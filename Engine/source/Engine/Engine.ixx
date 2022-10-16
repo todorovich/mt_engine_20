@@ -17,7 +17,7 @@ export import Camera;
 
 export import std.core;
 
-using namespace std::literals::chrono_literals;
+export using namespace std::literals::chrono_literals;
 
 export LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

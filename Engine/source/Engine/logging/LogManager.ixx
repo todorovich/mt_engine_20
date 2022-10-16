@@ -1,7 +1,7 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module LogManager;
 
-import Log;
+export import Log;
 
 export namespace logging 
 {

@@ -17,7 +17,6 @@ import DirectXUtility;
 import std.core;
 import std.filesystem;
 
-
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
 

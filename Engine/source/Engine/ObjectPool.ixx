@@ -1,6 +1,6 @@
 export module ObjectPool;
 
-import std.core;
+export import std.core;
 
 export namespace mt 
 {

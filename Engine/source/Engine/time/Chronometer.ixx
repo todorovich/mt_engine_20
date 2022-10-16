@@ -1,7 +1,7 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module Chronometer;
 
-import Time;
+export import Time;
 
 export using namespace std::literals::chrono_literals;
 

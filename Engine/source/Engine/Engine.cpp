@@ -72,7 +72,7 @@ Status Engine::_Run()
 	GetTimeManager().GetInputChronometer().Pause(now);
 	GetTimeManager().GetTickChronometer().Pause(now);
 	{
-
+		// TODO: windows messages (input) should be processed on a different thread than the ticks.
 		bool quit = false;
 		while (!quit)
 		{

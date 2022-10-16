@@ -3,7 +3,8 @@ export module Alarm;
 import Time;
 
 import std.core;
-using namespace std::literals::chrono_literals;
+
+export using namespace std::literals::chrono_literals;
 
 namespace mt::time { class AlarmManager; }
 

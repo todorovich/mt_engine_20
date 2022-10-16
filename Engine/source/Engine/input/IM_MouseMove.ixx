@@ -5,8 +5,8 @@ module;
 
 export module IM_MouseMove;
 
-import InputMessage;
-import std.core;
+export import InputMessage;
+export import std.core;
 
 export namespace mt::input
 {

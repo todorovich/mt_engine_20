@@ -14,10 +14,10 @@ module;
 
 export module Camera;
 
-import Status;
-import std.threading;
+export import Status;
+export import std.threading;
 
-import MathHelper;
+export import MathHelper;
 
 export namespace mt::camera
 {

@@ -10,7 +10,7 @@ module;
 
 export module DirectXUtility;
 
-import std.core;
+export import std.core;
 
 export namespace mt::renderer 
 {

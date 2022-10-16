@@ -6,9 +6,9 @@ module;
 
 export module UploadBuffer;
 
-import std.core;
+export import std.core;
 
-import DirectXUtility;
+export import DirectXUtility;
 
 export template<typename T> class UploadBuffer
 {

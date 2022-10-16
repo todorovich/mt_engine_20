@@ -13,7 +13,6 @@ module;
 
 #include "d3dx12.h"
 
-
 // Link necessary d3d12 libraries.
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
@@ -23,10 +22,10 @@ module;
 export module DirectXRenderer;
 
 //import UploadBuffer;
-import Camera;
-import MathHelper;
-import std.core;
-import DirectXUtility;
+export import Camera;
+export import MathHelper;
+export import std.core;
+export import DirectXUtility;
 
 using Microsoft::WRL::ComPtr;
 using namespace std;

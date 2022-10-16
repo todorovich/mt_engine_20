@@ -1,7 +1,7 @@
 export module Timer;
 
-import Time;
-import Alarm;
+export import Time;
+export import Alarm;
 
 export namespace mt::time
 {

@@ -1,10 +1,10 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module TimeManager;
 
-import Time;
-import Timer;
-import AlarmManager;
-import Chronometer;
+export import Time;
+export import Timer;
+export import AlarmManager;
+export import Chronometer;
 
 import std.core;
 
@@ -113,10 +113,7 @@ export namespace mt::time
 	};
 }
 
-module : private;
-
 using namespace mt::time;
-
 
 void TimeManager::Initialize()
 {

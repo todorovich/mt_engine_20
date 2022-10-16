@@ -1,8 +1,8 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module Log;
 
-import std.core;
-import std.filesystem;
+export import std.core;
+export import std.filesystem;
 
 export namespace logging
 {

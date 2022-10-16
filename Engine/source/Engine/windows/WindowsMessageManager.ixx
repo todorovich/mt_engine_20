@@ -5,9 +5,9 @@ module;
 
 export module WindowsMessageManager;
 
-import WindowsMessage;
+export import WindowsMessage;
 
-import std.core;
+export import std.core;
 
 export namespace mt::windows
 {

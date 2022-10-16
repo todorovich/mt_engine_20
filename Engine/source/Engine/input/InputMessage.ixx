@@ -5,7 +5,7 @@ module;
 
 export module InputMessage;
 
-import std.core;
+export import std.core;
 
 export namespace mt::input
 {
