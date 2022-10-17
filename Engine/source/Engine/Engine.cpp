@@ -261,8 +261,8 @@ bool Engine::Initialize(HINSTANCE hInstance)
 	if (!GetRenderer()->InitializeDirect3d(_main_window_handle))
 		return false;
 
-	// Do the initial Resize code. Need to be told this info from windows.
-	Resize(1920, 1080);
+	// Do the initial Resize code. 
+	Resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
 
 	GetTimeManager()->Initialize();
 
