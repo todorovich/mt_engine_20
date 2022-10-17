@@ -13,7 +13,17 @@ using namespace mt::windows;
 
 LRESULT mt::windows::WM_LeftMouseButtonUp::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
 {
-	_input_manager->MouseUp(MK_LBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	//MK_SHIFT and MK_CONTROL exist
+
+	_input_manager->MouseEvent(
+		GET_X_LPARAM(lParam),
+		GET_Y_LPARAM(lParam),
+		wParam & MK_LBUTTON,
+		wParam & MK_RBUTTON,
+		wParam & MK_MBUTTON,
+		wParam & MK_XBUTTON1,
+		wParam & MK_XBUTTON2
+	);
 
 	return 0;
 }

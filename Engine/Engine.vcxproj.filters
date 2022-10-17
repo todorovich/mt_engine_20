@@ -13,31 +13,10 @@
     <ClCompile Include="source\Engine\command\CommandManager.ixx">
       <Filter>source\Engine\Command</Filter>
     </ClCompile>
-    <ClCompile Include="source\Engine\input\IM_KeyDown.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\IM_KeyUp.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\IM_MouseDown.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\IM_MouseMove.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\IM_MouseUp.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
     <ClCompile Include="source\Engine\input\InputManager.cpp">
       <Filter>source\Engine\Input</Filter>
     </ClCompile>
     <ClCompile Include="source\Engine\input\InputManager.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\InputMessage.cpp">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\InputMessage.ixx">
       <Filter>source\Engine\Input</Filter>
     </ClCompile>
     <ClCompile Include="source\Engine\logging\Log.ixx">
@@ -294,6 +273,15 @@
     </ClCompile>
     <ClCompile Include="TimeManager.cpp">
       <Filter>source\Engine\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseInputMessage.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardInputMessage.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardKeys.ixx">
+      <Filter>source\Engine\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

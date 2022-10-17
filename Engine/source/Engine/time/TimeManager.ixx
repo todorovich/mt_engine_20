@@ -10,6 +10,9 @@ export import std.core;
 
 export using namespace std::literals::chrono_literals;
 
+export namespace mt { class Engine; }
+
+// TODO: need a tick and a physics tick. 
 export namespace mt::time
 {
 	class TimeManager
@@ -17,9 +20,12 @@ export namespace mt::time
 		static const int _number_of_samples_to_use = 100;
 	
 	public:
+
+		friend Engine;
+
 		TimeManager()
-			: _tgt_update_interval_ns(8333333ns)
-			, _tgt_render_interval_ns(16666666ns)
+			: _tgt_update_interval_ns(16666666ns)
+			, _tgt_render_interval_ns(1000000000ns/144)
 			, _frame_interval (16666666ns)
 			, _command_list_interval (0ns)
 			, _is_paused(true)
@@ -86,6 +92,7 @@ export namespace mt::time
 		void _DeleteAllChronometers();
 		void _AddEngineChronometers();
 		void _StartAllChronometers();
+		void _StopAllChronometers();
 		void _AddEngineAlarms();
 		
 		void _SetShouldUpdate();

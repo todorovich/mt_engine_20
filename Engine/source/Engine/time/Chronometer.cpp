@@ -31,7 +31,11 @@ void mt::time::Chronometer::Start(mt::time::TimePoint start_time)
 
         _is_running = true;
 
-        _current_tick_function = &Chronometer::Started;
+        if (_start_paused)
+            _current_tick_function = &Chronometer::Paused;
+        else
+            _current_tick_function = &Chronometer::Active;
+        
     }
 }
 

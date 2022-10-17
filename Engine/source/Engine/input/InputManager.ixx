@@ -5,7 +5,8 @@ module;
 
 export module InputManager;
 
-export import InputMessage;
+export import KeyboardInputMessage;
+export import MouseInputMessage;
 export import ObjectPool;
 
 export namespace mt { class Engine; }
@@ -14,13 +15,16 @@ export namespace mt::input
 {
     class InputManager
     {
-        ObjectPool<InputMessage, 1024> _message_pool;
+        using InputMessageVariant = std::variant<MouseInputMessage, KeyboardInputMessage>;
 
-        std::queue<InputMessage *> _input_queue;
+        ObjectPool<InputMessageVariant, 1024> _message_pool;
+
+        std::queue<InputMessageVariant*> _input_queue;
 
         POINT _mouse_position;
 
-        std::set<WPARAM> _held_keys_and_buttons;
+        std::set<KeyboardKeys> _held_keys;
+        std::set<MouseButtons> _held_buttons;
 
         mt::Engine& _engine;
 
@@ -35,30 +39,14 @@ export namespace mt::input
 
         InputManager &operator=(const InputManager &other) = delete;
 
-        void ProcessInput();
+        void ProcessInput(); // friend engine, make protected?
 
-        void MouseMove(WPARAM btnState, int x, int y);
+        void _ProcessMouseInput(MouseInputMessage& mouse_input_message);
 
-        void MouseDown(WPARAM btnState, int x, int y);
+        void _ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message);
 
-        void MouseUp(WPARAM btnState, int x, int y);
+        void KeyboardEvent(KeyboardKeys key, KeyState key_state);
 
-        void KeyDown(WPARAM vk_key, LPARAM flags);
-
-        void KeyUp(WPARAM vk_key, LPARAM flags);
-
-        friend InputMessage;
-
-    protected:
-
-        void _MouseMove(__int32 x, __int32 y);
-
-        void _MouseDown(WPARAM btnState);
-
-        void _MouseUp(WPARAM btnState);
-
-        void _KeyDown(WPARAM vk_key);
-
-        void _KeyUp(WPARAM vk_key);
+        void MouseEvent(__int32 x, __int32 y, bool button1, bool button2, bool button3, bool button4, bool button5);
     };
 }

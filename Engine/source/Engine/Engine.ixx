@@ -55,7 +55,7 @@ export namespace mt
 		// CALLBACKS
 		virtual void _OnResize() {};
 		virtual void _Update() {};
-		virtual void _Draw() {};
+		virtual void _PreRender() {};
 
 		void _Tick();
 		void _UpdateFrameStatisticsNoTimeCheck(bool was_rendered);

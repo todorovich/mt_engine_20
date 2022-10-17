@@ -61,6 +61,7 @@ void TimeManager::UpdateComplete()
 
 void TimeManager::RenderComplete()
 {
+	GetRenderChronometer().Pause();
 	_should_render = false;
 }
 
@@ -124,44 +125,34 @@ void TimeManager::_DeleteAllChronometers()
 
 void TimeManager::_AddEngineChronometers()
 {
-	auto chronometer = new Chronometer(*this, "Total Up-Time", true);
-
+	auto chronometer = new Chronometer(*this, "Total Up-Time", false);
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
-	chronometer = new Chronometer(*this, "Update");
-
+	chronometer = new Chronometer(*this, "Update", true, true);
+	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
+	
+	chronometer = new Chronometer(*this, "Render", true, true);
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
-	chronometer = new Chronometer(*this, "Render");
-
+	chronometer = new Chronometer(*this, "Statistics", true, true);
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
-	chronometer = new Chronometer(*this, "Statistics");
-
+	chronometer = new Chronometer(*this, "Windows Message", true, true);
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
-	chronometer = new Chronometer(*this, "Frame");
-
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Idle");
-
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Windows Message");
-
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Input");
-
+	chronometer = new Chronometer(*this, "Input", true, true);
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
 	chronometer = new Chronometer(*this, "Tick");
+	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
+	
+	chronometer = new Chronometer(*this, "Frame");
+	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
+	chronometer = new Chronometer(*this, "Idle");
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
 	chronometer = new Chronometer(*this, "In Between Ticks");
-
 	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
 
 }
@@ -170,8 +161,17 @@ void TimeManager::_StartAllChronometers()
 {
 	for (auto& pair : _chronometers)
 	{
-		Chronometer*& timer = pair.second;
-		timer->Start();
+		Chronometer*& chronometer = pair.second;
+		chronometer->Start();
+	}
+}
+
+void TimeManager::_StopAllChronometers()
+{
+	for (auto& pair : _chronometers)
+	{
+		Chronometer*& chronometer = pair.second;
+		chronometer->Stop();
 	}
 }
 

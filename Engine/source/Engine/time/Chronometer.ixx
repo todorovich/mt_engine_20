@@ -36,45 +36,54 @@ export namespace mt::time
         Duration *_paused_samples;
         Duration *_total_samples;
 
-        std::function<void(Chronometer &, const TimePoint &, const TimePoint &,
-                           const Duration &)> _current_tick_function = &Chronometer::Inactive;
+        std::function<void(Chronometer &, const TimePoint &, const TimePoint &, const Duration &)> 
+            _current_tick_function = &Chronometer::Inactive;
 
         __int64 _timer_ID;
         int _current_index;
         int _sample_size;
 
         bool _can_pause;
+        bool _start_paused;
         bool _is_paused;
         bool _is_running;
 
         static __int64 _next_timer_id;
 
-        void Tick(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time);
+        void Tick(
+            const TimePoint &current_tick_time, 
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        );
 
         void _CollectSample();
 
-        void
-        Inactive(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
+        void Inactive(
+            const TimePoint &current_tick_time,
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _is_running = false;
         }
 
-        void
-        Started(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
-            _duration_since_started = current_tick_time - _start_time;
-
-            _duration_active += current_tick_time - _start_time;
-            _current_tick_function = &Chronometer::Active;
-        }
-
-        void
-        Active(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
+        void Active(
+            const TimePoint &current_tick_time,
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _duration_since_started = current_tick_time - _start_time;
 
             _duration_active += delta_time;
         }
 
-        void
-        Paused(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
+        void Paused(
+            const TimePoint &current_tick_time, 
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _duration_since_started = current_tick_time - _start_time;
 
             if (_time_paused < previous_tick_time) {
@@ -92,26 +101,39 @@ export namespace mt::time
             _current_tick_function = &Chronometer::FullPause;
         }
 
-        void
-        FullPause(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
+        void FullPause(
+            const TimePoint &current_tick_time, 
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _duration_since_started = current_tick_time - _start_time;
 
             _duration_paused += delta_time;
         }
 
-        void
-        Continued(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
+        void Continued(
+            const TimePoint &current_tick_time, 
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _duration_since_started = current_tick_time - _start_time;
 
-            if (_time_continued < previous_tick_time) {
+            if (_time_continued < previous_tick_time) 
+            {
                 auto duration_retro_continued = previous_tick_time - _time_continued;
 
                 _duration_paused -= duration_retro_continued;
                 _duration_active += duration_retro_continued + delta_time;
-            } else if (_time_continued < current_tick_time) {
+            } 
+            else if (_time_continued < current_tick_time) 
+            {
                 _duration_paused += _time_continued - previous_tick_time;
                 _duration_active += current_tick_time - _time_continued;
-            } else {
+            } 
+            else 
+            {
                 return;
             }
 
@@ -123,9 +145,12 @@ export namespace mt::time
             _current_tick_function = &Chronometer::Active;
         }
 
-        void
-        Stopped(const TimePoint &current_tick_time, const TimePoint &previous_tick_time, const Duration &delta_time) {
-
+        void Stopped(
+            const TimePoint &current_tick_time, 
+            const TimePoint &previous_tick_time, 
+            const Duration &delta_time
+        )
+        {
             _current_tick_function = &Chronometer::Inactive;
         }
 
@@ -135,13 +160,15 @@ export namespace mt::time
 
         // Big 6
 
-        Chronometer(TimeManager& time_manager, const char *timer_name, bool can_pause = true)
+        Chronometer(TimeManager& time_manager, const char *timer_name, bool can_pause = true, bool start_paused = false)
             : _time_manager(time_manager)
             , _start_time(0ns), _stop_time(0ns), _time_paused(0ns), _time_continued(0ns)
             , _total_duration_paused(0ns), _duration_active(0ns), _duration_since_started(0ns)
             , _average_active_duration(0ns), _average_paused_duration(0ns), _average_total_duration(0ns)
             , _name(timer_name), _active_samples(nullptr), _paused_samples(nullptr), _total_samples(nullptr)
-            , _current_index(0), _timer_ID(-1), _sample_size(100), _can_pause(can_pause), _is_paused(false) {
+            , _current_index(0), _timer_ID(-1), _sample_size(100), _can_pause(can_pause), _is_paused(false) 
+            , _start_paused(start_paused)
+        {
             // Atomic Compare and Swap
             _timer_ID = _next_timer_id;
             _next_timer_id++;

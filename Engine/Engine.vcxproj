@@ -19,20 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="KeyboardInputMessage.ixx" />
+    <ClCompile Include="KeyboardKeys.ixx" />
+    <ClCompile Include="MouseInputMessage.ixx" />
     <ClCompile Include="source\Engine\command\Command.cpp" />
     <ClCompile Include="source\Engine\command\Command.ixx" />
     <ClCompile Include="source\Engine\command\CommandManager.ixx" />
     <ClCompile Include="source\Engine\Engine.cpp" />
     <ClCompile Include="source\Engine\Engine.ixx" />
-    <ClCompile Include="source\Engine\input\IM_KeyDown.ixx" />
-    <ClCompile Include="source\Engine\input\IM_KeyUp.ixx" />
-    <ClCompile Include="source\Engine\input\IM_MouseDown.ixx" />
-    <ClCompile Include="source\Engine\input\IM_MouseMove.ixx" />
-    <ClCompile Include="source\Engine\input\IM_MouseUp.ixx" />
     <ClCompile Include="source\Engine\input\InputManager.cpp" />
     <ClCompile Include="source\Engine\input\InputManager.ixx" />
-    <ClCompile Include="source\Engine\input\InputMessage.cpp" />
-    <ClCompile Include="source\Engine\input\InputMessage.ixx" />
     <ClCompile Include="source\Engine\logging\Log.ixx" />
     <ClCompile Include="source\Engine\logging\LogManager.ixx" />
     <ClCompile Include="source\Engine\MathHelper.ixx" />

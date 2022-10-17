@@ -21,7 +21,7 @@ export namespace mt
 	private:
 		virtual void _OnResize() override;
 		virtual void _Update() override;
-		virtual void _Draw() override;
+		virtual void _PreRender() override;
 
 	};
 
@@ -33,14 +33,11 @@ export namespace mt
 		return true;
 	}
 
-	void EngineDemo::_OnResize()
-	{}
+	void EngineDemo::_OnResize() {}
 
-	void EngineDemo::_Update()
-	{}
+	void EngineDemo::_Update() {}
 
-	void EngineDemo::_Draw()
-	{}
+	void EngineDemo::_PreRender() {}
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
