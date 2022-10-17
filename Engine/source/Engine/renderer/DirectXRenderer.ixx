@@ -1,4 +1,4 @@
-// Copyright 2018 Micho Todorovich, all rights reserved.
+// Copyright 2022 Micho Todorovich, all rights reserved.
 module;
 
 #include <wrl.h>
@@ -173,6 +173,8 @@ export struct MeshGeometry
     }
 };
 
+export namespace mt { class Engine; }
+
 export namespace mt::renderer
 {
     struct Vertex {
@@ -184,53 +186,8 @@ export namespace mt::renderer
         XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
     };
 
-    class DirectXRenderer {
-    public:
-        DirectXRenderer() {
-            //auto string = L"sizeof vector: " + std::to_wstring(sizeof(camera)) + L" bytes \n";
-
-            //OutputDebugStringW(string.c_str());
-        }
-
-        DirectXRenderer(const DirectXRenderer&) = delete;
-
-        ~DirectXRenderer() {
-            if (dx_device != nullptr)
-                flush_command_queue();
-        }
-
-        // Accessors
-        camera::Camera& GetCurrentCamera() { return camera; } // NOT CONST!!!!
-
-        bool Get4xMsaaState() const { return _4x_msaa_state; };
-
-        bool GetIsInitialized() const { return _is_initialized; };
-
-        int GetSwapChainBufferCount() const { return _swap_chain_buffer_count; };
-
-        void Set4xMsaaState(bool value);
-
-        bool GetIsRendering() const { return _is_rendering; }
-
-        // Mutators
-        bool InitializeDirect3d(HWND main_window_handle);
-
-        void Render();
-
-        void Resize(int client_width, int client_height);
-
-        void Update();
-
-        void flush_command_queue();
-
-        // Fence Stuff
-
-        void IncrementFence();
-
-        void WaitForFence();
-
-        bool IsCurrentFenceComplete() { return fence->GetCompletedValue() >= current_fence_index; }
-
+    class DirectXRenderer 
+    {
     protected:
 
         // Accessors
@@ -268,6 +225,8 @@ export namespace mt::renderer
 
         // Data
         static const int _swap_chain_buffer_count = 2;
+
+        Engine& _engine;
 
         camera::Camera camera; // 204 bytes (getting kind of bloated)
 
@@ -339,5 +298,59 @@ export namespace mt::renderer
         bool _4x_msaa_state = false;
         bool _is_initialized = false;
         bool _is_rendering = false;
+
+    public:
+        DirectXRenderer(Engine& engine)
+            : _engine(engine)
+        {
+            //auto string = L"sizeof vector: " + std::to_wstring(sizeof(camera)) + L" bytes \n";
+
+            //OutputDebugStringW(string.c_str());
+        }
+
+        DirectXRenderer(const DirectXRenderer&) = delete;
+
+        ~DirectXRenderer() {
+            if (dx_device != nullptr)
+                flush_command_queue();
+        }
+
+        // Accessors
+        camera::Camera& GetCurrentCamera() { return camera; } // NOT CONST!!!!
+
+        bool Get4xMsaaState() const { return _4x_msaa_state; };
+
+        bool GetIsInitialized() const { return _is_initialized; };
+
+        int GetSwapChainBufferCount() const { return _swap_chain_buffer_count; };
+
+        void Set4xMsaaState(bool value);
+
+        bool GetIsRendering() const { return _is_rendering; }
+
+        float GetWindowAspectRatio() const { return _window_aspect_ratio; }
+
+        int GetWindowWidth() const { return _window_width; }
+
+        int GetWindowHeight() const { return _window_height; }
+
+        // Mutators
+        bool InitializeDirect3d(HWND main_window_handle);
+
+        void Render();
+
+        void Resize(int client_width, int client_height);
+
+        void Update();
+
+        void flush_command_queue();
+
+        // Fence Stuff
+
+        void IncrementFence();
+
+        void WaitForFence();
+
+        bool IsCurrentFenceComplete() { return fence->GetCompletedValue() >= current_fence_index; }
     };
 }

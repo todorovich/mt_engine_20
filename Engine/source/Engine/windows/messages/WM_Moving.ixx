@@ -7,7 +7,7 @@ export module WindowsMessages.Moving;
 
 export import WindowsMessage;
 
-namespace mt::windows
+export namespace mt::windows
 {
     class WM_Moving : public WindowsMessage
     {

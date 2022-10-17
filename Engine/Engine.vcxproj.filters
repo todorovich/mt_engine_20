@@ -292,6 +292,9 @@
     <ClCompile Include="source\Engine\Status.ixx">
       <Filter>source\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="TimeManager.cpp">
+      <Filter>source\Engine\Time</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

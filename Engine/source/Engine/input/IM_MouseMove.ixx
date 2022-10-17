@@ -10,12 +10,14 @@ export import std.core;
 
 export namespace mt::input
 {
+	class InputManager;
+
 	class IM_MouseMove : public InputMessage
 	{
 	public:
 
-		IM_MouseMove(__int32 x = 0, __int32 y = 0)
-			: InputMessage(x , y)
+		IM_MouseMove(InputManager* input_manager, __int32 x = 0, __int32 y = 0)
+			: InputMessage(input_manager, x, y)
 		{}
 
 		IM_MouseMove(const IM_MouseMove& other)

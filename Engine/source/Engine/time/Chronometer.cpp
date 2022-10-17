@@ -16,7 +16,7 @@ __int64 mt::time::Chronometer::_next_timer_id = 1;
 
 void mt::time::Chronometer::Reset()
 {
-    *this = Chronometer(_name.c_str(), _can_pause);
+    *this = Chronometer(_time_manager, _name.c_str(), _can_pause);
 }
 
 void mt::time::Chronometer::Start(mt::time::TimePoint start_time)
@@ -47,11 +47,11 @@ void mt::time::Chronometer::Stop(mt::time::TimePoint stop_time)
 
         if (_is_paused)
         {
-            _duration_paused += _stop_time - mt::Engine::GetTimeManager().GetCurrentTickTime();
+            _duration_paused += _stop_time - _time_manager.GetCurrentTickTime();
         }
         else
         {
-            _duration_active += _stop_time - mt::Engine::GetTimeManager().GetCurrentTickTime();
+            _duration_active += _stop_time - _time_manager.GetCurrentTickTime();
         }
 
         _CollectSample();

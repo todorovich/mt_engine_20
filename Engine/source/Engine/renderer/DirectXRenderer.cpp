@@ -765,130 +765,134 @@ void DirectXRenderer::Resize(int client_width, int client_height)
 	{
 		_window_width = client_width;
 		_window_height = client_height;
+		_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
 
-		assert(dx_device);
-		assert(dx_swap_chain);
-		assert(dx_command_list_allocator);
-
-		// Flush before changing any resources.
-		flush_command_queue();
-
-		ThrowIfFailed(
-			dx_command_list->Reset(dx_command_list_allocator.Get(), nullptr),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
-		);
-
-		// Release the previous resources we will be recreating.
-		for (int i = 0; i < _swap_chain_buffer_count; ++i)
-			swap_chain_buffer[i].Reset();
-		depth_stencil_buffer.Reset();
-
-		// Resize the swap chain.
-		ThrowIfFailed(
-			dx_swap_chain->ResizeBuffers(
-				_swap_chain_buffer_count,
-				_window_width, _window_height,
-				mBackBufferFormat,
-				DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
-			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
-		);
-
-		current_back_buffer = 0;
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < _swap_chain_buffer_count; i++)
+		if (dx_device) 
 		{
+			assert(dx_device);
+			assert(dx_swap_chain);
+			assert(dx_command_list_allocator);
+
+			// Flush before changing any resources.
+			flush_command_queue();
+
 			ThrowIfFailed(
-				dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&swap_chain_buffer[i])),
+				dx_command_list->Reset(dx_command_list_allocator.Get(), nullptr),
 				__FUNCTION__,
 				__FILE__,
 				__LINE__
 			);
 
-			dx_device->CreateRenderTargetView(swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
-			rtvHeapHandle.Offset(1, rtv_descriptor_size);
-		}
+			// Release the previous resources we will be recreating.
+			for (int i = 0; i < _swap_chain_buffer_count; ++i)
+				swap_chain_buffer[i].Reset();
+			depth_stencil_buffer.Reset();
 
-		// Create the depth/stencil buffer and view.
-		D3D12_RESOURCE_DESC depthStencilDesc;
-		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		depthStencilDesc.Alignment = 0;
-		depthStencilDesc.Width = _window_width;
-		depthStencilDesc.Height = _window_height;
-		depthStencilDesc.DepthOrArraySize = 1;
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.Format = mDepthStencilFormat;
-		depthStencilDesc.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
-		depthStencilDesc.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
-		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+			// Resize the swap chain.
+			ThrowIfFailed(
+				dx_swap_chain->ResizeBuffers(
+					_swap_chain_buffer_count,
+					_window_width, _window_height,
+					mBackBufferFormat,
+					DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+				),
+				__FUNCTION__,
+				__FILE__,
+				__LINE__
+			);
 
-		D3D12_CLEAR_VALUE optClear;
-		optClear.Format = mDepthStencilFormat;
-		optClear.DepthStencil.Depth = 1.0f;
-		optClear.DepthStencil.Stencil = 0;
+			current_back_buffer = 0;
 
-		auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
+			for (UINT i = 0; i < _swap_chain_buffer_count; i++)
+			{
+				ThrowIfFailed(
+					dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&swap_chain_buffer[i])),
+					__FUNCTION__,
+					__FILE__,
+					__LINE__
+				);
 
-		ThrowIfFailed(
-			dx_device->CreateCommittedResource(
-				&heap_properties,
-				D3D12_HEAP_FLAG_NONE,
-				&depthStencilDesc,
+				dx_device->CreateRenderTargetView(swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
+				rtvHeapHandle.Offset(1, rtv_descriptor_size);
+			}
+
+			// Create the depth/stencil buffer and view.
+			D3D12_RESOURCE_DESC depthStencilDesc;
+			depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+			depthStencilDesc.Alignment = 0;
+			depthStencilDesc.Width = _window_width;
+			depthStencilDesc.Height = _window_height;
+			depthStencilDesc.DepthOrArraySize = 1;
+			depthStencilDesc.MipLevels = 1;
+			depthStencilDesc.Format = mDepthStencilFormat;
+			depthStencilDesc.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
+			depthStencilDesc.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
+			depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+			depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+			D3D12_CLEAR_VALUE optClear;
+			optClear.Format = mDepthStencilFormat;
+			optClear.DepthStencil.Depth = 1.0f;
+			optClear.DepthStencil.Stencil = 0;
+
+			auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+			ThrowIfFailed(
+				dx_device->CreateCommittedResource(
+					&heap_properties,
+					D3D12_HEAP_FLAG_NONE,
+					&depthStencilDesc,
+					D3D12_RESOURCE_STATE_COMMON,
+					&optClear,
+					IID_PPV_ARGS(depth_stencil_buffer.GetAddressOf())
+				),
+				__FUNCTION__,
+				__FILE__,
+				__LINE__
+			);
+
+			// Create descriptor to mip level 0 of entire resource using the format of the resource.
+			dx_device->CreateDepthStencilView(depth_stencil_buffer.Get(), nullptr, GetDepthStencilView());
+
+
+			auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer.Get(),
 				D3D12_RESOURCE_STATE_COMMON,
-				&optClear,
-				IID_PPV_ARGS(depth_stencil_buffer.GetAddressOf())
-			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
-		);
+				D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-		// Create descriptor to mip level 0 of entire resource using the format of the resource.
-		dx_device->CreateDepthStencilView(depth_stencil_buffer.Get(), nullptr, GetDepthStencilView());
+			// Transition the resource from its initial state to be used as a depth buffer.
+			dx_command_list->ResourceBarrier(1, &resource_barrier);
 
+			// Execute the Resize commands.
+			ThrowIfFailed(
+				dx_command_list->Close(),
+				__FUNCTION__,
+				__FILE__,
+				__LINE__
+			);
 
-		auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer.Get(),
-		                                                             D3D12_RESOURCE_STATE_COMMON,
-		                                                             D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			ID3D12CommandList* cmdsLists[] = { dx_command_list.Get() };
+			dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-		// Transition the resource from its initial state to be used as a depth buffer.
-		dx_command_list->ResourceBarrier(1, &resource_barrier);
+			// Wait until Resize is complete.
+			flush_command_queue();
 
-		// Execute the Resize commands.
-		ThrowIfFailed(
-			dx_command_list->Close(),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
-		);
+			// Update the viewport transform to cover the client area.
+			mScreenViewport.TopLeftX = 0;
+			mScreenViewport.TopLeftY = 0;
+			mScreenViewport.Width = static_cast<float>(_window_width);
+			mScreenViewport.Height = static_cast<float>(_window_height);
+			mScreenViewport.MinDepth = 0.0f;
+			mScreenViewport.MaxDepth = 1.0f;
 
-		ID3D12CommandList* cmdsLists[] = { dx_command_list.Get() };
-		dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+			mScissorRect = { 0, 0, _window_width, _window_height };
 
-		// Wait until Resize is complete.
-		flush_command_queue();
+			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
 
-		// Update the viewport transform to cover the client area.
-		mScreenViewport.TopLeftX = 0;
-		mScreenViewport.TopLeftY = 0;
-		mScreenViewport.Width = static_cast<float>(_window_width);
-		mScreenViewport.Height = static_cast<float>(_window_height);
-		mScreenViewport.MinDepth = 0.0f;
-		mScreenViewport.MaxDepth = 1.0f;
-
-		mScissorRect = { 0, 0, _window_width, _window_height };
-
-		_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
-
-		// The window resized, so update the aspect ratio and recompute the projection matrix.
-		Engine::GetCurrentCamera().SetLens(0.25f * MathHelper::Pi, Engine::GetWindowAspectRatio(), 1.0f, 1000.0f);
-		//XMStoreFloat4x4(&mProj, P);
+			// The window resized, so update the aspect ratio and recompute the projection matrix.
+			GetCurrentCamera().SetLens(0.25f * MathHelper::Pi, GetWindowAspectRatio(), 1.0f, 1000.0f);
+			//XMStoreFloat4x4(&mProj, P);
+		}
 	}
 }
 

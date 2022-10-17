@@ -16,7 +16,7 @@ export namespace mt
 		EngineDemo() = default;
 		~EngineDemo() = default;
 
-		virtual bool _Initialize(HINSTANCE hInstance) override;
+		virtual bool Initialize(HINSTANCE hInstance) override;
 
 	private:
 		virtual void _OnResize() override;
@@ -25,9 +25,9 @@ export namespace mt
 
 	};
 
-	bool EngineDemo::_Initialize(HINSTANCE hInstance)
+	bool EngineDemo::Initialize(HINSTANCE hInstance)
 	{
-		if (!Engine::_Initialize(hInstance))
+		if (!Engine::Initialize(hInstance))
 			return false;
 
 		return true;
@@ -52,11 +52,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 
 	try
 	{
-		mt::EngineDemo::Initialize(hInstance);
+		mt::EngineDemo engine_demo = mt::EngineDemo();
 
-		mt::EngineDemo::Run();
+		engine_demo.Initialize(hInstance);
 
-		mt::EngineDemo::Destroy();
+		engine_demo.Run();
+
+		engine_demo.Destroy();
 
 		return 0;
 	}

@@ -9,12 +9,21 @@ export import WindowsMessage;
 
 export import std.core;
 
+export namespace mt { class Engine; }
+
 export namespace mt::windows
 {
 	class WindowsMessageManager
 	{
+		Engine& _engine;
+
+		friend Engine;
+
+	protected:
+		void Initialize();
+
 	public:
-		WindowsMessageManager();
+		WindowsMessageManager(Engine& engine);
 	
 		~WindowsMessageManager();
 	

@@ -3,7 +3,7 @@ export module LogManager;
 
 export import Log;
 
-export namespace logging 
+export namespace mt::logging 
 {
 	class LogManager
 	{
@@ -30,5 +30,6 @@ export namespace logging
 		~LogManager() = default;
 
 		Log& GetMainLog() { return _main_log; }
+
 	};
 }

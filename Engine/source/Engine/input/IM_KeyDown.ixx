@@ -10,12 +10,14 @@ export import std.core;
 
 export namespace mt::input
 {
+	class InputManager;
+
 	class IM_KeyDown : public InputMessage
 	{
 	public:
 
-		IM_KeyDown(WPARAM button_down)
-			: InputMessage(static_cast<__int64>(button_down))
+		IM_KeyDown(InputManager* input_manager, WPARAM button_down)
+			: InputMessage(input_manager, static_cast<__int64>(button_down))
 		{}
 
 		IM_KeyDown(const IM_KeyDown& other)

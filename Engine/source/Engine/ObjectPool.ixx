@@ -4,7 +4,7 @@ export import std.core;
 
 export namespace mt 
 {
-	template<typename T, int number_of_objects> requires std::default_initializable<T>
+	template<typename T, int number_of_objects>
 	class ObjectPool
 	{
 	private:
@@ -61,7 +61,7 @@ export namespace mt
 			}
 
 			// zero out the retruned memory
-			new(returned_memory) T{};
+			//std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
 
 			_used_indicies.erase(index);
 

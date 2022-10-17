@@ -7,10 +7,11 @@ module;
 module WindowsMessages.LeftMouseButtonDown;
 
 import Engine;
+import InputManager;
 
 LRESULT mt::windows::WM_LeftMouseButtonDown::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
 {
-	mt::Engine::GetInputManager().MouseDown(MK_LBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	_input_manager->MouseDown(MK_LBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
 	return 0;
 }

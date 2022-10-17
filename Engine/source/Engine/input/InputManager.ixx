@@ -8,6 +8,8 @@ export module InputManager;
 export import InputMessage;
 export import ObjectPool;
 
+export namespace mt { class Engine; }
+
 export namespace mt::input
 {
     class InputManager
@@ -20,8 +22,12 @@ export namespace mt::input
 
         std::set<WPARAM> _held_keys_and_buttons;
 
+        mt::Engine& _engine;
+
     public:
-        InputManager() = default;
+        InputManager(mt::Engine& engine)
+            : _engine(engine)
+        {}
 
         ~InputManager() = default;
 

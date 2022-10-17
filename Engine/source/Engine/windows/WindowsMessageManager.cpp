@@ -6,7 +6,7 @@ module;
 module WindowsMessageManager;
 
 import WindowsMessages.Activate;
-//import WindowsMessages.CaptureChanged;
+import WindowsMessages.CaptureChanged;
 import WindowsMessages.Close;
 import WindowsMessages.Destroy;
 import WindowsMessages.EnterSizeMove;
@@ -37,43 +37,14 @@ import WindowsMessages.Sizing;
 import WindowsMessages.Timer;
 //import WindowsMessages.WindowPositionChanging;
 
+import Engine;
 import std.core;
 
-mt::windows::WindowsMessageManager::WindowsMessageManager()
-{
-	// Add all the message handlers to the message handler map
-	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, new WM_Activate()));
-	//_message_handler_map.insert(std::make_pair(WM_CAPTURECHANGED, new WM_CaptureChanged()));
-	_message_handler_map.insert(std::make_pair(WM_CLOSE, new WM_Close()));
-	_message_handler_map.insert(std::make_pair(WM_DESTROY, new WM_Destroy()));
-	_message_handler_map.insert(std::make_pair(WM_ENTERSIZEMOVE, new WM_EnterSizeMove()));
-	_message_handler_map.insert(std::make_pair(WM_ERASEBKGND, new WM_EraseBackground()));
-	_message_handler_map.insert(std::make_pair(WM_EXITSIZEMOVE, new WM_ExitSizeMove()));
-	_message_handler_map.insert(std::make_pair(WM_GETICON, new WM_GetIcon()));
-	_message_handler_map.insert(std::make_pair(WM_GETMINMAXINFO, new WM_GetMinMaxInfo()));
-	_message_handler_map.insert(std::make_pair(WM_INPUT, new WM_Input()));
-	_message_handler_map.insert(std::make_pair(WM_KEYUP, new WM_KeyUp()));
-	_message_handler_map.insert(std::make_pair(WM_LBUTTONDOWN, new WM_LeftMouseButtonDown()));
-	_message_handler_map.insert(std::make_pair(WM_LBUTTONUP, new WM_LeftMouseButtonUp()));
-	_message_handler_map.insert(std::make_pair(WM_MBUTTONDOWN, new WM_MiddleMouseButtonDown()));
-	_message_handler_map.insert(std::make_pair(WM_MBUTTONUP, new WM_MiddleMouseButtonUp()));
-	_message_handler_map.insert(std::make_pair(WM_MENUCHAR, new WM_MenuChar()));
-	_message_handler_map.insert(std::make_pair(WM_MOUSEMOVE, new WM_MouseMove()));
-	//_message_handler_map.insert(std::make_pair(WM_MOVE, new WM_Move()));
-	//_message_handler_map.insert(std::make_pair(WM_MOVING, new WM_Moving()));
-	_message_handler_map.insert(std::make_pair(WM_NCCALCSIZE, new WM_NonClientCalcSize()));
-	_message_handler_map.insert(std::make_pair(WM_NCMOUSELEAVE, new WM_NonClientMouseLeave()));
-	_message_handler_map.insert(std::make_pair(WM_NCPAINT, new WM_NonClientPaint()));
-	_message_handler_map.insert(std::make_pair(WM_PAINT, new WM_Paint()));
-	_message_handler_map.insert(std::make_pair(WM_QUIT, new WM_Quit()));
-	_message_handler_map.insert(std::make_pair(WM_RBUTTONDOWN, new WM_RightMouseButtonDown()));
-	_message_handler_map.insert(std::make_pair(WM_RBUTTONUP, new WM_RightMouseButtonUp()));
-	_message_handler_map.insert(std::make_pair(WM_SETTEXT, new WM_SetText()));
-	_message_handler_map.insert(std::make_pair(WM_SIZE, new WM_Size()));
-	_message_handler_map.insert(std::make_pair(WM_SIZING, new WM_Sizing()));
-	_message_handler_map.insert(std::make_pair(WM_TIMER, new WM_Timer()));
-	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging()));
-}
+using namespace mt::windows;
+
+WindowsMessageManager::WindowsMessageManager(mt::Engine& engine)
+	: _engine(engine)
+{}
 
 mt::windows::WindowsMessageManager::~WindowsMessageManager()
 {
@@ -82,6 +53,42 @@ mt::windows::WindowsMessageManager::~WindowsMessageManager()
 	{
 		delete pair.second;
 	}
+}
+
+void WindowsMessageManager::Initialize()
+{
+	// Add all the message handlers to the message handler map
+	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, new WM_Activate(_engine.GetTimeManager())));
+	_message_handler_map.insert(std::make_pair(WM_CAPTURECHANGED, new WM_CaptureChanged()));
+	_message_handler_map.insert(std::make_pair(WM_CLOSE, new WM_Close(_engine)));
+	_message_handler_map.insert(std::make_pair(WM_DESTROY, new WM_Destroy()));
+	_message_handler_map.insert(std::make_pair(WM_ENTERSIZEMOVE, new WM_EnterSizeMove(_engine)));
+	_message_handler_map.insert(std::make_pair(WM_ERASEBKGND, new WM_EraseBackground()));
+	_message_handler_map.insert(std::make_pair(WM_EXITSIZEMOVE, new WM_ExitSizeMove(_engine)));
+	_message_handler_map.insert(std::make_pair(WM_GETICON, new WM_GetIcon()));
+	_message_handler_map.insert(std::make_pair(WM_GETMINMAXINFO, new WM_GetMinMaxInfo()));
+	_message_handler_map.insert(std::make_pair(WM_INPUT, new WM_Input()));
+	_message_handler_map.insert(std::make_pair(WM_KEYUP, new WM_KeyUp(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_LBUTTONDOWN, new WM_LeftMouseButtonDown(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_LBUTTONUP, new WM_LeftMouseButtonUp(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_MBUTTONDOWN, new WM_MiddleMouseButtonDown(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_MBUTTONUP, new WM_MiddleMouseButtonUp(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_MENUCHAR, new WM_MenuChar()));
+	_message_handler_map.insert(std::make_pair(WM_MOUSEMOVE, new WM_MouseMove(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_MOVE, new WM_Move()));
+	_message_handler_map.insert(std::make_pair(WM_MOVING, new WM_Moving()));
+	_message_handler_map.insert(std::make_pair(WM_NCCALCSIZE, new WM_NonClientCalcSize()));
+	_message_handler_map.insert(std::make_pair(WM_NCMOUSELEAVE, new WM_NonClientMouseLeave()));
+	_message_handler_map.insert(std::make_pair(WM_NCPAINT, new WM_NonClientPaint()));
+	_message_handler_map.insert(std::make_pair(WM_PAINT, new WM_Paint()));
+	_message_handler_map.insert(std::make_pair(WM_QUIT, new WM_Quit()));
+	_message_handler_map.insert(std::make_pair(WM_RBUTTONDOWN, new WM_RightMouseButtonDown(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_RBUTTONUP, new WM_RightMouseButtonUp(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_SETTEXT, new WM_SetText()));
+	_message_handler_map.insert(std::make_pair(WM_SIZE, new WM_Size(_engine)));
+	_message_handler_map.insert(std::make_pair(WM_SIZING, new WM_Sizing()));
+	_message_handler_map.insert(std::make_pair(WM_TIMER, new WM_Timer()));
+	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
 }
 
 LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

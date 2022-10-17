@@ -4,7 +4,7 @@ export module Log;
 export import std.core;
 export import std.filesystem;
 
-export namespace logging
+export namespace mt::logging
 {
 	class Log
 	{

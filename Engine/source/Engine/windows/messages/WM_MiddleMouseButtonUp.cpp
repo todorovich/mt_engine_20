@@ -7,10 +7,11 @@ module;
 module WindowsMessages.MiddleMouseButtonUp;
 
 import Engine;
+import InputManager;
 
 LRESULT mt::windows::WM_MiddleMouseButtonUp::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
 {
-	mt::Engine::GetInputManager().MouseUp(MK_MBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	_input_manager->MouseUp(MK_MBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
 	return 0;
 }

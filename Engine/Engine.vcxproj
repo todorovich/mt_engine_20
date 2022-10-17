@@ -116,6 +116,7 @@
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.cpp" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />
     <ClCompile Include="source\Game\EngineDemo.ixx" />
+    <ClCompile Include="TimeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Engine\renderer\d3dx12.h" />

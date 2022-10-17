@@ -1,10 +1,10 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module Command;
 
-namespace mt::command { class CommandManager; }
-
 export namespace mt::command
 {
+	class CommandManager;
+
 	enum class EXECUTION_TYPE
 	{
 		IMMEDIATE,		// CREATOR MAY NOT CALL EXECUTE OR DESTROY, EXECUTION IS IMMEDIATE
@@ -14,10 +14,12 @@ export namespace mt::command
 
 	class Command
 	{
+		CommandManager& _command_manager;
+
 	public:
 		friend CommandManager;
 
-		explicit Command(EXECUTION_TYPE method_of_execution = EXECUTION_TYPE::ASYNCHRONOURS) ;
+		explicit Command(CommandManager& commandManager, EXECUTION_TYPE method_of_execution = EXECUTION_TYPE::ASYNCHRONOURS);
 
 		virtual void execute() {};
 

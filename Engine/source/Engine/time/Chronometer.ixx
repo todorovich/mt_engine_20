@@ -13,6 +13,8 @@ export namespace mt::time
     {
     private:
 
+        TimeManager& _time_manager;
+
         TimePoint _start_time;
         TimePoint _stop_time;
 
@@ -133,12 +135,13 @@ export namespace mt::time
 
         // Big 6
 
-        Chronometer(const char *timer_name, bool can_pause = true)
-                : _start_time(0ns), _stop_time(0ns), _time_paused(0ns), _time_continued(0ns),
-                  _total_duration_paused(0ns), _duration_active(0ns), _duration_since_started(0ns),
-                  _average_active_duration(0ns), _average_paused_duration(0ns), _average_total_duration(0ns),
-                  _name(timer_name), _active_samples(nullptr), _paused_samples(nullptr), _total_samples(nullptr),
-                  _current_index(0), _timer_ID(-1), _sample_size(100), _can_pause(can_pause), _is_paused(false) {
+        Chronometer(TimeManager& time_manager, const char *timer_name, bool can_pause = true)
+            : _time_manager(time_manager)
+            , _start_time(0ns), _stop_time(0ns), _time_paused(0ns), _time_continued(0ns)
+            , _total_duration_paused(0ns), _duration_active(0ns), _duration_since_started(0ns)
+            , _average_active_duration(0ns), _average_paused_duration(0ns), _average_total_duration(0ns)
+            , _name(timer_name), _active_samples(nullptr), _paused_samples(nullptr), _total_samples(nullptr)
+            , _current_index(0), _timer_ID(-1), _sample_size(100), _can_pause(can_pause), _is_paused(false) {
             // Atomic Compare and Swap
             _timer_ID = _next_timer_id;
             _next_timer_id++;
@@ -169,17 +172,18 @@ export namespace mt::time
         Chronometer(const Chronometer &other) = delete;
 
         Chronometer(Chronometer &&other)
-                : _start_time(std::move(other._start_time)), _stop_time(std::move(other._stop_time)),
-                  _time_paused(std::move(other._time_paused)), _time_continued(std::move(other._time_continued)),
-                  _total_duration_paused(std::move(other._total_duration_paused)),
-                  _duration_active(std::move(other._duration_active)),
-                  _duration_since_started(std::move(other._duration_since_started)),
-                  _average_active_duration(std::move(other._average_active_duration)), _name(std::move(other._name)),
-                  _active_samples(std::move(other._active_samples)), _paused_samples(std::move(other._active_samples)),
-                  _total_samples(std::move(other._active_samples)), _current_index(std::move(other._current_index)),
-                  _timer_ID(std::move(other._timer_ID)), _sample_size(std::move(other._sample_size)),
-                  _can_pause(std::move(other._can_pause)), _is_paused(std::move(other._is_paused)) {
-
+            : _time_manager(other._time_manager)
+            , _start_time(std::move(other._start_time)), _stop_time(std::move(other._stop_time))
+            , _time_paused(std::move(other._time_paused)), _time_continued(std::move(other._time_continued))
+            , _total_duration_paused(std::move(other._total_duration_paused))
+            , _duration_active(std::move(other._duration_active))
+            , _duration_since_started(std::move(other._duration_since_started))
+            , _average_active_duration(std::move(other._average_active_duration)), _name(std::move(other._name))
+            , _active_samples(std::move(other._active_samples)), _paused_samples(std::move(other._active_samples))
+            , _total_samples(std::move(other._active_samples)), _current_index(std::move(other._current_index))
+            , _timer_ID(std::move(other._timer_ID)), _sample_size(std::move(other._sample_size))
+            , _can_pause(std::move(other._can_pause)), _is_paused(std::move(other._is_paused)) 
+        {
         }
 
         Chronometer &operator=(const Chronometer &other) = delete;

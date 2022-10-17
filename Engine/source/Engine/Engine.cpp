@@ -1,10 +1,20 @@
+module;
+
 #include <windows.h>
-//#include <WinUser.h>
-//#include "wingdi.h"
 
 module Engine;
 
+import TimeManager;
+import CommandManager;
+import Status;
+import WindowsMessageManager;
+import InputManager;
+import DirectXRenderer;
+import Camera;
+import LogManager;
+
 import std.core;
+import std.filesystem;
 
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
@@ -34,18 +44,59 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 #pragma warning(pop)  
 }
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
-	// before CreateWindow returns, and thus before mhMainWnd is valid.
-	return mt::Engine::GetWindowsMessageManager().handle_message(hwnd, msg, wParam, lParam);
-}
-
 using namespace mt;
 
-std::unique_ptr<Engine> mt::Engine::_instance = std::make_unique<Engine>();
 
-Status Engine::_Run()
+
+Engine* Engine::_instance = nullptr;
+
+Engine::Engine()
+	: log_manager_(std::make_unique<logging::LogManager>())
+	, command_manager_(std::make_unique<command::CommandManager>())
+	, time_manager_(std::make_unique<time::TimeManager>())
+	, input_manager_(std::make_unique<input::InputManager>(*this))
+	, direct_x_renderer_(std::make_unique<renderer::DirectXRenderer>(*this))
+	, windows_message_manager_(std::make_unique<windows::WindowsMessageManager>(*this))
+{
+	if (_instance == nullptr)
+		_instance = this;
+	else
+		throw new std::runtime_error("Only one Engine may exist at a time;");
+}
+
+Engine::~Engine()
+{
+	if (!IsDestroyed())
+	{
+		Destroy();
+	}
+};
+
+void Engine::Shutdown()
+{
+	_is_shutting_down = true;
+
+	GetTimeManager()->Pause();
+
+	OutputDebugStringW(L"Engine Shutdown Initiated\n");
+
+	Destroy();
+}
+
+void Engine::Destroy() 
+{
+	if (_instance != nullptr) 
+	{
+		// Destroy the window
+		DestroyWindow(GetMainWindowHandle());
+
+		_instance = nullptr;
+	}
+
+	OutputDebugStringW(L"Engine Destroyed\n");
+}
+
+Status Engine::Run()
 {
 	//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
 
@@ -54,31 +105,31 @@ Status Engine::_Run()
 
 	auto now = time::Clock::now();
 
-	GetTimeManager().GetTotalUpTimeChronometer().Start(now);
-	GetTimeManager().GetUpdateChronometer().Start(now);
-	GetTimeManager().GetRenderChronometer().Start(now);
-	GetTimeManager().GetFrameChronometer().Start(now);
-	GetTimeManager().GetIdleChronometer().Start(now);
-	GetTimeManager().GetStatisticsChronometer().Start(now);
-	GetTimeManager().GetWindowsMessageChronometer().Start(now);
-	GetTimeManager().GetInputChronometer().Start(now);
-	GetTimeManager().GetTickChronometer().Start(now);
-	GetTimeManager().GetInBetweenTicksChronometer().Start(now);
+	GetTimeManager()->GetTotalUpTimeChronometer().Start(now);
+	GetTimeManager()->GetUpdateChronometer().Start(now);
+	GetTimeManager()->GetRenderChronometer().Start(now);
+	GetTimeManager()->GetFrameChronometer().Start(now);
+	GetTimeManager()->GetIdleChronometer().Start(now);
+	GetTimeManager()->GetStatisticsChronometer().Start(now);
+	GetTimeManager()->GetWindowsMessageChronometer().Start(now);
+	GetTimeManager()->GetInputChronometer().Start(now);
+	GetTimeManager()->GetTickChronometer().Start(now);
+	GetTimeManager()->GetInBetweenTicksChronometer().Start(now);
 
-	GetTimeManager().GetUpdateChronometer().Pause(now);
-	GetTimeManager().GetRenderChronometer().Pause(now);
-	GetTimeManager().GetStatisticsChronometer().Pause(now);
-	GetTimeManager().GetWindowsMessageChronometer().Pause(now);
-	GetTimeManager().GetInputChronometer().Pause(now);
-	GetTimeManager().GetTickChronometer().Pause(now);
+	GetTimeManager()->GetUpdateChronometer().Pause(now);
+	GetTimeManager()->GetRenderChronometer().Pause(now);
+	GetTimeManager()->GetStatisticsChronometer().Pause(now);
+	GetTimeManager()->GetWindowsMessageChronometer().Pause(now);
+	GetTimeManager()->GetInputChronometer().Pause(now);
+	GetTimeManager()->GetTickChronometer().Pause(now);
 	{
 		// TODO: windows messages (input) should be processed on a different thread than the ticks.
 		bool quit = false;
 		while (!quit)
 		{
 			now = time::Clock::now();
-			GetTimeManager().GetWindowsMessageChronometer().Continue(now);
-			GetTimeManager().GetIdleChronometer().Pause(now);
+			GetTimeManager()->GetWindowsMessageChronometer().Continue(now);
+			GetTimeManager()->GetIdleChronometer().Pause(now);
 			{
 				// If there are Window messages then process them.
 				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -92,27 +143,27 @@ Status Engine::_Run()
 				}
 			}
 			now = time::Clock::now();
-			GetTimeManager().GetIdleChronometer().Continue(now);
-			GetTimeManager().GetWindowsMessageChronometer().Pause(now);
+			GetTimeManager()->GetIdleChronometer().Continue(now);
+			GetTimeManager()->GetWindowsMessageChronometer().Pause(now);
 
-			GetTimeManager().GetInBetweenTicksChronometer().Pause();
+			GetTimeManager()->GetInBetweenTicksChronometer().Pause();
 			{
-				GetEngine()._Tick();
+				_Tick();
 			}
-			GetTimeManager().GetInBetweenTicksChronometer().Continue();
+			GetTimeManager()->GetInBetweenTicksChronometer().Continue();
 		};
 	}
 	now = time::Clock::now();
-	GetTimeManager().GetTotalUpTimeChronometer().Stop(now);
-	GetTimeManager().GetUpdateChronometer().Stop(now);
-	GetTimeManager().GetRenderChronometer().Stop(now);
-	GetTimeManager().GetFrameChronometer().Stop(now);
-	GetTimeManager().GetIdleChronometer().Stop(now);
-	GetTimeManager().GetStatisticsChronometer().Stop(now);
-	GetTimeManager().GetWindowsMessageChronometer().Stop(now);
-	GetTimeManager().GetInputChronometer().Stop(now);
-	GetTimeManager().GetTickChronometer().Stop(now);
-	GetTimeManager().GetInBetweenTicksChronometer().Stop(now);
+	GetTimeManager()->GetTotalUpTimeChronometer().Stop(now);
+	GetTimeManager()->GetUpdateChronometer().Stop(now);
+	GetTimeManager()->GetRenderChronometer().Stop(now);
+	GetTimeManager()->GetFrameChronometer().Stop(now);
+	GetTimeManager()->GetIdleChronometer().Stop(now);
+	GetTimeManager()->GetStatisticsChronometer().Stop(now);
+	GetTimeManager()->GetWindowsMessageChronometer().Stop(now);
+	GetTimeManager()->GetInputChronometer().Stop(now);
+	GetTimeManager()->GetTickChronometer().Stop(now);
+	GetTimeManager()->GetInBetweenTicksChronometer().Stop(now);
 	// Join the Tick thread (ensuring it has actually shut down)
 	//if (_engine_tick_thread.joinable()) _engine_tick_thread.join();
 
@@ -123,106 +174,115 @@ Status Engine::_Run()
 
 void Engine::_Tick()
 {
+	GetTimeManager()->Tick();
 
-	GetTimeManager().Tick();
-
-	if (GetTimeManager().GetEndOfFrame())
+	if (GetTimeManager()->GetEndOfFrame())
 	{
-		GetTimeManager().GetIdleChronometer().Pause();
+		GetTimeManager()->GetIdleChronometer().Pause();
 
 		_UpdateFrameStatisticsNoTimeCheck(_was_rendered_this_frame);
 
 		auto now = time::Clock::now();
-		GetTimeManager().GetFrameChronometer().Lap(now);
-		GetTimeManager().GetIdleChronometer().Lap(now);
-		GetTimeManager().GetStatisticsChronometer().Lap(now);
-		GetTimeManager().GetWindowsMessageChronometer().Lap(now);
-		GetTimeManager().GetTickChronometer().Lap(now);
-		GetTimeManager().GetInBetweenTicksChronometer().Lap(now);
+		GetTimeManager()->GetFrameChronometer().Lap(now);
+		GetTimeManager()->GetIdleChronometer().Lap(now);
+		GetTimeManager()->GetStatisticsChronometer().Lap(now);
+		GetTimeManager()->GetWindowsMessageChronometer().Lap(now);
+		GetTimeManager()->GetTickChronometer().Lap(now);
+		GetTimeManager()->GetInBetweenTicksChronometer().Lap(now);
 
-		GetTimeManager().FrameComplete();
+		GetTimeManager()->FrameComplete();
 
 		_was_rendered_this_frame = false;
 
-		GetTimeManager().GetIdleChronometer().Continue();
+		GetTimeManager()->GetIdleChronometer().Continue();
 	}
 
-	if (GetTimeManager().GetShouldUpdate())
+	if (GetTimeManager()->GetShouldUpdate())
 	{
-		GetTimeManager().GetIdleChronometer().Pause();
+		GetTimeManager()->GetIdleChronometer().Pause();
 
 		// Input
-		GetTimeManager().GetInputChronometer().Continue();
+		GetTimeManager()->GetInputChronometer().Continue();
 		{
-			input_manager_.ProcessInput();
-			GetTimeManager().GetInputChronometer().Lap();
+			GetInputManager()->ProcessInput();
+			GetTimeManager()->GetInputChronometer().Lap();
 		}
-		GetTimeManager().GetInputChronometer().Pause();
+		GetTimeManager()->GetInputChronometer().Pause();
 
 		// Update
-		GetTimeManager().GetUpdateChronometer().Continue();
+		GetTimeManager()->GetUpdateChronometer().Continue();
 		{
 			_Update();
-			direct_x_renderer_.Update();
+			GetRenderer()->Update();
 		}
-		GetTimeManager().GetUpdateChronometer().Pause();
+		GetTimeManager()->GetUpdateChronometer().Pause();
 
-		GetTimeManager().UpdateComplete();
+		GetTimeManager()->UpdateComplete();
 
-		GetTimeManager().GetUpdateChronometer().Lap();
+		GetTimeManager()->GetUpdateChronometer().Lap();
 
-		GetTimeManager().GetIdleChronometer().Continue();
+		GetTimeManager()->GetIdleChronometer().Continue();
 	}
 
-	if (GetTimeManager().GetShouldRender())
+	if (GetTimeManager()->GetShouldRender())
 	{
 		// Render whenever you can, but don't wait.
-		if (GetRenderer().IsCurrentFenceComplete())
+		if (GetRenderer()->IsCurrentFenceComplete())
 		{
 			auto now = time::Clock::now();
-			GetTimeManager().GetIdleChronometer().Pause(now);
-			GetTimeManager().GetRenderChronometer().Continue(now);
+			GetTimeManager()->GetIdleChronometer().Pause(now);
+			GetTimeManager()->GetRenderChronometer().Continue(now);
 			{
 				_Draw();
-				direct_x_renderer_.Render();
-				direct_x_renderer_.IncrementFence();
+				GetRenderer()->Render();
+				GetRenderer()->IncrementFence();
 				_was_rendered_this_frame = true;
 			}
-			GetTimeManager().GetRenderChronometer().Pause();
+			GetTimeManager()->GetRenderChronometer().Pause();
 
-			GetTimeManager().RenderComplete();
+			GetTimeManager()->RenderComplete();
 
-			GetTimeManager().GetRenderChronometer().Lap();
+			GetTimeManager()->GetRenderChronometer().Lap();
 
-			GetTimeManager().GetIdleChronometer().Continue();
+			GetTimeManager()->GetIdleChronometer().Continue();
 		}
 	}
-	GetTimeManager().GetIdleChronometer().Continue();
+	GetTimeManager()->GetIdleChronometer().Continue();
 }
 
-bool Engine::_Initialize(HINSTANCE hInstance)
+bool Engine::Initialize(HINSTANCE hInstance)
 {
 	_instance_handle = hInstance;
 
+	// Will Register Message Handler WNDPROC
 	if (!_InitializeMainWindow())
 		return false;
 
-	if (!direct_x_renderer_.InitializeDirect3d(_main_window_handle))
+	if (!GetRenderer()->InitializeDirect3d(_main_window_handle))
 		return false;
 
-	// Do the initial Resize code.
-	Resize(_window_width, _window_height);
+	// Do the initial Resize code. Need to be told this info from windows.
+	Resize(1920, 1080);
 
-	time_manager_.Initialize();
+	GetTimeManager()->Initialize();
 
 	return true;
 }
 
+LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
+	// before CreateWindow returns, and thus before mhMainWnd is valid.
+	return Engine::_instance->windows_message_manager_->handle_message(hwnd, msg, wParam, lParam);
+}
+
 bool Engine::_InitializeMainWindow()
 {
+	windows_message_manager_->Initialize();
+
 	WNDCLASS wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = MainWndProc;
+	wc.lpfnWndProc = ::MainWndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = _instance_handle;
@@ -239,10 +299,10 @@ bool Engine::_InitializeMainWindow()
 	}
 
 	// Compute window rectangle dimensions based on requested client area dimensions.
-	RECT R = { 0, 0, _window_width, _window_height };
-	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
-	int width = R.right - R.left;
-	int height = R.bottom - R.top;
+	RECT rectangle = { 0, 0, GetRenderer()->GetWindowWidth(), GetRenderer()->GetWindowHeight()};
+	AdjustWindowRect(&rectangle, WS_OVERLAPPEDWINDOW, false);
+	int width = rectangle.right - rectangle.left;
+	int height = rectangle.bottom - rectangle.top;
 
 	_main_window_handle = CreateWindow(L"MainWnd", _main_window_caption.c_str(),
 		WS_MAXIMIZE, 0, 0, width, height, nullptr, nullptr, _instance_handle, 0);
@@ -561,22 +621,19 @@ void Engine::_UpdateFrameStatisticsNoTimeCheck(bool was_rendered)
 	GetTimeManager().GetIdleChronometer().Continue();*/
 }
 
-void Engine::_resize(int width, int height)
+// TODO: window manager.
+void Engine::Resize(int width, int height)
 {
 	// This flag should prevent futher rendering after the current frame finishes
-	_set_is_resizing(true);
+	SetIsWindowResizing(true);
 
 	// wait until rendering is finished.
-	while (direct_x_renderer_.GetIsRendering()) {};
+	while (GetRenderer()->GetIsRendering()) {};
 
-	_window_width = width;
-	_window_height = height;
-	_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
-
-	direct_x_renderer_.Resize(width, height);
+	GetRenderer()->Resize(width, height);
 
 	// Trigger callback
 	_OnResize();
 	// Continue rendering.
-	_set_is_resizing(false);
+	SetIsWindowResizing(false);
 }

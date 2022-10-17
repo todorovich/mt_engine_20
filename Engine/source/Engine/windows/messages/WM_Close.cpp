@@ -20,7 +20,7 @@ LRESULT mt::windows::WM_Close::execute(const HWND& hwnd, const UINT& msg, const 
 	if (user_wants_to_close)
 	{
 		// Shutdown the Game
-		mt::Engine::Shutdown();
+		_engine.Shutdown();
 	}
 
 	return 0;
