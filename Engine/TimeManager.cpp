@@ -1,15 +1,6 @@
 module TimeManager;
 
-//import Time;
-//import Timer;
-//import AlarmManager;
-
-//import std.core;
-
-//using namespace std::literals::chrono_literals;
-
 using namespace mt::time;
-
 
 void TimeManager::Tick()
 {
