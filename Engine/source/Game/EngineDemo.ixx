@@ -19,9 +19,8 @@ export namespace mt
 		virtual bool Initialize(HINSTANCE hInstance) override;
 
 	private:
-		virtual void _OnResize() override;
 		virtual void _Update() override;
-		virtual void _PreRender() override;
+		virtual void _Draw() override;
 
 	};
 
@@ -33,11 +32,9 @@ export namespace mt
 		return true;
 	}
 
-	void EngineDemo::_OnResize() {}
-
 	void EngineDemo::_Update() {}
 
-	void EngineDemo::_PreRender() {}
+	void EngineDemo::_Draw() {}
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)

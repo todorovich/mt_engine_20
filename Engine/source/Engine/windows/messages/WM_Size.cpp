@@ -6,6 +6,7 @@ module;
 module WindowsMessages.Size;
 
 import Engine;
+import WindowManager;
 import DirectXRenderer;
 import Camera;
 import TimeManager;
@@ -17,42 +18,46 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 	auto _window_width = LOWORD(lParam);
 	auto _window_height = HIWORD(lParam);
 
-	_engine.Resize(_window_width, _window_height);
+	renderer::DirectXRenderer& renderer = *_engine.GetRenderer();
+	time::TimeManager& time_manager = *_engine.GetTimeManager();
+	WindowManager& window_manager = *_engine.GetWindowManager();
 
-	if (_engine.GetRenderer()->GetIsInitialized())
+	window_manager.resize(_window_width, _window_height);
+
+	if (renderer.GetIsInitialized())
 	{
 		if (wParam == SIZE_MINIMIZED)
 		{
-			_engine.GetTimeManager()->Pause();
-			_engine.SetIsWindowMinimized(true);
-			_engine.SetIsWindowMaximized(false);
+			time_manager.Pause();
+			window_manager.setIsWindowMinimized(true);
+			window_manager.setIsWindowMaximized(false);
 		}
 		else if (wParam == SIZE_MAXIMIZED)
 		{
-			_engine.GetTimeManager()->Continue();
-			_engine.SetIsWindowMinimized(false);
-			_engine.SetIsWindowMaximized(true);
-			_engine.Resize(_window_width, _window_height);
+			time_manager.Continue();
+			window_manager.setIsWindowMinimized(false);
+			window_manager.setIsWindowMaximized(true);
+			window_manager.resize(_window_width, _window_height);
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
 			// Restoring from minimized state?
-			if (_engine.IsWindowMinimized())
+			if (window_manager.isWindowMinimized())
 			{
-				_engine.GetTimeManager()->Continue();
-				_engine.SetIsWindowMinimized(false);
-				_engine.Resize(_window_width, _window_height);
+				time_manager.Continue();
+				window_manager.setIsWindowMinimized(false);
+				window_manager.resize(_window_width, _window_height);
 			}
 
 			// Restoring from maximized state?
-			else if (_engine.IsWindowMaximized())
+			else if (window_manager.isWindowMaximized())
 			{
-				_engine.GetTimeManager()->Continue();
-				_engine.SetIsWindowMinimized(false);
-				_engine.Resize(_window_width, _window_height);
+				time_manager.Continue();
+				window_manager.setIsWindowMinimized(false);
+				window_manager.resize(_window_width, _window_height);
 			}
 
-			else if (_engine.IsWindowResizing())
+			else if (window_manager.isWindowResizing())
 			{
 				// If user is dragging the Resize bars, we do not Resize 
 				// the buffers here because as the user continuously 
@@ -67,7 +72,7 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 			}
 			else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
 			{
-				_engine.Resize(_window_width, _window_height);
+				window_manager.resize(_window_width, _window_height);
 			}
 		}
 	}

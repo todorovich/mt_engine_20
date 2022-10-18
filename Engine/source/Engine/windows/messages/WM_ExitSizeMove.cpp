@@ -8,16 +8,19 @@ module WindowsMessages.ExitSizeMove;
 import Engine;
 import TimeManager;
 import DirectXRenderer;
+import WindowManager;
 
 using namespace mt::windows;
 
 LRESULT WM_ExitSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
-	_engine.Resize(_engine.GetRenderer()->GetWindowWidth(), _engine.GetRenderer()->GetWindowHeight());
+	_engine.GetWindowManager()->resize(
+		_engine.GetRenderer()->GetWindowWidth(), _engine.GetRenderer()->GetWindowHeight()
+	);
 	
-	_engine.GetTimeManager()->Continue();
+	_engine.GetTimeManager()->Continue(); // why?
 	
-	_engine.SetIsWindowResizing(false);
+	_engine.GetWindowManager()->setIsWindowResizing(false);
 	
 	return 0;
 }

@@ -46,12 +46,6 @@
     <ClCompile Include="source\Engine\time\AlarmManager.ixx">
       <Filter>source\Engine\Time</Filter>
     </ClCompile>
-    <ClCompile Include="source\Engine\time\Chronometer.cpp">
-      <Filter>source\Engine\Time</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\time\Chronometer.ixx">
-      <Filter>source\Engine\Time</Filter>
-    </ClCompile>
     <ClCompile Include="source\Engine\time\Time.ixx">
       <Filter>source\Engine\Time</Filter>
     </ClCompile>
@@ -282,6 +276,15 @@
     </ClCompile>
     <ClCompile Include="KeyboardKeys.ixx">
       <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowManager.ixx">
+      <Filter>source\Engine\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowManager.cpp">
+      <Filter>source\Engine\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="StopWatch.ixx">
+      <Filter>source\Engine\Time</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,39 +1,19 @@
 module TimeManager;
 
-import Time;
-import Timer;
-import AlarmManager;
-import Chronometer;
+//import Time;
+//import Timer;
+//import AlarmManager;
 
-import std.core;
+//import std.core;
 
-using namespace std::literals::chrono_literals;
+//using namespace std::literals::chrono_literals;
 
 using namespace mt::time;
 
-void TimeManager::Initialize()
-{
-	_DeleteAllChronometers();
-
-	_AddEngineChronometers();
-
-	_StartAllChronometers();
-
-	_AddEngineAlarms();
-
-	curr_tick_time = Clock::now();
-	prev_tick_time = TimePoint(0ns);
-
-	tick_delta_time_ns = 0ns;
-
-	_is_paused = false;
-}
 
 void TimeManager::Tick()
 {
 	auto now = Clock::now();
-	GetIdleChronometer().Pause(now);
-	GetTickChronometer().Continue(now);
 
 	prev_tick_time = curr_tick_time;
 
@@ -43,15 +23,7 @@ void TimeManager::Tick()
 
 	_alarm_manager.Tick(curr_tick_time, prev_tick_time, tick_delta_time_ns);
 
-	// Tick all the chronometers
-	for (auto& chronometer : _chronometers)
-	{
-		chronometer.second->Tick(curr_tick_time, prev_tick_time, tick_delta_time_ns);
-	}
-
 	now = Clock::now();
-	GetTickChronometer().Pause(now);
-	GetIdleChronometer().Continue(now);
 }
 
 void TimeManager::UpdateComplete()
@@ -61,7 +33,6 @@ void TimeManager::UpdateComplete()
 
 void TimeManager::RenderComplete()
 {
-	GetRenderChronometer().Pause();
 	_should_render = false;
 }
 
@@ -81,10 +52,10 @@ void TimeManager::Continue()
 
 		_alarm_manager.Continue(continue_time);
 
-		for (auto& pair : _chronometers)
+		for (auto& pair : _stop_watches)
 		{
-			Chronometer*& timer = pair.second;
-			timer->Continue(continue_time);
+			StopWatch*& timer = pair.second;
+			timer->continue_task(continue_time);
 		}
 	}
 
@@ -102,10 +73,10 @@ void TimeManager::Pause()
 
 		_alarm_manager.Pause(time_paused);
 
-		for (auto& pair : _chronometers)
+		for (auto& pair : _stop_watches)
 		{
-			Chronometer*& chrono = pair.second;
-			chrono->Pause(time_paused);
+			StopWatch*& chrono = pair.second;
+			chrono->pause_task(time_paused);
 		}
 	}
 
@@ -114,66 +85,15 @@ void TimeManager::Pause()
 
 void TimeManager::_DeleteAllChronometers()
 {
-	for (auto& pair : _chronometers)
+	for (auto& pair : _stop_watches)
 	{
-		Chronometer*& timer = pair.second;
+		StopWatch*& timer = pair.second;
 		delete timer;
 	}
 
-	_chronometers.clear();
+	_stop_watches.clear();
 }
 
-void TimeManager::_AddEngineChronometers()
-{
-	auto chronometer = new Chronometer(*this, "Total Up-Time", false);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Update", true, true);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-	
-	chronometer = new Chronometer(*this, "Render", true, true);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Statistics", true, true);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Windows Message", true, true);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Input", true, true);
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Tick");
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-	
-	chronometer = new Chronometer(*this, "Frame");
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "Idle");
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-	chronometer = new Chronometer(*this, "In Between Ticks");
-	_chronometers.insert(std::make_pair(chronometer->GetName(), chronometer));
-
-}
-
-void TimeManager::_StartAllChronometers()
-{
-	for (auto& pair : _chronometers)
-	{
-		Chronometer*& chronometer = pair.second;
-		chronometer->Start();
-	}
-}
-
-void TimeManager::_StopAllChronometers()
-{
-	for (auto& pair : _chronometers)
-	{
-		Chronometer*& chronometer = pair.second;
-		chronometer->Stop();
-	}
-}
 
 void TimeManager::_AddEngineAlarms()
 {
