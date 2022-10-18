@@ -14,7 +14,7 @@ LRESULT mt::windows::WM_KeyUp::execute(const HWND& hwnd, const UINT& msg, const 
 
 	_input_manager->KeyboardEvent(
 		static_cast<mt::input::KeyboardKeys>(wParam),
-		mt::input::KeyState::PRESSED
+		mt::input::KeyState::RELEASED
 	);
 
 	// An application should return zero if it processes this message.

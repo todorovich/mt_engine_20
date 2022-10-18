@@ -83,7 +83,7 @@ void InputManager::_ProcessMouseInput(MouseInputMessage& mouse_input_message)
 
 void InputManager::_ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message)
 {
-	if (keyboard_input_message.key_state == KeyState::PRESSED)
+	if (keyboard_input_message.key_state == KeyState::PRESSED || keyboard_input_message.key_state == KeyState::HELD)
 		_held_keys.insert(keyboard_input_message.key);
 	else
 		_held_keys.erase(keyboard_input_message.key);
