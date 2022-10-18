@@ -47,12 +47,13 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 #pragma warning(pop)  
 }
 
-const std::string_view mt::time::TimeManager::DefaultTimers::FRAME_TIME = "Frame Time"sv;
+const std::string_view mt::time::TimeManager::DefaultTimers::RUN_TIME= "Run Time"sv;
 const std::string_view mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME = "Windows Message Time"sv;
 const std::string_view mt::time::TimeManager::DefaultTimers::TICK_TIME = "Engine Tick Time"sv;
 const std::string_view mt::time::TimeManager::DefaultTimers::UPDATE_TIME = "Update Time"sv;
 const std::string_view mt::time::TimeManager::DefaultTimers::INPUT_TIME = "Input Time"sv;
 const std::string_view mt::time::TimeManager::DefaultTimers::RENDER_TIME = "Render Time"sv;
+const std::string_view mt::time::TimeManager::DefaultTimers::FRAME_TIME = "Frame Time"sv;
 
 using namespace mt;
 
@@ -100,41 +101,68 @@ bool Engine::Initialize(HINSTANCE instance_handle)
 
 Status Engine::Run()
 {
-	//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
+	auto run = [&]() {
 
-	// Message handler must be on same thread as the window (this thread)
-	MSG msg = { 0 };
+		GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).startTask();
 
+		//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
 
-	// TODO: windows messages (input) should be processed on a different thread than the ticks.
-	bool quit = false;
-	while (!quit)
-	{
-		auto now = time::Clock::now();
+		// Message handler must be on same thread as the window (this thread)
+		MSG msg = { 0 };
 
-		GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).doTask(
-			[&]() {
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME).doTask(
-					[&]() {
-						// If there are Window messages then process them.
-						while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-						{
-							TranslateMessage(&msg);
-							DispatchMessage(&msg);
-							if (msg.message == WM_QUIT)
-							{
-								quit = true;
-							}
-						}
-					}
+		// TODO: windows messages (input) should be processed on a different thread than the ticks.
+		bool quit = false;
+		long long last_frame_outputed = 0;
+
+		while (!quit)
+		{
+			auto now = time::Clock::now();
+
+			auto last_frame_rendered = GetRenderer()->GetFramesRendered();
+
+			if (last_frame_rendered % 144 == 0 && last_frame_outputed != last_frame_rendered)
+			{
+				last_frame_outputed = last_frame_rendered;
+
+				mt::time::Duration average = GetTimeManager()->
+					FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).getAverageTaskInterval();
+
+				OutputDebugStringW(
+					(std::to_wstring(GetRenderer()->GetFramesRendered()) + L" frame number : ").c_str()
 				);
 
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::TICK_TIME).doTask(
-					[&]() { _Tick(); } // do i need the lambda to capture this?
+				OutputDebugStringW(
+					(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
+				);
+
+				OutputDebugStringW(
+					(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
 				);
 			}
-		);
+
+			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME).doTask(
+				[&]() {
+					// If there are Window messages then process them.
+					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+					{
+						TranslateMessage(&msg);
+						DispatchMessage(&msg);
+						if (msg.message == WM_QUIT)
+						{
+							quit = true;
+						}
+					}
+				}
+			);
+
+			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::TICK_TIME).doTask(
+				[&]() { _Tick(); } // do i need the lambda to capture this?
+			);
+		};
 	};
+
+	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RUN_TIME).doTask(run);
+		
 
 	// Join the Tick thread (ensuring it has actually shut down)
 	//if (_engine_tick_thread.joinable()) _engine_tick_thread.join();
@@ -176,14 +204,14 @@ void Engine::_Tick()
 		[&]() {
 			if (GetTimeManager()->GetShouldUpdate())
 			{
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).pause_task();
+				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).pauseTask();
 
 				
 				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::INPUT_TIME).doTask(
 					[&]() { GetInputManager()->ProcessInput(); }
 				);
 
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).continue_task();
+				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).continueTask();
 				
 				_Update();
 			}
@@ -200,305 +228,12 @@ void Engine::_Tick()
 				GetRenderer()->Render();
 				GetRenderer()->IncrementFence();
 				GetTimeManager()->RenderComplete();
+
+				mt::time::StopWatch& stop_watch = GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
+
+				stop_watch.finishTask();
+				stop_watch.startTask();
 			}	
 		}
 	);
 }
-
-//void Engine::_UpdateFrameStatisticsNoTimeCheck(bool was_rendered)
-//{
-//	/*GetTimeManager().GetIdleChronometer().Pause();
-//	GetTimeManager().GetStatisticsChronometer().Continue();
-//
-//	static const float ns_to_ms = 1e-6f;
-//
-//	auto& game_chrono = Engine::GetTimeManager().GetTotalUpTimeChronometer();
-//	auto& update_chrono = Engine::GetTimeManager().GetUpdateChronometer();
-//	auto& render_chrono = Engine::GetTimeManager().GetRenderChronometer();
-//	auto& frame_chrono = Engine::GetTimeManager().GetFrameChronometer();
-//	auto& idle_chrono = Engine::GetTimeManager().GetIdleChronometer();
-//	auto& stats_chrono = Engine::GetTimeManager().GetStatisticsChronometer();
-//	auto& wm_chrono = Engine::GetTimeManager().GetWindowsMessageChronometer();
-//	auto& input_chrono = Engine::GetTimeManager().GetInputChronometer();
-//	auto& tick_chrono = Engine::GetTimeManager().GetTickChronometer();
-//	auto& in_between_chrono = Engine::GetTimeManager().GetInBetweenTicksChronometer();
-//
-//	float ns_to_s = 1e-9f;
-//
-//	const auto emsp = "&emsp;";
-//	const auto red_span = "<span style=\"color:Red\">";
-//	const auto span_end = "</span>";
-//
-//	io::Indenter indenter;
-//
-//	archiver << '\n' << "<table id=\"outer\">" << '\n';
-//
-//	indenter++;
-//	archiver << indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver << indenter << "<td style=\"vertical-align:top\">" << '\n';
-//
-//	indenter++;
-//	archiver << indenter << "<table class=\"mt\">" << '\n';
-//
-//	indenter++;
-//	archiver << indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<th></th>" << '\n'
-//		<< indenter << "<th>Duration Since Started</th>" << '\n'
-//		<< indenter << "<th>Average Duration Active</th>" << '\n'
-//		<< indenter << "<th>Average Duration Paused</th>" << '\n'
-//		<< indenter << "<th>Average Total Duration</th>" << '\n'
-//		<< indenter << "<th>Last Active Duration</th>" << '\n'
-//		<< indenter << "<th>Last Paused Duration</th>" << '\n'
-//		<< indenter << "<th>Last Total Duration</th>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << game_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << game_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << update_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << update_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << render_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << render_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << frame_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << frame_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << idle_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << idle_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << stats_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << stats_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << wm_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << wm_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << input_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << input_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>" << tick_chrono.GetName() << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetDurationSinceStarted().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetAverageActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetAveragePausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetAverageTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetLastActiveDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetLastPausedDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << tick_chrono.GetLastTotalDuration().count() * ns_to_ms << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</tr>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</table>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</td>" << '\n'
-//		<< indenter << "<td style=\"vertical-align:top\">" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<table class=\"mt\">" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<th></th>" << '\n'
-//		<< indenter << "<th>Update</th>" << '\n'
-//		<< indenter << "<th>Render</th>" << '\n'
-//		<< indenter << "<th>Frame</th>" << '\n'
-//		<< indenter << "<th>Idle</th>" << '\n'
-//		<< indenter << "<th>Statistics</th>" << '\n'
-//		<< indenter << "<th>Windows Messages</th>" << '\n'
-//		<< indenter << "<th>Input</th>" << '\n'
-//		<< indenter << "<th>Tick</th>" << '\n'
-//		<< indenter << "<th>In-Between Ticks</th>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>Average</td>" << '\n'
-//		<< indenter << "<td>" << (update_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n';
-//
-//	if (was_rendered)
-//	{
-//		archiver << indenter << "<td>" << (render_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n';
-//	}
-//	else
-//	{
-//		archiver << indenter << "<td> --<i>ms</i>" << "</td>" << '\n';
-//	}
-//
-//
-//	archiver
-//		<< indenter << "<td>" << (frame_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (idle_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (stats_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (wm_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (input_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (tick_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (in_between_chrono.GetAverageActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver
-//		<< indenter << "</tr>" << '\n'
-//		<< indenter << "<tr>" << '\n';
-//
-//	indenter++;
-//	archiver
-//		<< indenter << "<td>Last Sample</td>" << '\n'
-//		<< indenter << "<td>" << (update_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (render_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (frame_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (idle_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (stats_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (wm_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (input_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (tick_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n'
-//		<< indenter << "<td>" << (in_between_chrono.GetLastActiveDuration().count() * ns_to_ms) << "<i>ms</i>" << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</tr>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</table>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</td>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</tr>" << '\n';
-//
-//	indenter--;
-//	archiver << indenter << "</table>" << '\n';
-//
-//	archiver.flush();
-//
-//	_time_since_stat_update = 0ns;
-//
-//	GetTimeManager().GetStatisticsChronometer().Pause();
-//	GetTimeManager().GetIdleChronometer().Continue();*/
-//}

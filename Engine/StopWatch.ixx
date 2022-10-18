@@ -50,18 +50,16 @@ export namespace mt::time
             , _created(created)
             , _task_finished(created)
             , _task_started(created)
-        {
-            _total = Duration();
-            _total_active = Duration();
-            _total_idle = Duration();
-
-            _task_started = TimePoint::min();
-            _task_finished = TimePoint::min();
-        }
+            , _task_paused(TimePoint::min())
+            , _paused(0ns)
+            , _total(0ns)
+            , _total_active(0ns)
+            , _total_idle(0ns)
+        {}
 
         void reset() {}
 
-        void start_task(TimePoint start_time = Clock::now())
+        void startTask(TimePoint start_time = Clock::now())
         {
             if (!_isActive)
             {
@@ -72,11 +70,26 @@ export namespace mt::time
             }
         }
 
-        void pause_task(TimePoint start_time = Clock::now()) {};
+        void pauseTask(TimePoint pause_time = Clock::now()) 
+        {  
+            if (_task_paused == TimePoint::min())
+            {
+                _task_paused = pause_time;
+                _total = _task_paused - _task_started;
+            }
+        }
 
-        void continue_task(TimePoint start_time = Clock::now()) {};
+        void continueTask(TimePoint start_time = Clock::now()) 
+        { 
+            if (_task_paused != TimePoint::min())
+            {
+                _paused += start_time - _task_paused;
+                _total = _task_paused - _task_started;
+                _task_paused = TimePoint::min();
+            }
+        }
 
-        void finish_task(TimePoint finish_time = Clock::now())
+        void finishTask(TimePoint finish_time = Clock::now())
         {
             if (_isActive)
             {
@@ -89,9 +102,11 @@ export namespace mt::time
                 // Subtract out the previous sample from the average
                 _average_task_interval -= _task_intervals[index] / _number_of_samples;
 
-                _task_intervals[index] = _task_finished - _task_started;
+                _task_intervals[index] = _task_finished - _task_started - _paused;
                 
                 _total_active += _task_intervals[index];
+
+                _total_idle += _paused;
 
                 // Add the current sample to the average
                 _average_task_interval += _task_intervals[index] / _number_of_samples;
@@ -102,14 +117,15 @@ export namespace mt::time
 
         void doTask(std::function<void(void)> doTask)
         {
-            start_task();
+            startTask();
             doTask();
-            finish_task();
+            finishTask();
         }
 
-        Duration getActive() { return _total_active; }
-        Duration getPaused() { return _total_idle; }
-        Duration getAverageTaskInterval() { return _average_task_interval; }
-        std::vector<Duration> get() { return _task_intervals; }
+        Duration getActive() const { return _total_active; }
+        Duration getPaused() const { return _total_idle; }
+        Duration getAverageTaskInterval() const { return _average_task_interval; }
+
+        std::vector<Duration> get() const { return _task_intervals; }
     };
 }

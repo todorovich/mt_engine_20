@@ -17,8 +17,8 @@ import DirectXUtility;
 import std.core;
 import std.filesystem;
 
-using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
+using namespace mt::renderer;
 
 void DirectXRenderer::Render()
 {
@@ -50,6 +50,8 @@ void DirectXRenderer::Render()
 	// the note above I imagine a real fix is incoming.
 
 	_is_rendering = false;
+
+	_frames_rendered++;
 }
 
 bool DirectXRenderer::InitializeDirect3d(HWND main_window_handle)

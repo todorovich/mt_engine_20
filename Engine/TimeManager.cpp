@@ -46,7 +46,7 @@ void TimeManager::Continue()
 		for (auto& pair : _stop_watches)
 		{
 			StopWatch*& timer = pair.second;
-			timer->continue_task(continue_time);
+			timer->continueTask(continue_time);
 		}
 	}
 
@@ -67,7 +67,7 @@ void TimeManager::Pause()
 		for (auto& pair : _stop_watches)
 		{
 			StopWatch*& chrono = pair.second;
-			chrono->pause_task(time_paused);
+			chrono->pauseTask(time_paused);
 		}
 	}
 

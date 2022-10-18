@@ -288,6 +288,8 @@ export namespace mt::renderer
         DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+        long long _frames_rendered = 0;
+
         int current_back_buffer = 0;
         int _window_width = 0;
         int _window_height = 0;
@@ -333,6 +335,8 @@ export namespace mt::renderer
         int GetWindowWidth() const { return _window_width; }
 
         int GetWindowHeight() const { return _window_height; }
+
+        long long GetFramesRendered() const { return _frames_rendered; }
 
         // Mutators
         bool InitializeDirect3d(HWND main_window_handle);

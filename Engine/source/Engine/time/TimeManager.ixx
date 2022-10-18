@@ -48,12 +48,13 @@ export namespace mt::time
 		friend Engine;
 
 		static struct DefaultTimers {
+			static const std::string_view RUN_TIME; 
 			static const std::string_view WINDOWS_MESSAGE_TIME;
-			static const std::string_view FRAME_TIME;
 			static const std::string_view TICK_TIME;
 			static const std::string_view UPDATE_TIME;
 			static const std::string_view INPUT_TIME;
 			static const std::string_view RENDER_TIME;
+			static const std::string_view FRAME_TIME;
 		};
 
 		TimeManager()
@@ -63,12 +64,13 @@ export namespace mt::time
 			, _command_list_interval (0ns)
 			, _is_paused(true)
 			, _stop_watches{ 
-				std::make_pair(DefaultTimers::FRAME_TIME, new StopWatch(*this, DefaultTimers::FRAME_TIME)),
+				std::make_pair(DefaultTimers::RUN_TIME, new StopWatch(*this, DefaultTimers::RUN_TIME)),
 				std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME, new StopWatch(*this, DefaultTimers::WINDOWS_MESSAGE_TIME)),
 				std::make_pair(DefaultTimers::TICK_TIME, new StopWatch(*this, DefaultTimers::TICK_TIME)),
 				std::make_pair(DefaultTimers::UPDATE_TIME, new StopWatch(*this, DefaultTimers::UPDATE_TIME)),
 				std::make_pair(DefaultTimers::INPUT_TIME, new StopWatch(*this, DefaultTimers::INPUT_TIME)),
 				std::make_pair(DefaultTimers::RENDER_TIME, new StopWatch(*this, DefaultTimers::RENDER_TIME)),
+				std::make_pair(DefaultTimers::FRAME_TIME, new StopWatch(*this, DefaultTimers::FRAME_TIME))
 			}
 		{
 			_AddEngineAlarms();
