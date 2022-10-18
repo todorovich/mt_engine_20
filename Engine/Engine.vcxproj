@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="KeyboardInputMessage.ixx" />
-    <ClCompile Include="KeyboardKeys.ixx" />
-    <ClCompile Include="MouseInputMessage.ixx" />
+    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx" />
+    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx" />
+    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx" />
     <ClCompile Include="source\Engine\command\Command.cpp" />
     <ClCompile Include="source\Engine\command\Command.ixx" />
     <ClCompile Include="source\Engine\command\CommandManager.ixx" />
@@ -64,6 +64,8 @@
     <ClCompile Include="source\Engine\windows\messages\WM_GetMinMaxInfo.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Input.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Input.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_KeyUp.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_KeyUp.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_LeftMouseButtonDown.cpp" />
@@ -110,10 +112,10 @@
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.cpp" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />
     <ClCompile Include="source\Game\EngineDemo.ixx" />
-    <ClCompile Include="StopWatch.ixx" />
-    <ClCompile Include="TimeManager.cpp" />
-    <ClCompile Include="WindowManager.cpp" />
-    <ClCompile Include="WindowManager.ixx" />
+    <ClCompile Include="source\Engine\time\StopWatch.ixx" />
+    <ClCompile Include="source\Engine\time\TimeManager.cpp" />
+    <ClCompile Include="source\Engine\windows\WindowManager.cpp" />
+    <ClCompile Include="source\Engine\windows\WindowManager.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Engine\renderer\d3dx12.h" />

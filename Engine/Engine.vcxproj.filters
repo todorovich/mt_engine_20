@@ -265,26 +265,32 @@
     <ClCompile Include="source\Engine\Status.ixx">
       <Filter>source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="TimeManager.cpp">
+    <ClCompile Include="source\Engine\time\TimeManager.cpp">
       <Filter>source\Engine\Time</Filter>
     </ClCompile>
-    <ClCompile Include="MouseInputMessage.ixx">
+    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx">
       <Filter>source\Engine\Input</Filter>
     </ClCompile>
-    <ClCompile Include="KeyboardInputMessage.ixx">
+    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx">
       <Filter>source\Engine\Input</Filter>
     </ClCompile>
-    <ClCompile Include="KeyboardKeys.ixx">
+    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx">
       <Filter>source\Engine\Input</Filter>
     </ClCompile>
-    <ClCompile Include="WindowManager.ixx">
+    <ClCompile Include="source\Engine\windows\WindowManager.ixx">
       <Filter>source\Engine\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="WindowManager.cpp">
+    <ClCompile Include="source\Engine\windows\WindowManager.cpp">
       <Filter>source\Engine\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="StopWatch.ixx">
+    <ClCompile Include="source\Engine\time\StopWatch.ixx">
       <Filter>source\Engine\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.cpp">
+      <Filter>source\Engine\Windows\Windows Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.ixx">
+      <Filter>source\Engine\Windows\Windows Messages</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

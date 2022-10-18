@@ -15,6 +15,7 @@ import WindowsMessages.ExitSizeMove;
 import WindowsMessages.GetIcon;
 import WindowsMessages.GetMinMaxInfo;
 import WindowsMessages.Input;
+import WindowsMessages.KeyDown;
 import WindowsMessages.KeyUp;
 import WindowsMessages.LeftMouseButtonDown;
 import WindowsMessages.LeftMouseButtonUp;
@@ -68,6 +69,7 @@ void WindowsMessageManager::Initialize()
 	_message_handler_map.insert(std::make_pair(WM_GETICON, new WM_GetIcon()));
 	_message_handler_map.insert(std::make_pair(WM_GETMINMAXINFO, new WM_GetMinMaxInfo()));
 	_message_handler_map.insert(std::make_pair(WM_INPUT, new WM_Input()));
+	_message_handler_map.insert(std::make_pair(WM_KEYDOWN, new WM_KeyDown(_engine.GetInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_KEYUP, new WM_KeyUp(_engine.GetInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_LBUTTONDOWN, new WM_LeftMouseButtonDown(_engine.GetInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_LBUTTONUP, new WM_LeftMouseButtonUp(_engine.GetInputManager())));
