@@ -12,7 +12,7 @@ LRESULT mt::windows::WM_Activate::execute(const HWND& hwnd, const UINT& msg, con
 {
 	if (LOWORD(wParam) == WA_INACTIVE)
 	{
-		_input_manager->KeyboardEvent(
+		_input_manager->keyboardEvent(
 			mt::input::KeyboardKeys::NO_KEY,
 			mt::input::KeyState::NO_STATE
 		);

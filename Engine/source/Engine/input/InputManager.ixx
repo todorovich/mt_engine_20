@@ -28,6 +28,10 @@ export namespace mt::input
 
         mt::Engine& _engine;
 
+        void _processMouseInput(MouseInputMessage& mouse_input_message);
+
+        void _processKeyboardInput(KeyboardInputMessage& keyboard_input_message);
+
     public:
         InputManager(mt::Engine& engine)
             : _engine(engine)
@@ -36,17 +40,17 @@ export namespace mt::input
         ~InputManager() = default;
 
         InputManager(const InputManager &other) = delete;
+        
+        InputManager(InputManager&& other) = default;
 
-        InputManager &operator=(const InputManager &other) = delete;
+        InputManager& operator=(const InputManager &other) = delete;
 
-        void ProcessInput(); // friend engine, make protected?
+        InputManager& operator=(InputManager&& other) = default;
 
-        void _ProcessMouseInput(MouseInputMessage& mouse_input_message);
+        void processInput(); // friend engine, make protected?
 
-        void _ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message);
+        void keyboardEvent(KeyboardKeys key, KeyState key_state);
 
-        void KeyboardEvent(KeyboardKeys key, KeyState key_state);
-
-        void MouseEvent(__int32 x, __int32 y, bool button1, bool button2, bool button3, bool button4, bool button5);
+        void mouseEvent(__int32 x, __int32 y, bool button1, bool button2, bool button3, bool button4, bool button5);
     };
 }

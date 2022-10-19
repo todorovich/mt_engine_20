@@ -13,7 +13,7 @@ import TimeManager;
 
 using namespace mt::input;
 
-void InputManager::ProcessInput()
+void InputManager::processInput()
 {
 	//v.index(); // which one are we
 	auto size = _input_queue.size();
@@ -26,11 +26,11 @@ void InputManager::ProcessInput()
 		int index = input_message_variant->index();
 		if (index)
 		{
-			_ProcessKeyboardInput(std::get<KeyboardInputMessage>(*input_message_variant));
+			_processKeyboardInput(std::get<KeyboardInputMessage>(*input_message_variant));
 		}
 		else 
 		{
-			_ProcessMouseInput(std::get<MouseInputMessage>(*input_message_variant));
+			_processMouseInput(std::get<MouseInputMessage>(*input_message_variant));
 		}
 
 		_message_pool.ReleaseMemory(input_message_variant);
@@ -38,7 +38,7 @@ void InputManager::ProcessInput()
 }
 
 // TODO 
-void InputManager::_ProcessMouseInput(MouseInputMessage& mouse_input_message)
+void InputManager::_processMouseInput(MouseInputMessage& mouse_input_message)
 {
 	if (mouse_input_message.left_button)
 		_held_buttons.insert(MouseButtons::LEFT);
@@ -82,7 +82,7 @@ void InputManager::_ProcessMouseInput(MouseInputMessage& mouse_input_message)
 	_mouse_position.y = mouse_input_message.y;
 }
 
-void InputManager::_ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message)
+void InputManager::_processKeyboardInput(KeyboardInputMessage& keyboard_input_message)
 {
 	switch (keyboard_input_message.key_state)
 	{
@@ -111,14 +111,14 @@ void InputManager::_ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_me
 	}
 }
 
-void InputManager::KeyboardEvent(KeyboardKeys key, KeyState key_state)
+void InputManager::keyboardEvent(KeyboardKeys key, KeyState key_state)
 {
 	auto ptr = _message_pool.GetMemory();
 	ptr->emplace<KeyboardInputMessage>(this, key, key_state);
 	_input_queue.push(ptr);
 }
 
-void InputManager::MouseEvent(__int32 x, __int32 y, bool left_button, bool right_button, bool middle_button, bool button_4, bool button_5)
+void InputManager::mouseEvent(__int32 x, __int32 y, bool left_button, bool right_button, bool middle_button, bool button_4, bool button_5)
 {
 	auto ptr = _message_pool.GetMemory();
 	ptr->emplace<MouseInputMessage>(this, x, y, left_button, right_button, middle_button, button_4, button_5);

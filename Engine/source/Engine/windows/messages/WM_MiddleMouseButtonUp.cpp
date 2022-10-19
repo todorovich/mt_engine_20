@@ -13,7 +13,7 @@ LRESULT mt::windows::WM_MiddleMouseButtonUp::execute(const HWND & hwnd, const UI
 {
 	//MK_SHIFT and MK_CONTROL exist
 
-	_input_manager->MouseEvent(
+	_input_manager->mouseEvent(
 		GET_X_LPARAM(lParam),
 		GET_Y_LPARAM(lParam),
 		wParam & MK_LBUTTON,

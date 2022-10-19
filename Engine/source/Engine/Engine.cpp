@@ -212,7 +212,7 @@ void Engine::_Tick()
 
 				
 				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::INPUT_TIME).doTask(
-					[&]() { GetInputManager()->ProcessInput(); }
+					[&]() { GetInputManager()->processInput(); }
 				);
 
 				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).continueTask();

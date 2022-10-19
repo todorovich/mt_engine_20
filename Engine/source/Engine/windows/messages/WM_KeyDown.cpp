@@ -14,7 +14,7 @@ LRESULT mt::windows::WM_KeyDown::execute(const HWND& hwnd, const UINT& msg, cons
 
 	bool repeated = lParam & key_held_mask;
 
-	_input_manager->KeyboardEvent(
+	_input_manager->keyboardEvent(
 		static_cast<mt::input::KeyboardKeys>(wParam),
 		repeated ? mt::input::KeyState::HELD : mt::input::KeyState::PRESSED
 	);

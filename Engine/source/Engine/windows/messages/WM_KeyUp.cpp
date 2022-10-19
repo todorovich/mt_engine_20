@@ -12,7 +12,7 @@ LRESULT mt::windows::WM_KeyUp::execute(const HWND& hwnd, const UINT& msg, const 
 {
 	//OutputDebugStringW(L"WM_KEY_UP_Handler\n");
 
-	_input_manager->KeyboardEvent(
+	_input_manager->keyboardEvent(
 		static_cast<mt::input::KeyboardKeys>(wParam),
 		mt::input::KeyState::RELEASED
 	);
