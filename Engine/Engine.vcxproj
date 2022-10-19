@@ -33,6 +33,7 @@
     <ClCompile Include="source\Engine\logging\LogManager.ixx" />
     <ClCompile Include="source\Engine\MathHelper.ixx" />
     <ClCompile Include="source\Engine\ObjectPool.ixx" />
+    <ClCompile Include="source\Engine\renderer\Camera.cpp" />
     <ClCompile Include="source\Engine\renderer\Camera.ixx" />
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.cpp" />
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.ixx" />

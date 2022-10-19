@@ -74,8 +74,8 @@ void InputManager::_processMouseInput(MouseInputMessage& mouse_input_message)
 		float dx = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.x - _mouse_position.x));
 		float dy = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.y - _mouse_position.y));
 	
-		camera.Pitch(dy);
-		camera.RotateY(dx);
+		camera.pitch(dy);
+		camera.rotateY(dx);
 	}
 	
 	_mouse_position.x = mouse_input_message.x;

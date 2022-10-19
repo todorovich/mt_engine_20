@@ -892,7 +892,7 @@ void DirectXRenderer::Resize(int client_width, int client_height)
 			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
 
 			// The window resized, so update the aspect ratio and recompute the projection matrix.
-			GetCurrentCamera().SetLens(0.25f * MathHelper::Pi, GetWindowAspectRatio(), 1.0f, 1000.0f);
+			GetCurrentCamera().setLens(0.25f * MathHelper::Pi, GetWindowAspectRatio(), 1.0f, 1000.0f);
 			//XMStoreFloat4x4(&mProj, P);
 		}
 	}
@@ -912,9 +912,9 @@ void DirectXRenderer::Set4xMsaaState(bool value)
 
 void DirectXRenderer::Update()
 {
-	camera.UpdateViewMatrix();
+	camera.updateViewMatrix();
 
-	DirectX::XMMATRIX worldViewProj = camera.GetView() * camera.GetProj();
+	DirectX::XMMATRIX worldViewProj = camera.getViewMatrix() * camera.getProjectionMatrix();
 
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants objConstants;

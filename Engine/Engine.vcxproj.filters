@@ -298,6 +298,7 @@
     <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
+    <ClCompile Include="source\Engine\renderer\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
