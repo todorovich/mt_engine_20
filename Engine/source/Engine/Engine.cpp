@@ -114,13 +114,13 @@ Status Engine::Run()
 		bool quit = false;
 		long long last_frame_outputed = 0;
 
-		while (!quit)
+		while (true)
 		{
 			auto now = time::Clock::now();
 
 			auto last_frame_rendered = GetRenderer()->GetFramesRendered();
 
-			if (last_frame_rendered % 144 == 0 && last_frame_outputed != last_frame_rendered)
+			if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
 			{
 				last_frame_outputed = last_frame_rendered;
 
@@ -145,15 +145,19 @@ Status Engine::Run()
 					// If there are Window messages then process them.
 					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 					{
+						//VK_ACCEPT
 						TranslateMessage(&msg);
 						DispatchMessage(&msg);
 						if (msg.message == WM_QUIT)
 						{
 							quit = true;
+							break;
 						}
 					}
 				}
 			);
+
+			if (quit) break;
 
 			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::TICK_TIME).doTask(
 				[&]() { _Tick(); } // do i need the lambda to capture this?

@@ -35,6 +35,9 @@ import WindowsMessages.RightMouseButtonUp;
 import WindowsMessages.SetText;
 import WindowsMessages.Size;
 import WindowsMessages.Sizing;
+import WindowsMessages.SystemCommand;
+import WindowsMessages.SystemKeyDown;
+import WindowsMessages.SystemKeyUp;
 import WindowsMessages.Timer;
 //import WindowsMessages.WindowPositionChanging;
 
@@ -59,7 +62,7 @@ mt::windows::WindowsMessageManager::~WindowsMessageManager()
 void WindowsMessageManager::Initialize()
 {
 	// Add all the message handlers to the message handler map
-	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, new WM_Activate(_engine.GetTimeManager())));
+	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, new WM_Activate(_engine.GetTimeManager(), _engine.GetInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_CAPTURECHANGED, new WM_CaptureChanged()));
 	_message_handler_map.insert(std::make_pair(WM_CLOSE, new WM_Close(_engine)));
 	_message_handler_map.insert(std::make_pair(WM_DESTROY, new WM_Destroy()));
@@ -89,6 +92,9 @@ void WindowsMessageManager::Initialize()
 	_message_handler_map.insert(std::make_pair(WM_SETTEXT, new WM_SetText()));
 	_message_handler_map.insert(std::make_pair(WM_SIZE, new WM_Size(_engine)));
 	_message_handler_map.insert(std::make_pair(WM_SIZING, new WM_Sizing()));
+	_message_handler_map.insert(std::make_pair(WM_SYSCOMMAND, new WM_SystemCommand()));
+	_message_handler_map.insert(std::make_pair(WM_SYSKEYDOWN, new WM_SystemKeyDown(_engine.GetInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_SYSKEYUP, new WM_SystemKeyUp(_engine.GetInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_TIMER, new WM_Timer()));
 	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
 }

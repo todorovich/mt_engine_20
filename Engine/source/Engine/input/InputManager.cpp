@@ -37,6 +37,7 @@ void InputManager::ProcessInput()
 	}
 }
 
+// TODO 
 void InputManager::_ProcessMouseInput(MouseInputMessage& mouse_input_message)
 {
 	if (mouse_input_message.left_button)
@@ -83,11 +84,16 @@ void InputManager::_ProcessMouseInput(MouseInputMessage& mouse_input_message)
 
 void InputManager::_ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message)
 {
-	if (keyboard_input_message.key_state == KeyState::PRESSED || keyboard_input_message.key_state == KeyState::HELD)
-		_held_keys.insert(keyboard_input_message.key);
-	else
-		_held_keys.erase(keyboard_input_message.key);
+	switch (keyboard_input_message.key_state)
+	{
+		case KeyState::PRESSED: [[fallthrough]];
+		[[likely]] case KeyState::HELD: _held_keys.insert(keyboard_input_message.key); break;
+		case KeyState::RELEASED: _held_keys.erase(keyboard_input_message.key); break;
+		[[unlikely]] case KeyState::NO_STATE: _held_keys.clear(); break;
+	}
 
+	OutputDebugStringW((std::wstring(to_wstring(keyboard_input_message.key)) + L" " + std::wstring(to_wstring(keyboard_input_message.key_state)) + L'\n').c_str());
+	
 	if (keyboard_input_message.key == KeyboardKeys::ESCAPE)
 	{
 		PostMessage(_engine.GetWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);

@@ -292,6 +292,12 @@
     <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.ixx">
       <Filter>source\Engine\Windows\Windows Messages</Filter>
     </ClCompile>
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

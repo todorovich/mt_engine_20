@@ -104,6 +104,10 @@
     <ClCompile Include="source\Engine\windows\messages\WM_Size.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Sizing.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Sizing.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Timer.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Timer.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_WindowPositionChanging.cpp" />
@@ -111,6 +115,8 @@
     <ClCompile Include="source\Engine\windows\WindowsMessage.ixx" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.cpp" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.ixx" />
     <ClCompile Include="source\Game\EngineDemo.ixx" />
     <ClCompile Include="source\Engine\time\StopWatch.ixx" />
     <ClCompile Include="source\Engine\time\TimeManager.cpp" />
