@@ -28,14 +28,14 @@ export namespace mt::input
 		NEXT = 0x22, // gp dn
 		END = 0x23,
 		HOME = 0x24,
-		LEFT = 0x25, // arrow
-		UP = 0x26, // arrow
-		RIGHT = 0x27, // arrow
-		DOWN = 0x28, // arrow
+		LEFT_ARROW = 0x25, // arrow
+		UP_ARROW = 0x26, // arrow
+		RIGHT_ARROW = 0x27, // arrow
+		DOWN_ARROW = 0x28, // arrow
 		SELECT = 0x29, // Select key?
 		PRINT = 0x2A,
 		EXECUTE = 0x2B,
-		SNAPSHOT = 0x2C, // printscreen
+		PRINT_SCREEN = 0x2C, // printscreen
 		INSERT = 0x2D,
 		DEL = 0x2E,
 		HELP = 0x2F, // help key?
@@ -168,14 +168,14 @@ export namespace mt::input
 			case KeyboardKeys::NEXT: return L"PG DN"sv;
 			case KeyboardKeys::END: return L"END"sv;
 			case KeyboardKeys::HOME: return L"HOME"sv;
-			case KeyboardKeys::LEFT: return L"LEFT ARROW"sv;
-			case KeyboardKeys::UP: return L"UP ARROW"sv;
-			case KeyboardKeys::RIGHT: return L"RIGHT ARROW"sv;
-			case KeyboardKeys::DOWN: return L"DOWN ARROW"sv;
+			case KeyboardKeys::LEFT_ARROW: return L"LEFT ARROW"sv;
+			case KeyboardKeys::UP_ARROW: return L"UP ARROW"sv;
+			case KeyboardKeys::RIGHT_ARROW: return L"RIGHT ARROW"sv;
+			case KeyboardKeys::DOWN_ARROW: return L"DOWN ARROW"sv;
 			case KeyboardKeys::SELECT: return L"SELECT"sv;
 			case KeyboardKeys::PRINT: return L"PRINT"sv;
 			case KeyboardKeys::EXECUTE: return L"EXECUTE"sv;
-			case KeyboardKeys::SNAPSHOT: return L"SNAPSHOT"sv;
+			case KeyboardKeys::PRINT_SCREEN: return L"PRINT_SCREEN"sv;
 			case KeyboardKeys::INSERT: return L"INSERT"sv;
 			case KeyboardKeys::DEL: return L"DEL"sv;
 			case KeyboardKeys::HELP: return L"HELP"sv;
