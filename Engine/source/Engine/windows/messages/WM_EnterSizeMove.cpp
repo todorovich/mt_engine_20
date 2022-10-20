@@ -13,9 +13,9 @@ using namespace mt::windows;
 
 LRESULT WM_EnterSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
-	_engine.GetWindowManager()->setIsWindowResizing(true);
+	_engine.getWindowManager()->setIsWindowResizing(true);
 
-	_engine.GetTimeManager()->pause();
+	_engine.getTimeManager()->pause();
 
 	return 0;
 }

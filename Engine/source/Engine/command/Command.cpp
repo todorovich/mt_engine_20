@@ -15,7 +15,7 @@ mt::command::Command::Command(CommandManager& command_manager, EXECUTION_TYPE me
 	{
 	case EXECUTION_TYPE::IMMEDIATE:
 		execute();
-		Destroy();
+		destroy();
 		break;
 	case EXECUTION_TYPE::ASYNCHRONOURS:
 		add_to_command_queue();

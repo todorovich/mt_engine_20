@@ -12,17 +12,19 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
 	// before CreateWindow returns, and thus before mhMainWnd is valid.
-	return mt::Engine::_instance->windows_message_manager_->handle_message(hwnd, msg, wParam, lParam);
+	return mt::Engine::_instance->_windows_message_manager->handle_message(hwnd, msg, wParam, lParam);
 }
 
 bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 {
+	_instance_handle = instance_handle;
+
 	WNDCLASS wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = ::MainWndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hInstance = instance_handle;
+	wc.hInstance = _instance_handle;
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -36,14 +38,14 @@ bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 	}
 
 	// Compute window rectangle dimensions based on requested client area dimensions.
-	RECT rectangle = { 0, 0, _engine.GetRenderer()->getWindowWidth(), _engine.GetRenderer()->getWindowHeight() };
+	RECT rectangle = { 0, 0, _engine.getRenderer()->getWindowWidth(), _engine.getRenderer()->getWindowHeight() };
 	AdjustWindowRect(&rectangle, WS_OVERLAPPEDWINDOW, false);
 	int width = rectangle.right - rectangle.left;
 	int height = rectangle.bottom - rectangle.top;
 
 	_main_window_handle = CreateWindow(
 		L"MainWnd", _main_window_caption.c_str(), WS_MAXIMIZE, 0, 0, 
-		width, height, nullptr, nullptr, instance_handle, 0
+		width, height, nullptr, nullptr, _instance_handle, 0
 	);
 
 	if (!_main_window_handle)
@@ -69,9 +71,9 @@ void WindowManager::resize(int width, int height)
 	setIsWindowResizing(true);
 
 	// wait until rendering is finished.
-	while (_engine.GetRenderer()->getIsRendering()) {};
+	while (_engine.getRenderer()->getIsRendering()) {};
 
-	_engine.GetRenderer()->resize(width, height);
+	_engine.getRenderer()->resize(width, height);
 	
 	// TODO: Callbacks?
 

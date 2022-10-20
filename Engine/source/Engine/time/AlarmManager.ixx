@@ -61,7 +61,7 @@ export namespace mt::time
 					}
 					else
 					{
-						_alarm_pool.ReleaseMemory(alarm);
+						_alarm_pool.releaseMemory(alarm);
 						_alarms_and_timers.erase(alarm);
 					}
 
@@ -90,7 +90,7 @@ export namespace mt::time
 
 		void addAlarm(TimePoint time_point, std::function<void()> function, bool repeats = false, Duration repeat_interval = 0ns)
 		{
-			Alarm* alarm = new (_alarm_pool.GetMemory()) Alarm(time_point, function, repeats, repeat_interval);
+			Alarm* alarm = new (_alarm_pool.getMemory()) Alarm(time_point, function, repeats, repeat_interval);
 
 			_alarm_queue.push(alarm);
 			_alarms_and_timers.insert(alarm);

@@ -4,7 +4,7 @@ module;
 
 #include <windows.h>
 
-export module WindowsMessages.Destroy;
+export module WindowsMessages.destroy;
 
 export import WindowsMessage;
 

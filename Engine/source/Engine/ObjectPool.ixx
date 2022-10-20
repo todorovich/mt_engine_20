@@ -8,9 +8,9 @@ export namespace mt
 	class ObjectPool
 	{
 	private:
-		std::vector<T>			_data;
+		std::vector<T>													_data;
 		std::priority_queue<int, std::vector<int>, std::greater<int>> 	_unused_indicies;
-		std::set<int>				_used_indicies;
+		std::set<int>													_used_indicies;
 
 	public:
 
@@ -33,7 +33,7 @@ export namespace mt
 		
 		ObjectPool operator=(ObjectPool&& other) = delete;
 
-		T* GetMemory()
+		T* getMemory()
 		{
 			if (_unused_indicies.size() == 0)
 			{
@@ -51,7 +51,7 @@ export namespace mt
 
 		}
 
-		void ReleaseMemory(T* returned_memory)
+		void releaseMemory(T* returned_memory)
 		{
 			// Check if we actually own this object.
 			int index = static_cast<int>(returned_memory - &_data[0]);

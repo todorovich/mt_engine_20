@@ -23,7 +23,7 @@ export namespace mt::command
 
 		virtual void execute() {};
 
-		void Destroy()
+		void destroy()
 		{
 			delete this;
 		};

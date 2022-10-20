@@ -29,13 +29,13 @@ export namespace mt
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-		const std::unique_ptr<command::CommandManager>			command_manager_;
-		const std::unique_ptr<logging::LogManager>				log_manager_;
-		const std::unique_ptr<input::InputManager>				input_manager_;
-		const std::unique_ptr<time::TimeManager>				time_manager_;
-		const std::unique_ptr<renderer::DirectXRenderer>		direct_x_renderer_;
-		const std::unique_ptr<windows::WindowManager>			window_manager_;
-		const std::unique_ptr<windows::WindowsMessageManager>	windows_message_manager_;
+		const std::unique_ptr<command::CommandManager>			_command_manager;
+		const std::unique_ptr<logging::LogManager>				_log_manager;
+		const std::unique_ptr<input::InputManager>				_input_manager;
+		const std::unique_ptr<time::TimeManager>				_time_manager;
+		const std::unique_ptr<renderer::DirectXRenderer>		_direct_x_renderer;
+		const std::unique_ptr<windows::WindowManager>			_window_manager;
+		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 
 		time::Duration _time_since_stat_update = time::Duration(0);
 		
@@ -47,11 +47,11 @@ export namespace mt
 		std::thread _engine_tick_thread;
 
 		// CALLBACKS
-		virtual void _Update() {};
-		virtual void _Draw() {};
+		virtual void _update() {};
+		virtual void _draw() {};
 
-		void _Tick();
-		void _UpdateFrameStatisticsNoTimeCheck(bool was_rendered);
+		void _tick();
+		void _updateFrameStatisticsNoTimeCheck(bool was_rendered);
 	public:
 		
 		// Big 5
@@ -65,26 +65,26 @@ export namespace mt
 		Engine& operator=(Engine&& other) = delete;
 		 
 		// ACCESSOR
-		command::CommandManager * const			GetCommandManager()			{ return command_manager_.get(); }
-		input::InputManager * const				GetInputManager()			{ return input_manager_.get(); }
-		logging::LogManager * const				GetLogManager()				{ return log_manager_.get(); }
-		renderer::DirectXRenderer * const		GetRenderer()				{ return direct_x_renderer_.get(); };
-		windows::WindowManager * const			GetWindowManager()			{ return window_manager_.get(); };
-		windows::WindowsMessageManager * const	GetWindowsMessageManager()	{ return windows_message_manager_.get(); };
-		time::TimeManager * const				GetTimeManager()			{ return time_manager_.get(); };
+		command::CommandManager * const			getCommandManager()			{ return _command_manager.get(); }
+		input::InputManager * const				getInputManager()			{ return _input_manager.get(); }
+		logging::LogManager * const				getLogManager()				{ return _log_manager.get(); }
+		renderer::DirectXRenderer * const		getRenderer()				{ return _direct_x_renderer.get(); };
+		windows::WindowManager * const			getWindowManager()			{ return _window_manager.get(); };
+		windows::WindowsMessageManager * const	getWindowsMessageManager()	{ return _windows_message_manager.get(); };
+		time::TimeManager * const				getTimeManager()			{ return _time_manager.get(); };
 
-		bool IsDestroyed() const { return _instance == nullptr; };
+		bool isDestroyed() const { return _instance == nullptr; };
 
 		// MUTATOR
 
-		virtual bool Initialize(HINSTANCE hInstance);
+		virtual bool initialize(HINSTANCE hInstance);
 
-		Status Run();
+		Status run();
 
 		// Called to begin orderly shutdown.
-		void Shutdown();
+		void shutdown();
 
-		void Destroy();
+		void destroy();
 	};
 }
 

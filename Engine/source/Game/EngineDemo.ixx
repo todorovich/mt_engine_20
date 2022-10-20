@@ -16,25 +16,25 @@ export namespace mt
 		EngineDemo() = default;
 		~EngineDemo() = default;
 
-		virtual bool Initialize(HINSTANCE hInstance) override;
+		virtual bool initialize(HINSTANCE hInstance) override;
 
 	private:
-		virtual void _Update() override;
-		virtual void _Draw() override;
+		virtual void _update() override;
+		virtual void _draw() override;
 
 	};
 
-	bool EngineDemo::Initialize(HINSTANCE hInstance)
+	bool EngineDemo::initialize(HINSTANCE hInstance)
 	{
-		if (!Engine::Initialize(hInstance))
+		if (!Engine::initialize(hInstance))
 			return false;
 
 		return true;
 	}
 
-	void EngineDemo::_Update() {}
+	void EngineDemo::_update() {}
 
-	void EngineDemo::_Draw() {}
+	void EngineDemo::_draw() {}
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
@@ -48,11 +48,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 	{
 		mt::EngineDemo engine_demo = mt::EngineDemo();
 
-		engine_demo.Initialize(hInstance);
+		engine_demo.initialize(hInstance);
 
-		engine_demo.Run();
+		engine_demo.run();
 
-		engine_demo.Destroy();
+		engine_demo.destroy();
 
 		return 0;
 	}

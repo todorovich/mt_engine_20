@@ -15,12 +15,12 @@ export namespace mt::windows
 {
 	class WindowsMessageManager
 	{
+		friend Engine;
+		
 		Engine& _engine;
 
-		friend Engine;
-
 	protected:
-		void Initialize();
+		void initialize();
 
 	public:
 		WindowsMessageManager(Engine& engine);

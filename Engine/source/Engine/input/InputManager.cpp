@@ -33,7 +33,7 @@ void InputManager::processInput()
 			_processMouseInput(std::get<MouseInputMessage>(*input_message_variant));
 		}
 
-		_message_pool.ReleaseMemory(input_message_variant);
+		_message_pool.releaseMemory(input_message_variant);
 	}
 }
 
@@ -68,7 +68,7 @@ void InputManager::_processMouseInput(MouseInputMessage& mouse_input_message)
 	 //Left mouse button is being held
 	if (_held_buttons.find(MouseButtons::LEFT) != _held_buttons.end())
 	{
-		auto& camera = _engine.GetRenderer()->getCurrentCamera();
+		auto& camera = _engine.getRenderer()->getCurrentCamera();
 	
 		// Make each pixel correspond to 1/10th of a degree.
 		float dx = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.x - _mouse_position.x));
@@ -96,11 +96,11 @@ void InputManager::_processKeyboardInput(KeyboardInputMessage& keyboard_input_me
 	
 	if (keyboard_input_message.key == KeyboardKeys::ESCAPE)
 	{
-		PostMessage(_engine.GetWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
+		PostMessage(_engine.getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
 	}
 	else if (keyboard_input_message.key == KeyboardKeys::PAUSE)
 	{
-		if (mt::time::TimeManager& time_manager = *_engine.GetTimeManager(); time_manager.IsUpdatePaused())
+		if (mt::time::TimeManager& time_manager = *_engine.getTimeManager(); time_manager.IsUpdatePaused())
 		{
 			time_manager.resume();
 		}
@@ -113,14 +113,14 @@ void InputManager::_processKeyboardInput(KeyboardInputMessage& keyboard_input_me
 
 void InputManager::keyboardEvent(KeyboardKeys key, KeyState key_state)
 {
-	auto ptr = _message_pool.GetMemory();
+	auto ptr = _message_pool.getMemory();
 	ptr->emplace<KeyboardInputMessage>(this, key, key_state);
 	_input_queue.push(ptr);
 }
 
 void InputManager::mouseEvent(__int32 x, __int32 y, bool left_button, bool right_button, bool middle_button, bool button_4, bool button_5)
 {
-	auto ptr = _message_pool.GetMemory();
+	auto ptr = _message_pool.getMemory();
 	ptr->emplace<MouseInputMessage>(this, x, y, left_button, right_button, middle_button, button_4, button_5);
 	_input_queue.push(ptr);
 }

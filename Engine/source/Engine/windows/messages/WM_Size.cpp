@@ -18,9 +18,9 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 	auto _window_width = LOWORD(lParam);
 	auto _window_height = HIWORD(lParam);
 
-	renderer::DirectXRenderer& renderer = *_engine.GetRenderer();
-	time::TimeManager& time_manager = *_engine.GetTimeManager();
-	WindowManager& window_manager = *_engine.GetWindowManager();
+	renderer::DirectXRenderer& renderer = *_engine.getRenderer();
+	time::TimeManager& time_manager = *_engine.getTimeManager();
+	WindowManager& window_manager = *_engine.getWindowManager();
 
 	window_manager.resize(_window_width, _window_height);
 

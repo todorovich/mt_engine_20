@@ -32,7 +32,7 @@ export namespace mt::windows
 			: _engine(engine)
 		{}
 
-		HINSTANCE GetInstanceHandle() const { return _instance_handle; }
+		HINSTANCE getInstanceHandle() const { return _instance_handle; }
 
 		HWND getMainWindowHandle() { return _main_window_handle; }
 
