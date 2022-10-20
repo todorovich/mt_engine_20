@@ -38,6 +38,7 @@
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.cpp" />
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.ixx" />
     <ClCompile Include="source\Engine\renderer\DirectXUtility.ixx" />
+    <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
     <ClCompile Include="source\Engine\renderer\UploadBuffer.ixx" />
     <ClCompile Include="source\Engine\Status.ixx" />
     <ClCompile Include="source\Engine\time\Alarm.ixx" />

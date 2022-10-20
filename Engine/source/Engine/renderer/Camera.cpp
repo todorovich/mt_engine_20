@@ -5,7 +5,7 @@ module;
 
 module Camera;
 
-using namespace mt::camera;
+using namespace mt::renderer;
 using namespace DirectX;
 using namespace mt;
 

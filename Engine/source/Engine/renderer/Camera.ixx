@@ -4,17 +4,17 @@ module;
 
 export module Camera;
 
+export import DirectXUtility;
 export import Status;
+
 export import std.threading;
 
-export import MathHelper;
-
-export namespace mt::camera
+export namespace mt::renderer
 {
     class Camera
     {
-		DirectX::XMFLOAT4X4 _view = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 _projection = MathHelper::Identity4x4();
+		DirectX::XMFLOAT4X4 _view = Identity4x4();
+		DirectX::XMFLOAT4X4 _projection = Identity4x4();
 
 		// Camera coordinate system with coordinates relative to world space.
 		DirectX::XMFLOAT3 _position = { 0.0f, 0.0f, 10.0f };

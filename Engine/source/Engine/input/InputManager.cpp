@@ -68,7 +68,7 @@ void InputManager::_processMouseInput(MouseInputMessage& mouse_input_message)
 	 //Left mouse button is being held
 	if (_held_buttons.find(MouseButtons::LEFT) != _held_buttons.end())
 	{
-		auto& camera = _engine.GetRenderer()->GetCurrentCamera();
+		auto& camera = _engine.GetRenderer()->getCurrentCamera();
 	
 		// Make each pixel correspond to 1/10th of a degree.
 		float dx = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.x - _mouse_position.x));

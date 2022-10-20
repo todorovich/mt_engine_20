@@ -299,6 +299,7 @@
     <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
     <ClCompile Include="source\Engine\renderer\Camera.cpp" />
+    <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

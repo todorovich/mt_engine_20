@@ -15,7 +15,7 @@ using namespace mt::windows;
 LRESULT WM_ExitSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
 	_engine.GetWindowManager()->resize(
-		_engine.GetRenderer()->GetWindowWidth(), _engine.GetRenderer()->GetWindowHeight()
+		_engine.GetRenderer()->getWindowWidth(), _engine.GetRenderer()->getWindowHeight()
 	);
 	
 	_engine.GetTimeManager()->Continue(); // why?

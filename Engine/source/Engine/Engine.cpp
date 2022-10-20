@@ -90,7 +90,7 @@ bool Engine::Initialize(HINSTANCE instance_handle)
 	if (!GetWindowManager()->initializeMainWindow(instance_handle))
 		return false;
 
-	if (!GetRenderer()->InitializeDirect3d(GetWindowManager()->getMainWindowHandle()))
+	if (!GetRenderer()->initializeDirect3d(GetWindowManager()->getMainWindowHandle()))
 		return false;
 
 	// Do the initial Resize code. 
@@ -118,7 +118,7 @@ Status Engine::Run()
 		{
 			auto now = time::Clock::now();
 
-			auto last_frame_rendered = GetRenderer()->GetFramesRendered();
+			auto last_frame_rendered = GetRenderer()->getFramesRendered();
 
 			if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
 			{
@@ -128,7 +128,7 @@ Status Engine::Run()
 					FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).getAverageTaskInterval();
 
 				OutputDebugStringW(
-					(std::to_wstring(GetRenderer()->GetFramesRendered()) + L" frame number : ").c_str()
+					(std::to_wstring(GetRenderer()->getFramesRendered()) + L" frame number : ").c_str()
 				);
 
 				OutputDebugStringW(
@@ -225,12 +225,12 @@ void Engine::_Tick()
 	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RENDER_TIME).doTask(
 		[&]() {
 			// Render whenever you can, but don't wait.
-			if (GetTimeManager()->GetShouldRender() && GetRenderer()->IsCurrentFenceComplete())
+			if (GetTimeManager()->GetShouldRender() && GetRenderer()->isCurrentFenceComplete())
 			{
-				GetRenderer()->Update();
+				GetRenderer()->update();
 				_Draw();
-				GetRenderer()->Render();
-				GetRenderer()->IncrementFence();
+				GetRenderer()->render();
+				GetRenderer()->incrementFence();
 				GetTimeManager()->RenderComplete();
 
 				mt::time::StopWatch& stop_watch = GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME);

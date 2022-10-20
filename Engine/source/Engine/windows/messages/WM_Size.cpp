@@ -24,7 +24,7 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 
 	window_manager.resize(_window_width, _window_height);
 
-	if (renderer.GetIsInitialized())
+	if (renderer.getIsInitialized())
 	{
 		if (wParam == SIZE_MINIMIZED)
 		{

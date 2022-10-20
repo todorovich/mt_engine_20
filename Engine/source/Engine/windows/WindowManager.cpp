@@ -36,7 +36,7 @@ bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 	}
 
 	// Compute window rectangle dimensions based on requested client area dimensions.
-	RECT rectangle = { 0, 0, _engine.GetRenderer()->GetWindowWidth(), _engine.GetRenderer()->GetWindowHeight() };
+	RECT rectangle = { 0, 0, _engine.GetRenderer()->getWindowWidth(), _engine.GetRenderer()->getWindowHeight() };
 	AdjustWindowRect(&rectangle, WS_OVERLAPPEDWINDOW, false);
 	int width = rectangle.right - rectangle.left;
 	int height = rectangle.bottom - rectangle.top;
@@ -69,9 +69,9 @@ void WindowManager::resize(int width, int height)
 	setIsWindowResizing(true);
 
 	// wait until rendering is finished.
-	while (_engine.GetRenderer()->GetIsRendering()) {};
+	while (_engine.GetRenderer()->getIsRendering()) {};
 
-	_engine.GetRenderer()->Resize(width, height);
+	_engine.GetRenderer()->resize(width, height);
 	
 	// TODO: Callbacks?
 

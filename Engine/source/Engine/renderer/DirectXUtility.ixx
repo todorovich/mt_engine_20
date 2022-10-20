@@ -2,19 +2,29 @@ module;
 
 #include <windows.h>
 #include <wrl.h>
+#include <comdef.h>
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <dxgi.h>
+#include <DirectXMath.h>
 #include "d3dx12.h"
-#include <comdef.h>
 
 export module DirectXUtility;
 
+export import MathHelper;
+
 export import std.core;
 
-export namespace mt::renderer 
+export namespace mt::renderer
 {
+	struct Vertex {
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT4 color;
+	};
+
 	class DxException;
+
+	struct ObjectConstants;
 
 	void ThrowIfFailed(HRESULT result, std::string function, std::string file, int line);
 
@@ -36,6 +46,16 @@ export namespace mt::renderer
 		return (byteSize + 255) & ~255;
 	}
 
+	constexpr DirectX::XMFLOAT4X4 Identity4x4()
+	{
+		return DirectX::XMFLOAT4X4(
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+	}
+
 	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
@@ -50,6 +70,14 @@ export namespace mt::renderer
 		UINT64 byteSize,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 	);
+
+	DirectX::XMVECTOR SphericalToCartesian(float radius, float theta, float phi);
+
+	DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M);
+
+	DirectX::XMVECTOR RandUnitVec3();
+
+	DirectX::XMVECTOR RandHemisphereUnitVec3(DirectX::XMVECTOR n);
 }
 
 namespace mt::renderer 
@@ -81,6 +109,15 @@ namespace mt::renderer
 		}
 	};
 
+	struct ObjectConstants {
+		DirectX::XMFLOAT4X4 world_view_projection = Identity4x4();
+	};
+}
+
+module : private;
+
+namespace mt::renderer
+{
 	void ThrowIfFailed(HRESULT result, std::string function, std::string file, int line)
 	{
 		if (result < 0) { throw DxException(result, AnsiToWString(""), AnsiToWString(file), line); }
@@ -204,5 +241,84 @@ namespace mt::renderer
 		// The caller can Release the uploadBuffer after it knows the copy has been executed.
 
 		return defaultBuffer;
+	}
+
+	DirectX::XMVECTOR SphericalToCartesian(float radius, float theta, float phi)
+	{
+		return DirectX::XMVectorSet(
+			radius * sinf(phi) * cosf(theta),
+			radius * cosf(phi),
+			radius * sinf(phi) * sinf(theta),
+			1.0f);
+	}
+
+	DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M)
+	{
+		// Inverse-transpose is just applied to normals.  So zero out 
+		// translation row so that it doesn't get into our inverse-transpose
+		// calculation--we don't want the inverse-transpose of the translation.
+		DirectX::XMMATRIX A = M;
+		A.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(A);
+		return DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, A));
+	}
+
+	DirectX::XMVECTOR RandUnitVec3()
+	{
+		DirectX::XMVECTOR One = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
+		DirectX::XMVECTOR Zero = DirectX::XMVectorZero();
+
+		// Keep trying until we get a point on/in the hemisphere.
+		while (true)
+		{
+			// Generate random point in the cube [-1,1]^3.
+			DirectX::XMVECTOR v = DirectX::XMVectorSet(
+				MathHelper::RandF(-1.0f, 1.0f),
+				MathHelper::RandF(-1.0f, 1.0f),
+				MathHelper::RandF(-1.0f, 1.0f),
+				0.0f
+			);
+
+			// Ignore points outside the unit sphere in order to get an even distribution 
+			// over the unit sphere.  Otherwise points will clump more on the sphere near 
+			// the corners of the cube.
+
+			if (DirectX::XMVector3Greater(DirectX::XMVector3LengthSq(v), One))
+				continue;
+
+			return DirectX::XMVector3Normalize(v);
+		}
+	}
+
+	DirectX::XMVECTOR RandHemisphereUnitVec3(DirectX::XMVECTOR n)
+	{
+		DirectX::XMVECTOR One = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
+		DirectX::XMVECTOR Zero = DirectX::XMVectorZero();
+
+		// Keep trying until we get a point on/in the hemisphere.
+		while (true)
+		{
+			// Generate random point in the cube [-1,1]^3.
+			DirectX::XMVECTOR v = DirectX::XMVectorSet(
+				MathHelper::RandF(-1.0f, 1.0f),
+				MathHelper::RandF(-1.0f, 1.0f),
+				MathHelper::RandF(-1.0f, 1.0f),
+				0.0f
+			);
+
+			// Ignore points outside the unit sphere in order to get an even distribution 
+			// over the unit sphere.  Otherwise points will clump more on the sphere near 
+			// the corners of the cube.
+
+			if (DirectX::XMVector3Greater(DirectX::XMVector3LengthSq(v), One))
+				continue;
+
+			// Ignore points in the bottom hemisphere.
+			if (DirectX::XMVector3Less(DirectX::XMVector3Dot(n, v), Zero))
+				continue;
+
+			return DirectX::XMVector3Normalize(v);
+		}
 	}
 }
