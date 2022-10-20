@@ -233,17 +233,17 @@ void DirectXRenderer::_createCommandList()
 	_dx_command_list->SetGraphicsRootSignature(_dx_root_signature.Get());
 
 
-	auto vertex_buffer_view = _box_mesh_geometry->VertexBufferView();
+	auto vertex_buffer_view = _box_mesh_geometry->vertexBufferView();
 	_dx_command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
 
-    auto index_buffer_view = _box_mesh_geometry->IndexBufferView();
+    auto index_buffer_view = _box_mesh_geometry->indexBufferView();
 	_dx_command_list->IASetIndexBuffer(&index_buffer_view);
 	_dx_command_list->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	_dx_command_list->SetGraphicsRootDescriptorTable(0, _dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
 
 	_dx_command_list->DrawIndexedInstanced(
-		_box_mesh_geometry->DrawArgs["box"].IndexCount,
+		_box_mesh_geometry->draw_arguments["box"].index_count,
 		1, 0, 0, 0);
 
 	resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(_getCurrentBackBuffer(),
@@ -538,51 +538,51 @@ void DirectXRenderer::_createBoxGeometry()
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
 	_box_mesh_geometry = std::make_unique<MeshGeometry>();
-	_box_mesh_geometry->Name = "boxGeo";
+	_box_mesh_geometry->name = "boxGeo";
 
 	ThrowIfFailed(
-		D3DCreateBlob(vbByteSize, &_box_mesh_geometry->VertexBufferCPU),
+		D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
 		__FUNCTION__,
 		__FILE__,
 		__LINE__
 	);
-	CopyMemory(_box_mesh_geometry->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+	CopyMemory(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
 	ThrowIfFailed(
-		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->IndexBufferCPU),
+		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
 		__FUNCTION__,
 		__FILE__,
 		__LINE__
 	);
-	CopyMemory(_box_mesh_geometry->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+	CopyMemory(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
 
-	_box_mesh_geometry->VertexBufferGPU = CreateDefaultBuffer(
+	_box_mesh_geometry->vertex_buffer_gpu = CreateDefaultBuffer(
 		_dx_device.Get(),
 		_dx_command_list.Get(), 
 		vertices.data(), 
 		vbByteSize, 
-		_box_mesh_geometry->VertexBufferUploader
+		_box_mesh_geometry->vertex_buffer_uploader
 	);
 
-	_box_mesh_geometry->IndexBufferGPU = CreateDefaultBuffer(
+	_box_mesh_geometry->index_buffer_gpu = CreateDefaultBuffer(
 		_dx_device.Get(),
 		_dx_command_list.Get(),
 		indices.data(),
 		ibByteSize, 
-		_box_mesh_geometry->IndexBufferUploader
+		_box_mesh_geometry->index_buffer_uploader
 	);
 
-	_box_mesh_geometry->VertexByteStride = sizeof(Vertex);
-	_box_mesh_geometry->VertexBufferByteSize = vbByteSize;
-	_box_mesh_geometry->IndexFormat = DXGI_FORMAT_R16_UINT;
-	_box_mesh_geometry->IndexBufferByteSize = ibByteSize;
+	_box_mesh_geometry->vertex_byte_stride = sizeof(Vertex);
+	_box_mesh_geometry->vertex_buffer_byte_size = vbByteSize;
+	_box_mesh_geometry->index_format = DXGI_FORMAT_R16_UINT;
+	_box_mesh_geometry->index_buffer_byte_size = ibByteSize;
 
 	SubmeshGeometry submesh;
-	submesh.IndexCount = (UINT)indices.size();
-	submesh.StartIndexLocation = 0;
-	submesh.BaseVertexLocation = 0;
+	submesh.index_count = (UINT)indices.size();
+	submesh.start_index_location = 0;
+	submesh.base_vertex_location = 0;
 
-	_box_mesh_geometry->DrawArgs["box"] = submesh;
+	_box_mesh_geometry->draw_arguments["box"] = submesh;
 }
 
 void DirectXRenderer::_createPipelineStateObject()
@@ -915,11 +915,11 @@ void DirectXRenderer::update()
 {
 	_camera.updateViewMatrix();
 
-	DirectX::XMMATRIX worldViewProj = _camera.getViewMatrix() * _camera.getProjectionMatrix();
+	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 
 	// Update the constant buffer with the latest worldViewProj matrix.
-	ObjectConstants objConstants;
-	XMStoreFloat4x4(&objConstants.world_view_projection, XMMatrixTranspose(worldViewProj));
-	_object_constants_upload_buffer->CopyData(0, objConstants);
+	ObjectConstants object_constants;
+	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
+	_object_constants_upload_buffer->CopyData(0, object_constants);
 
 }

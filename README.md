@@ -30,10 +30,12 @@ for (auto i = 0u; i < 0; i++)
     // iterate over stuff
 }
 
-auto lamda = [&](int param_1, int param_2) -> int 
+auto Lamda = [&](int param_1, int param_2) -> int 
 {
     return 0;
 }
+
+void FreeFunction;
 
 template<typename TYPE>
 class ClassName 
