@@ -16,11 +16,11 @@ LRESULT mt::windows::WM_Activate::execute(const HWND& hwnd, const UINT& msg, con
 			mt::input::KeyboardKeys::NO_KEY,
 			mt::input::KeyState::NO_STATE
 		);
-		_time_manager->Pause();
+		_time_manager->pause();
 	}
 	else
 	{
-		_time_manager->Continue();
+		_time_manager->resume();
 	}
 
 	return 0;

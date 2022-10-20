@@ -18,7 +18,7 @@ LRESULT WM_ExitSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM
 		_engine.GetRenderer()->getWindowWidth(), _engine.GetRenderer()->getWindowHeight()
 	);
 	
-	_engine.GetTimeManager()->Continue(); // why?
+	_engine.GetTimeManager()->resume(); // why?
 	
 	_engine.GetWindowManager()->setIsWindowResizing(false);
 	

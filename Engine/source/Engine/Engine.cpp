@@ -103,7 +103,7 @@ Status Engine::Run()
 {
 	auto run = [&]() {
 
-		GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).startTask();
+		GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->startTask();
 
 		//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
 
@@ -125,7 +125,7 @@ Status Engine::Run()
 				last_frame_outputed = last_frame_rendered;
 
 				mt::time::Duration average = GetTimeManager()->
-					FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).getAverageTaskInterval();
+					findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->getAverageTaskInterval();
 
 				OutputDebugStringW(
 					(std::to_wstring(GetRenderer()->getFramesRendered()) + L" frame number : ").c_str()
@@ -140,7 +140,7 @@ Status Engine::Run()
 				);
 			}
 
-			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME).doTask(
+			GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME)->doTask(
 				[&]() {
 					// If there are Window messages then process them.
 					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -159,13 +159,13 @@ Status Engine::Run()
 
 			if (quit) break;
 
-			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::TICK_TIME).doTask(
+			GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME)->doTask(
 				[&]() { _Tick(); } // do i need the lambda to capture this?
 			);
 		};
 	};
 
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RUN_TIME).doTask(run);
+	GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME)->doTask(run);
 		
 
 	// Join the Tick thread (ensuring it has actually shut down)
@@ -180,7 +180,7 @@ void Engine::Shutdown()
 {
 	_is_shutting_down = true;
 
-	GetTimeManager()->Pause();
+	GetTimeManager()->pause();
 
 	OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
@@ -202,41 +202,41 @@ void Engine::Destroy()
 
 void Engine::_Tick()
 {
-	GetTimeManager()->Tick();
+	GetTimeManager()->tick();
 		
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).doTask(
+	GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->doTask(
 		[&]() {
-			if (GetTimeManager()->GetShouldUpdate())
+			if (GetTimeManager()->getShouldUpdate())
 			{
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).pauseTask();
+				GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->pauseTask();
 
 				
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::INPUT_TIME).doTask(
+				GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME)->doTask(
 					[&]() { GetInputManager()->processInput(); }
 				);
 
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).continueTask();
+				GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->continueTask();
 				
 				_Update();
 			}
 		}
 	);
 
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RENDER_TIME).doTask(
+	GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME)->doTask(
 		[&]() {
 			// Render whenever you can, but don't wait.
-			if (GetTimeManager()->GetShouldRender() && GetRenderer()->isCurrentFenceComplete())
+			if (GetTimeManager()->getShouldRender() && GetRenderer()->isCurrentFenceComplete())
 			{
 				GetRenderer()->update();
 				_Draw();
 				GetRenderer()->render();
 				GetRenderer()->incrementFence();
-				GetTimeManager()->RenderComplete();
+				GetTimeManager()->renderComplete();
 
-				mt::time::StopWatch& stop_watch = GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
+				mt::time::StopWatch* stop_watch = GetTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
 
-				stop_watch.finishTask();
-				stop_watch.startTask();
+				stop_watch->finishTask();
+				stop_watch->startTask();
 			}	
 		}
 	);

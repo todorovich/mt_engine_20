@@ -17,15 +17,14 @@ export namespace mt::time
 {
 	class TimeManager
 	{
-		void _DeleteAllChronometers();
-		void _AddEngineAlarms();
+		void _addEngineAlarms();
 
-		void _SetShouldUpdate();
-		void _SetShouldRender();
-		void _SetEndOfFrame();
+		void _setShouldUpdate();
+		void _setShouldRender();
+		void _setEndOfFrame();
 
-		AlarmManager							_alarm_manager;
-		std::map<std::string_view, StopWatch*>	_stop_watches;
+		AlarmManager											_alarm_manager;
+		std::map<std::string_view, std::unique_ptr<StopWatch>>	_stop_watches;
 
 		Duration	_tgt_update_interval_ns;
 		Duration	_tgt_render_interval_ns;
@@ -47,7 +46,7 @@ export namespace mt::time
 
 		friend Engine;
 
-		static struct DefaultTimers {
+		struct DefaultTimers {
 			static const std::string_view RUN_TIME; 
 			static const std::string_view WINDOWS_MESSAGE_TIME;
 			static const std::string_view TICK_TIME;
@@ -63,17 +62,17 @@ export namespace mt::time
 			, _frame_interval (16666666ns)
 			, _command_list_interval (0ns)
 			, _is_paused(true)
-			, _stop_watches{ 
-				std::make_pair(DefaultTimers::RUN_TIME, new StopWatch(*this, DefaultTimers::RUN_TIME)),
-				std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME, new StopWatch(*this, DefaultTimers::WINDOWS_MESSAGE_TIME)),
-				std::make_pair(DefaultTimers::TICK_TIME, new StopWatch(*this, DefaultTimers::TICK_TIME)),
-				std::make_pair(DefaultTimers::UPDATE_TIME, new StopWatch(*this, DefaultTimers::UPDATE_TIME)),
-				std::make_pair(DefaultTimers::INPUT_TIME, new StopWatch(*this, DefaultTimers::INPUT_TIME)),
-				std::make_pair(DefaultTimers::RENDER_TIME, new StopWatch(*this, DefaultTimers::RENDER_TIME)),
-				std::make_pair(DefaultTimers::FRAME_TIME, new StopWatch(*this, DefaultTimers::FRAME_TIME))
-			}
+			, _stop_watches()
 		{
-			_AddEngineAlarms();
+			_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::make_unique<StopWatch>(*this, DefaultTimers::RUN_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::make_unique<StopWatch>(*this, DefaultTimers::WINDOWS_MESSAGE_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::TICK_TIME,				std::make_unique<StopWatch>(*this, DefaultTimers::TICK_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::UPDATE_TIME,			std::make_unique<StopWatch>(*this, DefaultTimers::UPDATE_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::INPUT_TIME,				std::make_unique<StopWatch>(*this, DefaultTimers::INPUT_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::RENDER_TIME,			std::make_unique<StopWatch>(*this, DefaultTimers::RENDER_TIME)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::FRAME_TIME,				std::make_unique<StopWatch>(*this, DefaultTimers::FRAME_TIME)));
+
+			_addEngineAlarms();
 
 			curr_tick_time = Clock::now();
 			prev_tick_time = TimePoint(0ns);
@@ -83,34 +82,31 @@ export namespace mt::time
 			_is_paused = false;
 		}
 
-		~TimeManager()
-		{
-			_DeleteAllChronometers();
-		}
+		~TimeManager() = default;
 	
-		TimePoint GetCurrentTickTime() const { return curr_tick_time; };
+		TimePoint getCurrentTickTime() const { return curr_tick_time; };
 
-		TimePoint GetPreviousTickTime() const { return prev_tick_time; };
+		TimePoint getPreviousTickTime() const { return prev_tick_time; };
 
-		Duration GetTickDeltaTime() const { return tick_delta_time_ns; };
+		Duration getTickDeltaTime() const { return tick_delta_time_ns; };
 
-		Duration GetTargetUpdateInterval() const { return _tgt_update_interval_ns; }
+		Duration getTargetUpdateInterval() const { return _tgt_update_interval_ns; }
 
-		Duration GetTargetRenderInterval() const { return _tgt_render_interval_ns; }
+		Duration getTargetRenderInterval() const { return _tgt_render_interval_ns; }
 
-		bool GetShouldUpdate() const { return _should_update; }
-		bool GetShouldRender() const { return _should_render; }
-		bool GetEndOfFrame() const { return _end_of_frame; }
+		bool getShouldUpdate() const { return _should_update; }
+		bool getShouldRender() const { return _should_render; }
+		bool getEndOfFrame() const { return _end_of_frame; }
 
-		void Continue();		// Call to unpaused.
-		void Pause();			// Call to pause.
-		void Tick();			// Call every frame.
+		void resume();		// Call to unpaused.
+		void pause();			// Call to pause.
+		void tick();			// Call every frame.
 	
-		void UpdateComplete();
-		void RenderComplete();
-		void FrameComplete();
+		void updateComplete();
+		void renderComplete();
+		void frameComplete();
 
-		StopWatch& FindTimer(std::string_view name) 
+		StopWatch* findStopWatch(std::string_view name) 
 		{ 
 			auto find = _stop_watches.find(name);
 			if (find == _stop_watches.end())
@@ -119,7 +115,7 @@ export namespace mt::time
 			}
 			else
 			{
-				return *find->second;	
+				return find->second.get();	
 			}
 		}
 

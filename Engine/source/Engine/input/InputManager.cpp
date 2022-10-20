@@ -102,11 +102,11 @@ void InputManager::_processKeyboardInput(KeyboardInputMessage& keyboard_input_me
 	{
 		if (mt::time::TimeManager& time_manager = *_engine.GetTimeManager(); time_manager.IsUpdatePaused())
 		{
-			time_manager.Continue();
+			time_manager.resume();
 		}
 		else
 		{
-			time_manager.Pause();
+			time_manager.pause();
 		}
 	}
 }

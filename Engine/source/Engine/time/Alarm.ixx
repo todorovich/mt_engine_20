@@ -27,7 +27,7 @@ export namespace mt::time
 
 		bool _is_paused;
 
-		void Tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time);
+		void tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time);
 
 	public:
 
@@ -84,15 +84,15 @@ export namespace mt::time
 			return _has_triggered; 
 		}
 
-		void Pause(TimePoint time_paused = Clock::now());
+		void pause(TimePoint time_paused = Clock::now());
 
-		void Continue(TimePoint time_continued = Clock::now());
+		void resume(TimePoint time_continued = Clock::now());
 	};
 }
 
 module :private;
 
-void mt::time::Alarm::Tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
+void mt::time::Alarm::tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
 {
 	// Not triggered or paused
 	if (_has_triggered == false && _is_paused == false)
@@ -106,13 +106,13 @@ void mt::time::Alarm::Tick(TimePoint current_tick_time, TimePoint previous_tick_
 	}
 }
 
-void mt::time::Alarm::Pause(TimePoint time_paused)
+void mt::time::Alarm::pause(TimePoint time_paused)
 {
 	_time_paused = time_paused;
 	_is_paused = true;
 }
 
-void mt::time::Alarm::Continue(TimePoint time_continued)
+void mt::time::Alarm::resume(TimePoint time_continued)
 {
 	// Offset time time by the amount of time spent paused;
 	_alarm_time += time_continued - _time_paused;

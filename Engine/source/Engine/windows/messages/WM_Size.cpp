@@ -28,13 +28,13 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 	{
 		if (wParam == SIZE_MINIMIZED)
 		{
-			time_manager.Pause();
+			time_manager.pause();
 			window_manager.setIsWindowMinimized(true);
 			window_manager.setIsWindowMaximized(false);
 		}
 		else if (wParam == SIZE_MAXIMIZED)
 		{
-			time_manager.Continue();
+			time_manager.resume();
 			window_manager.setIsWindowMinimized(false);
 			window_manager.setIsWindowMaximized(true);
 			window_manager.resize(_window_width, _window_height);
@@ -44,7 +44,7 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 			// Restoring from minimized state?
 			if (window_manager.isWindowMinimized())
 			{
-				time_manager.Continue();
+				time_manager.resume();
 				window_manager.setIsWindowMinimized(false);
 				window_manager.resize(_window_width, _window_height);
 			}
@@ -52,7 +52,7 @@ LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const W
 			// Restoring from maximized state?
 			else if (window_manager.isWindowMaximized())
 			{
-				time_manager.Continue();
+				time_manager.resume();
 				window_manager.setIsWindowMinimized(false);
 				window_manager.resize(_window_width, _window_height);
 			}

@@ -15,7 +15,7 @@ LRESULT WM_EnterSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARA
 {
 	_engine.GetWindowManager()->setIsWindowResizing(true);
 
-	_engine.GetTimeManager()->Pause();
+	_engine.GetTimeManager()->pause();
 
 	return 0;
 }
