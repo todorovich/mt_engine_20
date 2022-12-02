@@ -1,3 +1,5 @@
+module; 
+
 #include <windows.h>
 
 module WindowManager;

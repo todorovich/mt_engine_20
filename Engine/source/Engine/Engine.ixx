@@ -9,6 +9,8 @@ export import Time;
 export import Status;
 export import std.core;
 
+export import Debug;
+
 export using namespace std::literals::chrono_literals;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -24,7 +26,7 @@ export namespace mt
 		class WindowManager;
 		class WindowsMessageManager; 
 	};
-
+	
 	class Engine
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

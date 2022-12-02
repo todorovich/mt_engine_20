@@ -301,6 +301,14 @@
     </ClCompile>
     <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\input\InputDataType.ixx" />
+    <ClCompile Include="source\Engine\Debug.ixx" />
+    <ClCompile Include="source\Engine\input\InputType.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

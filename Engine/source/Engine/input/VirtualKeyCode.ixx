@@ -1,5 +1,9 @@
 export module VirtualKeyCode;
 
+export import std.core;
+
+using namespace std::literals;
+
 export namespace mt::input
 {
 	enum struct VirtualKeyCode : unsigned char
@@ -118,4 +122,91 @@ export namespace mt::input
 		INSERT = 0x7E, // NOT ASCII
 		DEL = 0x7F,
 	};
+
+	constexpr std::wstring to_wstring(VirtualKeyCode virtual_key_code)
+	{
+		switch (virtual_key_code)
+		{
+			case VirtualKeyCode::NO_KEY: return L"NO KEY";
+			case VirtualKeyCode::CONTROL: return L"CONTROL";
+			case VirtualKeyCode::ALT: return L"ALT";
+			case VirtualKeyCode::SHIFT: return L"SHIFT";
+			case VirtualKeyCode::WINDOWS: return L"WINDOWS";
+			case VirtualKeyCode::APPLICATIONS: return L"APPLICATIONS";
+			case VirtualKeyCode::PRINT_SCREEN: return L"PRINT SCREEN";
+			case VirtualKeyCode::PAUSE: return L"PAUSE";
+			case VirtualKeyCode::BACKSPACE: return L"BACKSPACE";
+			case VirtualKeyCode::TAB: return L"TAB";
+			case VirtualKeyCode::CAPS_LOCK: return L"CAPS LOCK";
+			case VirtualKeyCode::SCROLL_LOCK: return L"SCROLL LOCK";
+			case VirtualKeyCode::NUM_LOCK: return L"NUM LOCK";
+			case VirtualKeyCode::RETURN: return L"RETURN";
+			case VirtualKeyCode::ESCAPE: return L"ESCAPE";
+			case VirtualKeyCode::SPACE: return L"SPACE";
+			case VirtualKeyCode::APOSTROPHE: return L"APOSTROPHE";
+			case VirtualKeyCode::COMMA: return L"COMMA";
+			case VirtualKeyCode::MINUS: return L"MINUS";
+			case VirtualKeyCode::PERIOD: return L"PERIOD";
+			case VirtualKeyCode::FORWARD_SLASH: return L"FORWARD_SLASH";
+			case VirtualKeyCode::ZERO: return L"ZERO";
+			case VirtualKeyCode::ONE: return L"ONE";
+			case VirtualKeyCode::TWO: return L"TWO";
+			case VirtualKeyCode::THREE: return L"THREE";
+			case VirtualKeyCode::FOUR: return L"FOUR";
+			case VirtualKeyCode::FIVE: return L"FIVE";
+			case VirtualKeyCode::SIX: return L"SIX";
+			case VirtualKeyCode::SEVEN: return L"SEVEN";
+			case VirtualKeyCode::EIGHT: return L"EIGHT";
+			case VirtualKeyCode::NINE: return L"NINE";
+			case VirtualKeyCode::SEMICOLON: return L"SEMICOLON";
+			case VirtualKeyCode::LEFT_ANGLE_BRACKET: return L"LEFT ANGLE BRACKET";
+			case VirtualKeyCode::EQUALS: return L"EQUALS";
+			case VirtualKeyCode::RIGHT_ANGLE_BRACKET: return L"RIGHT ANGLE BRACKET";
+			case VirtualKeyCode::A: return L"A";
+			case VirtualKeyCode::B: return L"B";
+			case VirtualKeyCode::C: return L"C";
+			case VirtualKeyCode::D: return L"D";
+			case VirtualKeyCode::E: return L"E";
+			case VirtualKeyCode::F: return L"F";
+			case VirtualKeyCode::G: return L"G";
+			case VirtualKeyCode::H: return L"H";
+			case VirtualKeyCode::I: return L"I";
+			case VirtualKeyCode::J: return L"J";
+			case VirtualKeyCode::K: return L"K";
+			case VirtualKeyCode::L: return L"L";
+			case VirtualKeyCode::M: return L"M";
+			case VirtualKeyCode::N: return L"N";
+			case VirtualKeyCode::O: return L"O";
+			case VirtualKeyCode::P: return L"P";
+			case VirtualKeyCode::Q: return L"Q";
+			case VirtualKeyCode::R: return L"R";
+			case VirtualKeyCode::S: return L"S";
+			case VirtualKeyCode::T: return L"T";
+			case VirtualKeyCode::U: return L"U";
+			case VirtualKeyCode::V: return L"V";
+			case VirtualKeyCode::W: return L"W";
+			case VirtualKeyCode::X: return L"X";
+			case VirtualKeyCode::Y: return L"Y";
+			case VirtualKeyCode::Z: return L"Z";
+			case VirtualKeyCode::LEFT_SQUARE_BRACKET: return L"LEFT SQUARE BRACKET";
+			case VirtualKeyCode::BACK_SLASH: return L"BACK SLASH";
+			case VirtualKeyCode::RIGHT_SQUARE_BRACKET: return L"RIGHT SQUARE BRACKET";
+			case VirtualKeyCode::BACKTICK: return L"BACKTICK";
+			case VirtualKeyCode::DIVIDE: return L"DIVIDE";
+			case VirtualKeyCode::MULTIPLY: return L"MULTIPLY";
+			case VirtualKeyCode::ADD: return L"ADD";
+			case VirtualKeyCode::SUBTRACT: return L"SUBTRACT";
+			case VirtualKeyCode::LEFT_ARROW: return L"LEFT ARROW";
+			case VirtualKeyCode::RIGHT_ARROW: return L"RIGHT ARROW";
+			case VirtualKeyCode::UP_ARROW: return L"UP ARROW";
+			case VirtualKeyCode::DOWN_ARROW: return L"DOWN ARROW";
+			case VirtualKeyCode::HOME: return L"HOME";
+			case VirtualKeyCode::END: return L"END";
+			case VirtualKeyCode::PAGE_UP: return L"PAGE UP";
+			case VirtualKeyCode::PAGE_DOWN: return L"PAGE DOWN";
+			case VirtualKeyCode::INSERT: return L"INSERT";
+			case VirtualKeyCode::DEL: return L"DEL";
+			default: return std::to_wstring(static_cast<unsigned char>(virtual_key_code));
+		}
+	}
 }

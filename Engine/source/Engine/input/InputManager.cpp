@@ -4,7 +4,7 @@ module;
 #include <DirectXMath.h>
 #include <windows.h>
 
-#undef RELATIVE;
+#undef RELATIVE
 
 module InputManager;
 
@@ -37,13 +37,28 @@ void InputManager::processInput()
 			case InputDataType::BUTTON_PRESSED: [[fallthrough]];
 			case InputDataType::BUTTON_HELD: [[fallthrough]];
 			case InputDataType::BUTTON_RELEASED:
+			{
 				if (auto it = button_input_handler.find(input_type); it != button_input_handler.end()) it->second();
+				
+				if constexpr (mt::DEBUG)
+				{
+					auto s = to_wstring(*input_message) + L'\n';
+					if constexpr (mt::DEBUG) OutputDebugStringW(s.c_str());
+				}
+			}
 				break;
 			
 			case InputDataType::ONE_DIMENSIONAL:
 				if (auto it = one_dimensional_input_handler.find(input_type); it != one_dimensional_input_handler.end())
 				{
-					it->second(std::get<int>(input_message->data));
+					InputData1D input_data = std::get<mt::input::InputData1D>(input_message->data);
+					it->second(input_data.x);
+				}
+
+				if constexpr (mt::DEBUG)
+				{
+					auto s = to_wstring(*input_message) + L'\n';
+					if constexpr (mt::DEBUG) OutputDebugStringW(s.c_str());
 				}
 				break;
 
@@ -93,11 +108,11 @@ void InputManager::processInput()
 	}
 }
 
-void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, int, InputData2D, InputData3D> data)
+void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data)
 {
-	auto ptr = _message_pool.getMemory();
-	new (ptr) InputMessage(input_type, mt::time::Clock::now(), data);
-	_input_queue.push(ptr);
+	_input_queue.push(
+		new (_message_pool.getMemory()) InputMessage(input_type, mt::time::Clock::now(), data)
+	);
 }
 
 
@@ -140,67 +155,6 @@ void mt::input::InputManager::registerInputHandler(InputType input_type, InputHa
 	}
 }
 
-// TODO 
-//void InputManager::_processMouseInput(MouseInputMessage& mouse_input_message)
-//{
-//	if (mouse_input_message.left_button)
-//		_held_buttons.insert(InputButton::LEFT_MOUSE_BUTTON);
-//	else
-//		_held_buttons.erase(InputButton::LEFT_MOUSE_BUTTON);
-//
-//	if (mouse_input_message.right_button)
-//		_held_buttons.insert(InputButton::RIGHT_MOUSE_BUTTON);
-//	else
-//		_held_buttons.erase(InputButton::RIGHT_MOUSE_BUTTON);
-//
-//	if (mouse_input_message.middle_button)
-//		_held_buttons.insert(InputButton::MIDDLE_MOUSE_BUTTON);
-//	else
-//		_held_buttons.erase(InputButton::MIDDLE_MOUSE_BUTTON);
-//
-//	if (mouse_input_message.button_4)
-//		_held_buttons.insert(InputButton::MOUSE_BUTTON_FOUR);
-//	else
-//		_held_buttons.erase(InputButton::MOUSE_BUTTON_FOUR);
-//
-//	if (mouse_input_message.button_5)
-//		_held_buttons.insert(InputButton::MOUSE_BUTTON_FIVE);
-//	else
-//		_held_buttons.erase(InputButton::MOUSE_BUTTON_FIVE);
-//
-//	 //Left mouse button is being held
-//	if (_held_buttons.find(InputButton::LEFT_MOUSE_BUTTON) != _held_buttons.end())
-//	{
-//		auto& camera = _engine.getRenderer()->getCurrentCamera();
-//	
-//		// Make each pixel correspond to 1/10th of a degree.
-//		float dx = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.x - _mouse_position.x));
-//		float dy = DirectX::XMConvertToRadians(0.1f*static_cast<float>(mouse_input_message.y - _mouse_position.y));
-//	
-//		camera.pitch(dy);
-//		camera.rotateY(dx);
-//	}
-//	
-//	_mouse_position.x = mouse_input_message.x;
-//	_mouse_position.y = mouse_input_message.y;
-//}
-//
-//void InputManager::_processKeyboardInput(KeyboardInputMessage& keyboard_input_message)
-//{
-//	switch (keyboard_input_message.button_input.state)
-//	{
-//		case ButtonState::PRESSED: [[fallthrough]];
-//		[[likely]] case ButtonState::HELD: _held_buttons.insert(keyboard_input_message.button_input.button); break;
-//		case ButtonState::RELEASED: _held_buttons.erase(keyboard_input_message.button_input.button); break;
-//		[[unlikely]] case ButtonState::IDLE: _held_buttons.clear(); break;
-//	}
-//
-//	OutputDebugStringW((std::wstring(to_wstring(keyboard_input_message.button_input.button)) + L" " + std::wstring(to_wstring(keyboard_input_message.button_input.state)) + L'\n').c_str());
-//	
-//	if (keyboard_input_message.button_input.button == InputButton::ESCAPE)
-//	{
-//		PostMessage(_engine.getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
-//	}
 //	else if (keyboard_input_message.button_input.button == InputButton::PAUSE)
 //	{
 //		if (mt::time::TimeManager& time_manager = *_engine.getTimeManager(); time_manager.IsUpdatePaused())

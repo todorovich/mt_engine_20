@@ -53,7 +53,7 @@ export namespace mt::input
         void processInput(); // friend engine, make protected?
 
         void acceptInput(
-            InputType input_type, std::variant<std::monostate, int, InputData2D, InputData3D> data = std::monostate()
+            InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
         );
 
         using InputHandler =

@@ -1,0 +1,47 @@
+// Copyright 2022 Micho Todorovich, all rights reserved.
+module;
+
+#include <windows.h>
+#include <windowsx.h>
+
+module WindowsMessages.XButtonUp;
+
+import Engine;
+import InputManager;
+import InputModel;
+
+import InputDevice;
+import InputDataType;
+import InputContext;
+import VirtualKeyCode;
+
+LRESULT mt::windows::WM_XButtonUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+{
+	bool button_1 = 0x00010000 & wParam;
+	bool button_2 = 0x00020000 & wParam;
+
+	if (button_1)
+	{
+		_input_manager->acceptInput(
+			mt::input::InputType(
+				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FOUR
+			)
+		);
+
+		return true; // return true if processed.
+	}
+	else if (button_2)
+	{
+		_input_manager->acceptInput(
+			mt::input::InputType(
+				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FIVE
+			)
+		);
+
+		return true; // return true if processed.
+	}
+	else
+	{
+		return DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+}

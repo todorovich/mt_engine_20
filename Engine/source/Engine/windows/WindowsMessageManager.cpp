@@ -23,6 +23,7 @@ import WindowsMessages.MiddleMouseButtonDown;
 import WindowsMessages.MiddleMouseButtonUp;
 import WindowsMessages.MenuChar;
 import WindowsMessages.MouseMove;
+import WindowsMessages.MouseWheel;
 import WindowsMessages.Move;
 import WindowsMessages.Moving;
 import WindowsMessages.NonClientCalcSize;
@@ -39,6 +40,8 @@ import WindowsMessages.SystemCommand;
 import WindowsMessages.SystemKeyDown;
 import WindowsMessages.SystemKeyUp;
 import WindowsMessages.Timer;
+import WindowsMessages.XButtonDown;
+import WindowsMessages.XButtonUp;
 //import WindowsMessages.WindowPositionChanging;
 
 import Engine;
@@ -80,6 +83,7 @@ void WindowsMessageManager::initialize()
 	_message_handler_map.insert(std::make_pair(WM_MBUTTONUP, new WM_MiddleMouseButtonUp(_engine.getInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_MENUCHAR, new WM_MenuChar()));
 	_message_handler_map.insert(std::make_pair(WM_MOUSEMOVE, new WM_MouseMove(_engine.getInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_MOUSEWHEEL, new WM_MouseWheel(_engine.getInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_MOVE, new WM_Move()));
 	_message_handler_map.insert(std::make_pair(WM_MOVING, new WM_Moving()));
 	_message_handler_map.insert(std::make_pair(WM_NCCALCSIZE, new WM_NonClientCalcSize()));
@@ -96,6 +100,8 @@ void WindowsMessageManager::initialize()
 	_message_handler_map.insert(std::make_pair(WM_SYSKEYDOWN, new WM_SystemKeyDown(_engine.getInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_SYSKEYUP, new WM_SystemKeyUp(_engine.getInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_TIMER, new WM_Timer()));
+	_message_handler_map.insert(std::make_pair(WM_XBUTTONDOWN, new WM_XButtonDown(_engine.getInputManager())));
+	_message_handler_map.insert(std::make_pair(WM_XBUTTONUP, new WM_XButtonUp(_engine.getInputManager())));
 	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
 }
 

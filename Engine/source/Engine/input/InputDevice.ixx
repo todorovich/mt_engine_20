@@ -1,5 +1,9 @@
 export module InputDevice;
 
+export import std.core;
+
+using namespace std::literals;
+
 export namespace mt::input
 {
 	enum struct InputDevice : unsigned char
@@ -11,4 +15,15 @@ export namespace mt::input
 		GAMEPAD = 0x04,
 		FLIGHTSTICK = 0x08,
 	};
+
+	constexpr std::wstring to_wstring(InputDevice input_device)
+	{
+		switch (input_device)
+		{
+			case InputDevice::KEYBOARD: return L"KEYBOARD";
+			case InputDevice::MOUSE: return L"MOUSE";
+			case InputDevice::GAMEPAD: return L"GAMEPAD";
+			case InputDevice::FLIGHTSTICK: return L"FLIGHT STICK";
+		}
+	}
 }

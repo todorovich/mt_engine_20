@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Engine\Debug.ixx" />
     <ClCompile Include="source\Engine\input\InputContext.ixx" />
     <ClCompile Include="source\Engine\input\InputDataType.ixx" />
     <ClCompile Include="source\Engine\input\InputDevice.ixx" />
@@ -30,6 +31,7 @@
     <ClCompile Include="source\Engine\Engine.ixx" />
     <ClCompile Include="source\Engine\input\InputManager.cpp" />
     <ClCompile Include="source\Engine\input\InputManager.ixx" />
+    <ClCompile Include="source\Engine\input\InputType.ixx" />
     <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\logging\Log.ixx" />
@@ -85,6 +87,8 @@
     <ClCompile Include="source\Engine\windows\messages\WM_MiddleMouseButtonUp.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_MouseMove.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_MouseMove.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Move.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Move.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Moving.cpp" />
@@ -117,6 +121,10 @@
     <ClCompile Include="source\Engine\windows\messages\WM_Timer.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_WindowPositionChanging.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_WindowPositionChanging.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.ixx" />
     <ClCompile Include="source\Engine\windows\WindowsMessage.ixx" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.cpp" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />

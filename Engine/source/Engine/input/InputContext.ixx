@@ -1,5 +1,9 @@
 export module InputContext;
 
+export import std.core;
+
+using namespace std::literals;
+
 export namespace mt::input
 {
 
@@ -29,4 +33,37 @@ export namespace mt::input
 		return static_cast<InputContext>(static_cast<unsigned short>(a) & static_cast<unsigned short>(b));
 	}
 
+	constexpr std::wstring to_wstring(InputContext key)
+	{
+		if (key == InputContext::NO_CONTEXT) 
+		{
+			return L"NO CONTEXT";
+		}
+		else 
+		{
+			std::set<std::wstring> descriptions;
+
+			if ((key & InputContext::CHIRAL) == InputContext::CHIRAL) descriptions.insert(L"CHIRAL");
+			if ((key & InputContext::RIGHT) == InputContext::RIGHT) descriptions.insert(L"RIGHT");
+			if ((key & InputContext::FUNCTION_KEY) == InputContext::FUNCTION_KEY) descriptions.insert(L"FUNCTION KEY");
+			if ((key & InputContext::EXTENDED_KEY) == InputContext::EXTENDED_KEY) descriptions.insert(L"EXTENDED KEY");
+			if ((key & InputContext::RELATIVE) == InputContext::RELATIVE) descriptions.insert(L"RELATIVE");
+
+			if (auto it = descriptions.begin(); it != descriptions.end())
+			{
+				std::wstring retval = *it;
+
+				for (it++; it != descriptions.end(); it++)
+				{
+					retval += L" | " + *it;
+				}
+
+				return retval;
+			}
+			else
+			{
+				return L"INVALID CONTEXT";
+			}
+		}
+	}
 }
