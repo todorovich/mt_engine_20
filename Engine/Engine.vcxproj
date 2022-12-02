@@ -19,9 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx" />
-    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx" />
-    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx" />
+    <ClCompile Include="source\Engine\input\InputContext.ixx" />
+    <ClCompile Include="source\Engine\input\InputDataType.ixx" />
+    <ClCompile Include="source\Engine\input\InputDevice.ixx" />
+    <ClCompile Include="source\Engine\input\InputModel.ixx" />
     <ClCompile Include="source\Engine\command\Command.cpp" />
     <ClCompile Include="source\Engine\command\Command.ixx" />
     <ClCompile Include="source\Engine\command\CommandManager.ixx" />
@@ -29,6 +30,8 @@
     <ClCompile Include="source\Engine\Engine.ixx" />
     <ClCompile Include="source\Engine\input\InputManager.cpp" />
     <ClCompile Include="source\Engine\input\InputManager.ixx" />
+    <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx" />
+    <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\logging\Log.ixx" />
     <ClCompile Include="source\Engine\logging\LogManager.ixx" />
     <ClCompile Include="source\Engine\MathHelper.ixx" />

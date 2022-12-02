@@ -2,11 +2,20 @@ module;
 
 #include <windows.h>
 #include <crtdbg.h>
+#include <DirectXMath.h>
+
+// Fuck macros. This wasted like 30 minutes of my time.
+#undef RELATIVE
 
 export module EngineDemo;
 
 import Engine;
 import DirectXUtility;
+
+import InputManager;
+import WindowManager;
+import DirectXRenderer;
+
 
 export namespace mt
 {
@@ -28,6 +37,57 @@ export namespace mt
 	{
 		if (!Engine::initialize(hInstance))
 			return false;
+
+		getInputManager()->registerInputHandler(
+			mt::input::InputType(
+				mt::input::InputDevice::KEYBOARD,
+				mt::input::InputDataType::BUTTON_PRESSED,
+				mt::input::InputContext::NO_CONTEXT,
+				mt::input::VirtualKeyCode::ESCAPE
+			),
+			// TODO: make this something I can call on the engine proper.
+			[&]() { PostMessage(getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0); }
+		);
+
+		getInputManager()->registerInputHandler(
+			mt::input::InputType(
+				mt::input::InputDevice::MOUSE,
+				mt::input::InputDataType::BUTTON_PRESSED,
+				mt::input::InputContext::NO_CONTEXT,
+				mt::input::VirtualKeyCode::ONE
+			),
+			[&]() { getInputManager()->toggleRelativeMouse(); }
+		);
+
+		getInputManager()->registerInputHandler(
+			mt::input::InputType(
+				mt::input::InputDevice::MOUSE,
+				mt::input::InputDataType::BUTTON_RELEASED,
+				mt::input::InputContext::NO_CONTEXT,
+				mt::input::VirtualKeyCode::ONE
+			),
+			[&]() { getInputManager()->toggleRelativeMouse(); }
+		);
+
+		getInputManager()->registerInputHandler(
+			mt::input::InputType(
+				mt::input::InputDevice::MOUSE,
+				mt::input::InputDataType::TWO_DIMENSIONAL,
+				mt::input::InputContext::RELATIVE,
+				mt::input::VirtualKeyCode::NO_KEY
+			),
+			[&](int x, int y) {
+				auto& camera = getRenderer()->getCurrentCamera();
+
+				// TODO: This should be fov dependant.
+				// Make each pixel correspond to 1/10th of a degree.
+				float dx = DirectX::XMConvertToRadians(0.1f * static_cast<float>(x));
+				float dy = DirectX::XMConvertToRadians(0.1f * static_cast<float>(y));
+
+				camera.pitch(dy);
+				camera.rotateY(dx);
+			}
+		);
 
 		return true;
 	}

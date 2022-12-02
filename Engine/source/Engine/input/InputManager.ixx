@@ -5,32 +5,35 @@ module;
 
 export module InputManager;
 
-export import KeyboardInputMessage;
-export import MouseInputMessage;
+export import std.core;
+
 export import ObjectPool;
+export import Time;
+
+export import InputModel;
 
 export namespace mt { class Engine; }
 
+// Todo: Relative Mouse Position and locking mouse.
 export namespace mt::input
 {
     class InputManager
     {
-        using InputMessageVariant = std::variant<MouseInputMessage, KeyboardInputMessage>;
+        ObjectPool<InputMessage, 1024> _message_pool;
 
-        ObjectPool<InputMessageVariant, 1024> _message_pool;
+        std::queue<InputMessage*> _input_queue;
 
-        std::queue<InputMessageVariant*> _input_queue;
+        std::map<InputType, std::function<void()>>              button_input_handler;
+        std::map<InputType, std::function<void(int)>>           one_dimensional_input_handler;
+        std::map<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
+        std::map<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
 
-        POINT _mouse_position;
-
-        std::set<KeyboardKeys> _held_keys;
-        std::set<MouseButtons> _held_buttons;
+        //? I want this right?
+        std::set<InputType> _held_buttons;
 
         mt::Engine& _engine;
 
-        void _processMouseInput(MouseInputMessage& mouse_input_message);
-
-        void _processKeyboardInput(KeyboardInputMessage& keyboard_input_message);
+        bool isMouseRelative = false;
 
     public:
         InputManager(mt::Engine& engine)
@@ -49,8 +52,27 @@ export namespace mt::input
 
         void processInput(); // friend engine, make protected?
 
-        void keyboardEvent(KeyboardKeys key, KeyState key_state);
+        void acceptInput(
+            InputType input_type, std::variant<std::monostate, int, InputData2D, InputData3D> data = std::monostate()
+        );
 
-        void mouseEvent(__int32 x, __int32 y, bool button1, bool button2, bool button3, bool button4, bool button5);
+        using InputHandler =
+            std::variant<std::function<void()>, std::function<void(int)>, std::function<void(int, int)>, std::function<void(int, int, int)>>;
+
+        void registerInputHandler(InputType input_type, InputHandler input_handler);
+
+        void toggleRelativeMouse()
+        {
+            if (isMouseRelative)
+            {
+                isMouseRelative = false;
+                ShowCursor(true);
+            }
+            else
+            {
+                isMouseRelative = true;
+                ShowCursor(false);
+            }
+        }
     };
 }

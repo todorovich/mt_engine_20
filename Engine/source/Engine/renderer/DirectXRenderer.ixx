@@ -184,6 +184,7 @@ export namespace mt::renderer
 
         float getWindowAspectRatio() const { return _window_aspect_ratio; }
 
+        // TODO: doesn't this belong in the window manager?
         int getWindowWidth() const { return _window_width; }
 
         int getWindowHeight() const { return _window_height; }

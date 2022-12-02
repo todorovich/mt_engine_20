@@ -7,6 +7,10 @@ module WindowsMessages.SystemKeyDown;
 
 import Engine;
 import InputManager;
+import InputModel;
+
+import InputContext;
+import VirtualKeyCode;
 
 LRESULT mt::windows::WM_SystemKeyDown::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
@@ -14,9 +18,12 @@ LRESULT mt::windows::WM_SystemKeyDown::execute(const HWND& hwnd, const UINT& msg
 
 	bool repeated = lParam & key_held_mask;
 
-	_input_manager->keyboardEvent(
-		static_cast<mt::input::KeyboardKeys>(wParam),
-		repeated ? mt::input::KeyState::HELD : mt::input::KeyState::PRESSED
+	_input_manager->acceptInput(
+		mt::input::InputType(
+			(repeated ? mt::input::InputDataType::BUTTON_HELD : mt::input::InputDataType::BUTTON_RELEASED),
+			mt::input::InputContext::NO_CONTEXT,
+			static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam)
+		)
 	);
 
 	// An application should return zero if it processes this message.

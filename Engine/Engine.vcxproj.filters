@@ -268,15 +268,6 @@
     <ClCompile Include="source\Engine\time\TimeManager.cpp">
       <Filter>source\Engine\Time</Filter>
     </ClCompile>
-    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
     <ClCompile Include="source\Engine\windows\WindowManager.ixx">
       <Filter>source\Engine\Windows</Filter>
     </ClCompile>
@@ -300,6 +291,16 @@
     <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
     <ClCompile Include="source\Engine\renderer\Camera.cpp" />
     <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
+    <ClCompile Include="source\Engine\input\InputModel.ixx" />
+    <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\input\InputDevice.ixx" />
+    <ClCompile Include="source\Engine\input\InputContext.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
+    <ClCompile Include="source\Engine\input\InputDataType.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

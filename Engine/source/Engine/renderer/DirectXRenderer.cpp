@@ -466,12 +466,13 @@ void DirectXRenderer::_createShadersAndInputLayout()
 
 	OutputDebugStringW(std::wstring(L"Current Path: " + fs::current_path().wstring() + L'\n' + fs::current_path().parent_path().root_path().wstring() + L'\n').c_str());
 
+	// TODO: this is garbage, make this better.
 	fs::path p;
 	for (auto& e : fs::current_path())
 	{
 		p /= e;
 
-		if (wcsncmp(e.c_str(), L"mt_engine", sizeof(L"mt_engine")) == 0)
+		if (wcsncmp(e.c_str(), L"mt_engine_20", sizeof(L"mt_engine_20")) == 0)
 		{
 			break;
 		}
@@ -479,8 +480,8 @@ void DirectXRenderer::_createShadersAndInputLayout()
 
 	OutputDebugStringW((L"P = " + p.wstring()).c_str());
 
-	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\source\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Engine\\source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Engine\\source\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
 
 	// D3D_INPUT_ELEMENT_DESC
 	mInputLayout =
