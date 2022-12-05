@@ -3,7 +3,7 @@ module;
 
 #include <windows.h>
 
-module WindowsMessages.Destroy;
+module WindowsMessages.destroy;
 
 import Engine;
 

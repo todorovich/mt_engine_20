@@ -8,7 +8,7 @@ export namespace mt::logging
 {
 	class Log
 	{
-		std::fstream filestream;
+		std::fstream _filestream;
 
 	public:
 
@@ -40,16 +40,16 @@ export namespace mt::logging
 
 			log_path /= "Log.html";
 
-			filestream.open(log_path, std::ios::out | std::ios::trunc);
+			_filestream.open(log_path, std::ios::out | std::ios::trunc);
 
-			if (!filestream.is_open())
+			if (!_filestream.is_open())
 			{
 				throw;
 			}
 
 			const auto tab = "    ";
 
-			filestream
+			_filestream
 				<< "<!DOCTYPE html>" << '\n'
 				<< "<html>" << '\n' << '\n'
 				<< "<head>" << '\n'
@@ -74,19 +74,19 @@ export namespace mt::logging
 		// Move Assignment
 		Log& operator=(Log&& other) = default;
 
-		std::ostream& GetOStream() { return filestream; }
+		std::ostream& getOStream() { return _filestream; }
 
 		// Destructor
 		~Log()
 		{
-			filestream
+			_filestream
 				<< '\n'
 				<< "</body>" << '\n' << '\n'
 				<< "</html>" << std::endl;
 
-			filestream.sync();
+			_filestream.sync();
 
-			filestream.close();
+			_filestream.close();
 		};
 	};
 }

@@ -7,14 +7,24 @@ module WindowsMessages.KeyDown;
 
 import Engine;
 import InputManager;
+import InputModel;
+
+import InputDataType;
+import InputContext;
+import MicrosoftVirtualKeyCode;
 
 LRESULT mt::windows::WM_KeyDown::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
-	//OutputDebugStringW(L"WM_KEY_UP_Handler\n");
+	auto key_held_mask = 0x40000000;
 
-	_input_manager->KeyboardEvent(
-		static_cast<mt::input::KeyboardKeys>(wParam),
-		mt::input::KeyState::RELEASED
+	bool repeated = lParam & key_held_mask;
+
+	_input_manager->acceptInput(
+		mt::input::InputType(
+			(repeated ? mt::input::InputDataType::BUTTON_HELD : mt::input::InputDataType::BUTTON_PRESSED),
+			mt::input::InputContext::NO_CONTEXT,
+			static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam)
+		)
 	);
 
 	// An application should return zero if it processes this message.

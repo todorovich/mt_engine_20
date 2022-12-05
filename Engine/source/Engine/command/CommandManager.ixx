@@ -38,7 +38,7 @@ export namespace mt::command
 				auto command = command_queue.front();
 
 				command->execute();
-				command->Destroy();
+				command->destroy();
 
 				command_queue.pop();
 			}

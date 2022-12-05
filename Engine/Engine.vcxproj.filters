@@ -268,15 +268,6 @@
     <ClCompile Include="source\Engine\time\TimeManager.cpp">
       <Filter>source\Engine\Time</Filter>
     </ClCompile>
-    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx">
-      <Filter>source\Engine\Input</Filter>
-    </ClCompile>
     <ClCompile Include="source\Engine\windows\WindowManager.ixx">
       <Filter>source\Engine\Windows</Filter>
     </ClCompile>
@@ -292,6 +283,34 @@
     <ClCompile Include="source\Engine\windows\messages\WM_KeyDown.ixx">
       <Filter>source\Engine\Windows\Windows Messages</Filter>
     </ClCompile>
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
+    <ClCompile Include="source\Engine\renderer\Camera.cpp" />
+    <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
+    <ClCompile Include="source\Engine\input\InputModel.ixx" />
+    <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\input\InputDevice.ixx" />
+    <ClCompile Include="source\Engine\input\InputContext.ixx">
+      <Filter>source\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
+    <ClCompile Include="source\Engine\input\InputDataType.ixx" />
+    <ClCompile Include="source\Engine\Debug.ixx" />
+    <ClCompile Include="source\Engine\input\InputType.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.cpp" />
+    <ClCompile Include="source\Engine\FontManager.ixx" />
+    <ClCompile Include="source\Game\EngineDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -333,5 +352,6 @@
   <ItemGroup>
     <None Include="..\.gitignore" />
     <None Include="..\README.md" />
+    <None Include="source\Engine\input\README.md" />
   </ItemGroup>
 </Project>

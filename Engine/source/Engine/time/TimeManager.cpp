@@ -2,7 +2,7 @@ module TimeManager;
 
 using namespace mt::time;
 
-void TimeManager::Tick()
+void TimeManager::tick()
 {
 	auto now = Clock::now();
 
@@ -12,27 +12,27 @@ void TimeManager::Tick()
 
 	tick_delta_time_ns = curr_tick_time - prev_tick_time;
 
-	_alarm_manager.Tick(curr_tick_time, prev_tick_time, tick_delta_time_ns);
+	_alarm_manager.tick(curr_tick_time, prev_tick_time, tick_delta_time_ns);
 
 	now = Clock::now();
 }
 
-void TimeManager::UpdateComplete()
+void TimeManager::updateComplete()
 {
 	_should_update = false;
 }
 
-void TimeManager::RenderComplete()
+void TimeManager::renderComplete()
 {
 	_should_render = false;
 }
 
-void TimeManager::FrameComplete()
+void TimeManager::frameComplete()
 {
 	_end_of_frame = false;
 }
 
-void TimeManager::Continue()
+void TimeManager::resume()
 {
 	// If the game is paused, unpause it.
 	if (_is_paused)
@@ -41,11 +41,11 @@ void TimeManager::Continue()
 
 		auto continue_time = Clock::now();
 
-		_alarm_manager.Continue(continue_time);
+		_alarm_manager.resume(continue_time);
 
 		for (auto& pair : _stop_watches)
 		{
-			StopWatch*& timer = pair.second;
+			StopWatch* timer = pair.second.get();
 			timer->continueTask(continue_time);
 		}
 	}
@@ -53,7 +53,7 @@ void TimeManager::Continue()
 	// else do nothing
 }
 
-void TimeManager::Pause()
+void TimeManager::pause()
 {
 	// If the game is not paused, pause it.
 	if (_is_paused == false)
@@ -62,11 +62,11 @@ void TimeManager::Pause()
 
 		auto time_paused = Clock::now();
 
-		_alarm_manager.Pause(time_paused);
+		_alarm_manager.pause(time_paused);
 
 		for (auto& pair : _stop_watches)
 		{
-			StopWatch*& chrono = pair.second;
+			StopWatch* chrono = pair.second.get();
 			chrono->pauseTask(time_paused);
 		}
 	}
@@ -74,36 +74,24 @@ void TimeManager::Pause()
 	// else do nothing
 }
 
-void TimeManager::_DeleteAllChronometers()
+void TimeManager::_addEngineAlarms()
 {
-	for (auto& pair : _stop_watches)
-	{
-		StopWatch*& timer = pair.second;
-		delete timer;
-	}
-
-	_stop_watches.clear();
+	_alarm_manager.addAlarm(Clock::now() + _tgt_update_interval_ns, [&]() -> void { _setShouldUpdate(); }, true, _tgt_update_interval_ns);
+	_alarm_manager.addAlarm(Clock::now() + _tgt_render_interval_ns, [&]() -> void { _setShouldRender(); }, true, _tgt_render_interval_ns);
+	_alarm_manager.addAlarm(Clock::now() + _frame_interval, [&]() -> void { _setEndOfFrame(); }, true, _frame_interval);
 }
 
-
-void TimeManager::_AddEngineAlarms()
-{
-	_alarm_manager.AddAlarm(Clock::now() + _tgt_update_interval_ns, [&]() -> void { _SetShouldUpdate(); }, true, _tgt_update_interval_ns);
-	_alarm_manager.AddAlarm(Clock::now() + _tgt_render_interval_ns, [&]() -> void { _SetShouldRender(); }, true, _tgt_render_interval_ns);
-	_alarm_manager.AddAlarm(Clock::now() + _frame_interval, [&]() -> void { _SetEndOfFrame(); }, true, _frame_interval);
-}
-
-void TimeManager::_SetShouldUpdate()
+void TimeManager::_setShouldUpdate()
 {
 	_should_update = true;
 }
 
-void TimeManager::_SetShouldRender()
+void TimeManager::_setShouldRender()
 {
 	_should_render = true;
 }
 
-void TimeManager::_SetEndOfFrame()
+void TimeManager::_setEndOfFrame()
 {
 	_end_of_frame = true;
 }

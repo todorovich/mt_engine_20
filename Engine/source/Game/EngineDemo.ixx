@@ -1,7 +1,9 @@
 module;
 
 #include <windows.h>
-#include <crtdbg.h>
+
+// Fuck macros. This wasted like 30 minutes of my time.
+#undef RELATIVE
 
 export module EngineDemo;
 
@@ -16,43 +18,42 @@ export namespace mt
 		EngineDemo() = default;
 		~EngineDemo() = default;
 
-		virtual bool Initialize(HINSTANCE hInstance) override;
+		virtual bool initialize(HINSTANCE hInstance) override;
 
 	private:
-		virtual void _Update() override;
-		virtual void _Draw() override;
+		virtual void _update() override;
+		virtual void _draw() override;
 
+		void map_input_controls();
 	};
 
-	bool EngineDemo::Initialize(HINSTANCE hInstance)
+	bool EngineDemo::initialize(HINSTANCE hInstance)
 	{
-		if (!Engine::Initialize(hInstance))
+		if (!Engine::initialize(hInstance))
 			return false;
+
+		map_input_controls();
 
 		return true;
 	}
 
-	void EngineDemo::_Update() {}
+	void EngineDemo::_update() {}
 
-	void EngineDemo::_Draw() {}
+	void EngineDemo::_draw() {}
+
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
 {
-	// Enable run-time memory check for debug builds.
-#if defined(DEBUG) | defined(_DEBUG)
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
-
 	try
 	{
 		mt::EngineDemo engine_demo = mt::EngineDemo();
 
-		engine_demo.Initialize(hInstance);
+		engine_demo.initialize(hInstance);
 
-		engine_demo.Run();
+		engine_demo.run();
 
-		engine_demo.Destroy();
+		engine_demo.destroy();
 
 		return 0;
 	}

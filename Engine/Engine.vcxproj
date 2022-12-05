@@ -19,9 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Engine\input\KeyboardInputMessage.ixx" />
-    <ClCompile Include="source\Engine\input\KeyboardKeys.ixx" />
-    <ClCompile Include="source\Engine\input\MouseInputMessage.ixx" />
+    <ClCompile Include="source\Engine\Debug.ixx" />
+    <ClCompile Include="source\Engine\FontManager.ixx" />
+    <ClCompile Include="source\Engine\input\InputContext.ixx" />
+    <ClCompile Include="source\Engine\input\InputDataType.ixx" />
+    <ClCompile Include="source\Engine\input\InputDevice.ixx" />
+    <ClCompile Include="source\Engine\input\InputModel.ixx" />
     <ClCompile Include="source\Engine\command\Command.cpp" />
     <ClCompile Include="source\Engine\command\Command.ixx" />
     <ClCompile Include="source\Engine\command\CommandManager.ixx" />
@@ -29,14 +32,19 @@
     <ClCompile Include="source\Engine\Engine.ixx" />
     <ClCompile Include="source\Engine\input\InputManager.cpp" />
     <ClCompile Include="source\Engine\input\InputManager.ixx" />
+    <ClCompile Include="source\Engine\input\InputType.ixx" />
+    <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx" />
+    <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\logging\Log.ixx" />
     <ClCompile Include="source\Engine\logging\LogManager.ixx" />
     <ClCompile Include="source\Engine\MathHelper.ixx" />
     <ClCompile Include="source\Engine\ObjectPool.ixx" />
+    <ClCompile Include="source\Engine\renderer\Camera.cpp" />
     <ClCompile Include="source\Engine\renderer\Camera.ixx" />
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.cpp" />
     <ClCompile Include="source\Engine\renderer\DirectXRenderer.ixx" />
     <ClCompile Include="source\Engine\renderer\DirectXUtility.ixx" />
+    <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
     <ClCompile Include="source\Engine\renderer\UploadBuffer.ixx" />
     <ClCompile Include="source\Engine\Status.ixx" />
     <ClCompile Include="source\Engine\time\Alarm.ixx" />
@@ -80,6 +88,8 @@
     <ClCompile Include="source\Engine\windows\messages\WM_MiddleMouseButtonUp.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_MouseMove.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_MouseMove.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Move.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Move.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Moving.cpp" />
@@ -104,13 +114,24 @@
     <ClCompile Include="source\Engine\windows\messages\WM_Size.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Sizing.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Sizing.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemCommand.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyDown.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_Timer.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_Timer.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_WindowPositionChanging.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_WindowPositionChanging.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonDown.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_XButtonUp.ixx" />
     <ClCompile Include="source\Engine\windows\WindowsMessage.ixx" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.cpp" />
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
+    <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.ixx" />
+    <ClCompile Include="source\Game\EngineDemo.cpp" />
     <ClCompile Include="source\Game\EngineDemo.ixx" />
     <ClCompile Include="source\Engine\time\StopWatch.ixx" />
     <ClCompile Include="source\Engine\time\TimeManager.cpp" />
@@ -123,6 +144,7 @@
   <ItemGroup>
     <None Include="..\.gitignore" />
     <None Include="..\README.md" />
+    <None Include="source\Engine\input\README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -204,6 +226,7 @@
       <EnableModules>true</EnableModules>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <TranslateIncludes>false</TranslateIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)\source\freetype\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

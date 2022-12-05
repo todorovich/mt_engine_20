@@ -14,13 +14,13 @@ using namespace mt::windows;
 
 LRESULT WM_ExitSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
-	_engine.GetWindowManager()->resize(
-		_engine.GetRenderer()->GetWindowWidth(), _engine.GetRenderer()->GetWindowHeight()
+	_engine.getWindowManager()->resize(
+		_engine.getRenderer()->getWindowWidth(), _engine.getRenderer()->getWindowHeight()
 	);
 	
-	_engine.GetTimeManager()->Continue(); // why?
+	_engine.getTimeManager()->resume(); // why?
 	
-	_engine.GetWindowManager()->setIsWindowResizing(false);
+	_engine.getWindowManager()->setIsWindowResizing(false);
 	
 	return 0;
 }

@@ -60,13 +60,13 @@ using namespace mt;
 Engine* Engine::_instance = nullptr;
 
 Engine::Engine()
-	: command_manager_(std::make_unique<command::CommandManager>())
-	, direct_x_renderer_(std::make_unique<renderer::DirectXRenderer>(*this))
-	, input_manager_(std::make_unique<input::InputManager>(*this))
-	, log_manager_(std::make_unique<logging::LogManager>())
-	, windows_message_manager_(std::make_unique<windows::WindowsMessageManager>(*this))
-	, window_manager_(std::make_unique<windows::WindowManager>(*this))
-	, time_manager_(std::make_unique<time::TimeManager>())
+	: _command_manager(std::make_unique<command::CommandManager>())
+	, _direct_x_renderer(std::make_unique<renderer::DirectXRenderer>(*this))
+	, _input_manager(std::make_unique<input::InputManager>(*this))
+	, _log_manager(std::make_unique<logging::LogManager>())
+	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
+	, _window_manager(std::make_unique<windows::WindowManager>(*this))
+	, _time_manager(std::make_unique<time::TimeManager>())
 {
 	if (_instance == nullptr)
 		_instance = this;
@@ -76,34 +76,34 @@ Engine::Engine()
 
 Engine::~Engine()
 {
-	if (!IsDestroyed())
+	if (!isDestroyed())
 	{
-		Destroy();
+		destroy();
 	}
 };
 
-bool Engine::Initialize(HINSTANCE instance_handle)
+bool Engine::initialize(HINSTANCE instance_handle)
 {
-	windows_message_manager_->Initialize();
+	_windows_message_manager->initialize();
 
 	// Will Register Message Handler WNDPROC
-	if (!GetWindowManager()->initializeMainWindow(instance_handle))
+	if (!getWindowManager()->initializeMainWindow(instance_handle))
 		return false;
 
-	if (!GetRenderer()->InitializeDirect3d(GetWindowManager()->getMainWindowHandle()))
+	if (!getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()))
 		return false;
 
 	// Do the initial Resize code. 
-	GetWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
+	getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
 
 	return true;
 }
 
-Status Engine::Run()
+Status Engine::run()
 {
 	auto run = [&]() {
 
-		GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).startTask();
+		getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->startTask();
 
 		//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
 
@@ -114,21 +114,21 @@ Status Engine::Run()
 		bool quit = false;
 		long long last_frame_outputed = 0;
 
-		while (!quit)
+		while (true)
 		{
 			auto now = time::Clock::now();
 
-			auto last_frame_rendered = GetRenderer()->GetFramesRendered();
+			auto last_frame_rendered = getRenderer()->getFramesRendered();
 
-			if (last_frame_rendered % 144 == 0 && last_frame_outputed != last_frame_rendered)
+			if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
 			{
 				last_frame_outputed = last_frame_rendered;
 
-				mt::time::Duration average = GetTimeManager()->
-					FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME).getAverageTaskInterval();
+				mt::time::Duration average = getTimeManager()->
+					findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->getAverageTaskInterval();
 
 				OutputDebugStringW(
-					(std::to_wstring(GetRenderer()->GetFramesRendered()) + L" frame number : ").c_str()
+					(std::to_wstring(getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
 				);
 
 				OutputDebugStringW(
@@ -140,28 +140,32 @@ Status Engine::Run()
 				);
 			}
 
-			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME).doTask(
+			getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME)->doTask(
 				[&]() {
 					// If there are Window messages then process them.
 					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 					{
+						//VK_ACCEPT
 						TranslateMessage(&msg);
 						DispatchMessage(&msg);
 						if (msg.message == WM_QUIT)
 						{
 							quit = true;
+							break;
 						}
 					}
 				}
 			);
 
-			GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::TICK_TIME).doTask(
-				[&]() { _Tick(); } // do i need the lambda to capture this?
+			if (quit) break;
+
+			getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME)->doTask(
+				[&]() { _tick(); } // do i need the lambda to capture this?
 			);
 		};
 	};
 
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RUN_TIME).doTask(run);
+	getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME)->doTask(run);
 		
 
 	// Join the Tick thread (ensuring it has actually shut down)
@@ -172,23 +176,23 @@ Status Engine::Run()
 	return Status::success;
 }
 
-void Engine::Shutdown()
+void Engine::shutdown()
 {
 	_is_shutting_down = true;
 
-	GetTimeManager()->Pause();
+	getTimeManager()->pause();
 
 	OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
-	Destroy();
+	destroy();
 }
 
-void Engine::Destroy() 
+void Engine::destroy() 
 {
 	if (_instance != nullptr) 
 	{
 		// Destroy the window
-		DestroyWindow(GetWindowManager()->getMainWindowHandle());
+		DestroyWindow(getWindowManager()->getMainWindowHandle());
 
 		_instance = nullptr;
 	}
@@ -196,43 +200,43 @@ void Engine::Destroy()
 	OutputDebugStringW(L"Engine Destroyed\n");
 }
 
-void Engine::_Tick()
+void Engine::_tick()
 {
-	GetTimeManager()->Tick();
+	getTimeManager()->tick();
 		
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).doTask(
+	getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->doTask(
 		[&]() {
-			if (GetTimeManager()->GetShouldUpdate())
+			if (getTimeManager()->getShouldUpdate())
 			{
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).pauseTask();
+				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->pauseTask();
 
 				
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::INPUT_TIME).doTask(
-					[&]() { GetInputManager()->ProcessInput(); }
+				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME)->doTask(
+					[&]() { getInputManager()->processInput(); }
 				);
 
-				GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::UPDATE_TIME).continueTask();
+				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->continueTask();
 				
-				_Update();
+				_update();
 			}
 		}
 	);
 
-	GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::RENDER_TIME).doTask(
+	getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME)->doTask(
 		[&]() {
 			// Render whenever you can, but don't wait.
-			if (GetTimeManager()->GetShouldRender() && GetRenderer()->IsCurrentFenceComplete())
+			if (getTimeManager()->getShouldRender() && getRenderer()->isCurrentFenceComplete())
 			{
-				GetRenderer()->Update();
-				_Draw();
-				GetRenderer()->Render();
-				GetRenderer()->IncrementFence();
-				GetTimeManager()->RenderComplete();
+				getRenderer()->update();
+				_draw();
+				getRenderer()->render();
+				getRenderer()->incrementFence();
+				getTimeManager()->renderComplete();
 
-				mt::time::StopWatch& stop_watch = GetTimeManager()->FindTimer(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
+				mt::time::StopWatch* stop_watch = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
 
-				stop_watch.finishTask();
-				stop_watch.startTask();
+				stop_watch->finishTask();
+				stop_watch->startTask();
 			}	
 		}
 	);

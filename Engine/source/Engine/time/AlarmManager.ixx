@@ -41,13 +41,13 @@ export namespace mt::time
 
 		AlarmManager& operator=(AlarmManager&& other) = delete;
 
-		void Tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
+		void tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
 		{
 			if (!_alarm_queue.empty())
 			{
 				Alarm* alarm = _alarm_queue.top();
 
-				alarm->Tick(current_tick_time, previous_tick_time, delta_time);
+				alarm->tick(current_tick_time, previous_tick_time, delta_time);
 
 				while (alarm->HasTriggered())
 				{
@@ -61,36 +61,36 @@ export namespace mt::time
 					}
 					else
 					{
-						_alarm_pool.ReleaseMemory(alarm);
+						_alarm_pool.releaseMemory(alarm);
 						_alarms_and_timers.erase(alarm);
 					}
 
 					alarm = _alarm_queue.top();
-					alarm->Tick(current_tick_time, previous_tick_time, delta_time);
+					alarm->tick(current_tick_time, previous_tick_time, delta_time);
 				}
 			}
 		}
 
-		void Pause(TimePoint time_paused = Clock::now())
+		void pause(TimePoint time_paused = Clock::now())
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
-				alarm->Pause(time_paused);
+				alarm->pause(time_paused);
 			}
 		}
 
 
-		void Continue(TimePoint time_continued = Clock::now())
+		void resume(TimePoint time_continued = Clock::now())
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
-				alarm->Continue(time_continued);
+				alarm->resume(time_continued);
 			}
 		}
 
-		void AddAlarm(TimePoint time_point, std::function<void()> function, bool repeats = false, Duration repeat_interval = 0ns)
+		void addAlarm(TimePoint time_point, std::function<void()> function, bool repeats = false, Duration repeat_interval = 0ns)
 		{
-			Alarm* alarm = new (_alarm_pool.GetMemory()) Alarm(time_point, function, repeats, repeat_interval);
+			Alarm* alarm = new (_alarm_pool.getMemory()) Alarm(time_point, function, repeats, repeat_interval);
 
 			_alarm_queue.push(alarm);
 			_alarms_and_timers.insert(alarm);

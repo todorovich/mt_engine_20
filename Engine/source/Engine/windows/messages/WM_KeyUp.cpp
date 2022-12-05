@@ -7,14 +7,17 @@ module WindowsMessages.KeyUp;
 
 import Engine;
 import InputManager;
+import InputModel;
+
+import InputContext;
+import MicrosoftVirtualKeyCode;
 
 LRESULT mt::windows::WM_KeyUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
-	//OutputDebugStringW(L"WM_KEY_UP_Handler\n");
-
-	_input_manager->KeyboardEvent(
-		static_cast<mt::input::KeyboardKeys>(wParam),
-		mt::input::KeyState::PRESSED
+	_input_manager->acceptInput(
+		mt::input::InputType(
+			mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam)
+		)
 	);
 
 	// An application should return zero if it processes this message.

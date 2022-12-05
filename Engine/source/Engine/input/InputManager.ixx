@@ -5,28 +5,40 @@ module;
 
 export module InputManager;
 
-export import KeyboardInputMessage;
-export import MouseInputMessage;
+export import std.core;
+
 export import ObjectPool;
+export import Time;
+
+export import InputModel;
 
 export namespace mt { class Engine; }
 
+// Todo: Relative Mouse Position and locking mouse.
 export namespace mt::input
 {
     class InputManager
     {
-        using InputMessageVariant = std::variant<MouseInputMessage, KeyboardInputMessage>;
+        ObjectPool<InputMessage, 1024> _message_pool;
 
-        ObjectPool<InputMessageVariant, 1024> _message_pool;
+        std::queue<InputMessage*> _input_queue;
 
-        std::queue<InputMessageVariant*> _input_queue;
+        std::map<InputType, std::function<void()>>              button_input_handler;
+        std::map<InputType, std::function<void(int)>>           one_dimensional_input_handler;
+        std::map<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
+        std::map<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
 
-        POINT _mouse_position;
-
-        std::set<KeyboardKeys> _held_keys;
-        std::set<MouseButtons> _held_buttons;
+        // Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
+        // you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
+        std::set<InputType> _held_buttons;
 
         mt::Engine& _engine;
+
+        bool isMouseRelative = false;
+
+        void _centerMouseOnScreen();
+
+        POINT _mouse_return_position;
 
     public:
         InputManager(mt::Engine& engine)
@@ -36,17 +48,24 @@ export namespace mt::input
         ~InputManager() = default;
 
         InputManager(const InputManager &other) = delete;
+        
+        InputManager(InputManager&& other) = default;
 
-        InputManager &operator=(const InputManager &other) = delete;
+        InputManager& operator=(const InputManager &other) = delete;
 
-        void ProcessInput(); // friend engine, make protected?
+        InputManager& operator=(InputManager&& other) = default;
 
-        void _ProcessMouseInput(MouseInputMessage& mouse_input_message);
+        void processInput(); // friend engine, make protected?
 
-        void _ProcessKeyboardInput(KeyboardInputMessage& keyboard_input_message);
+        void acceptInput(
+            InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
+        );
 
-        void KeyboardEvent(KeyboardKeys key, KeyState key_state);
+        using InputHandler =
+            std::variant<std::function<void()>, std::function<void(int)>, std::function<void(int, int)>, std::function<void(int, int, int)>>;
 
-        void MouseEvent(__int32 x, __int32 y, bool button1, bool button2, bool button3, bool button4, bool button5);
+        void registerInputHandler(InputType input_type, InputHandler input_handler);
+
+        void toggleRelativeMouse();
     };
 }
