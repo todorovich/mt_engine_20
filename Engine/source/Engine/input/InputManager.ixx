@@ -28,12 +28,17 @@ export namespace mt::input
         std::map<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
         std::map<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
 
-        //? I want this right?
+        // Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
+        // you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
         std::set<InputType> _held_buttons;
 
         mt::Engine& _engine;
 
         bool isMouseRelative = false;
+
+        void _centerMouseOnScreen();
+
+        POINT _mouse_return_position;
 
     public:
         InputManager(mt::Engine& engine)
@@ -61,18 +66,6 @@ export namespace mt::input
 
         void registerInputHandler(InputType input_type, InputHandler input_handler);
 
-        void toggleRelativeMouse()
-        {
-            if (isMouseRelative)
-            {
-                isMouseRelative = false;
-                ShowCursor(true);
-            }
-            else
-            {
-                isMouseRelative = true;
-                ShowCursor(false);
-            }
-        }
+        void toggleRelativeMouse();
     };
 }

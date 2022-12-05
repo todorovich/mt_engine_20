@@ -92,6 +92,8 @@ export namespace mt::time
 
 		Duration getTargetUpdateInterval() const { return _tgt_update_interval_ns; }
 
+		// need to be able to detect if we are dropping frames and adjust this
+		// accordingly
 		Duration getTargetRenderInterval() const { return _tgt_render_interval_ns; }
 
 		bool getShouldUpdate() const { return _should_update; }

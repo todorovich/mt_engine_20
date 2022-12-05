@@ -25,7 +25,6 @@ XMVECTOR Camera::getPosition() const
 	return XMLoadFloat3(&_position);
 }
 
-
 XMFLOAT3 Camera::getPosition3f() const
 {
 	return _position;
@@ -164,7 +163,6 @@ Status Camera::lookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp)
 	return Status::success;
 }
 
-
 Status Camera::lookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up)
 {
 	XMVECTOR P = XMLoadFloat3(&pos);
@@ -173,7 +171,6 @@ Status Camera::lookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT
 
 	return lookAt(P, T, U);;
 }
-
 
 XMMATRIX Camera::getViewMatrix() const
 {
@@ -185,7 +182,6 @@ XMMATRIX Camera::getProjectionMatrix() const
 {
 	return XMLoadFloat4x4(&_projection);
 }
-
 
 XMFLOAT4X4 Camera::getViewFloats() const
 {

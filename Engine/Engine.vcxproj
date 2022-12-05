@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Engine\Debug.ixx" />
+    <ClCompile Include="source\Engine\FontManager.ixx" />
     <ClCompile Include="source\Engine\input\InputContext.ixx" />
     <ClCompile Include="source\Engine\input\InputDataType.ixx" />
     <ClCompile Include="source\Engine\input\InputDevice.ixx" />
@@ -130,6 +131,7 @@
     <ClCompile Include="source\Engine\windows\WindowsMessageManager.ixx" />
     <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.cpp" />
     <ClCompile Include="source\Engine\windows\messages\WM_SystemKeyUp.ixx" />
+    <ClCompile Include="source\Game\EngineDemo.cpp" />
     <ClCompile Include="source\Game\EngineDemo.ixx" />
     <ClCompile Include="source\Engine\time\StopWatch.ixx" />
     <ClCompile Include="source\Engine\time\TimeManager.cpp" />
@@ -224,6 +226,7 @@
       <EnableModules>true</EnableModules>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <TranslateIncludes>false</TranslateIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)\source\freetype\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

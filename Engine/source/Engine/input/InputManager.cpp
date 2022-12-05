@@ -19,6 +19,9 @@ using namespace mt::input;
 void InputManager::processInput()
 {
 	auto size = _input_queue.size();
+
+	std::set<InputType> pressed_buttons{};
+
 	for (auto x = 0u; x < size; x++)
 	{
 		InputMessage* input_message = _input_queue.front();
@@ -29,21 +32,49 @@ void InputManager::processInput()
 
 		switch (input_data_type)
 		{
-			// How do we register actions? Reregister given context individually into IDLE/PRESSED/HELD/RELEASED?
-			// this would allow to search for only the one that happened, and use that, but could overlap another context?
-			// eg register press and pressed|released for A. What happens on conflict? Multimap? In order to tell what to unregister
-			// wed have to not modify the inputtype at all if this double reg is valid. 
-			case InputDataType::BUTTON_IDLE: [[fallthrough]];
-			case InputDataType::BUTTON_PRESSED: [[fallthrough]];
-			case InputDataType::BUTTON_HELD: [[fallthrough]];
-			case InputDataType::BUTTON_RELEASED:
+			// check if button is in held buttons
+			// if so then trigger button released action and remove it
+			// if not trigger button idle action
+			case InputDataType::BUTTON_IDLE: [[fallthrough]]; 
+			case InputDataType::BUTTON_RELEASED: 
 			{
-				if (auto it = button_input_handler.find(input_type); it != button_input_handler.end()) it->second();
-				
-				if constexpr (mt::DEBUG)
+				auto held_input_type =
+					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
+				if (auto it = _held_buttons.find(held_input_type); it != _held_buttons.end())
 				{
-					auto s = to_wstring(*input_message) + L'\n';
-					if constexpr (mt::DEBUG) OutputDebugStringW(s.c_str());
+					auto adjusted_input_type =
+						InputType(input_type.input_device, InputDataType::BUTTON_RELEASED, input_type.input_context, input_type.virtual_key_code);
+
+					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+
+					_held_buttons.erase(it);
+				}
+				else
+				{
+					auto adjusted_input_type =
+						InputType(input_type.input_device, InputDataType::BUTTON_IDLE, input_type.input_context, input_type.virtual_key_code);
+
+					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+				}
+			}
+				break;
+
+			// check if button is in held buttons
+			// if so then noop (Wait for held buttons loop to trigger action)
+			// if not then trigger button pressed and put button in set to be added to held buttons after the action loop
+			case InputDataType::BUTTON_HELD: [[fallthrough]]; 
+			case InputDataType::BUTTON_PRESSED: 
+			{
+				auto held_input_type =
+					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
+				if (auto it = _held_buttons.find(held_input_type); it == _held_buttons.end())
+				{
+					auto adjusted_input_type =
+						InputType(input_type.input_device, InputDataType::BUTTON_PRESSED, input_type.input_context, input_type.virtual_key_code);
+
+					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+
+					pressed_buttons.insert(held_input_type);
 				}
 			}
 				break;
@@ -53,12 +84,6 @@ void InputManager::processInput()
 				{
 					InputData1D input_data = std::get<mt::input::InputData1D>(input_message->data);
 					it->second(input_data.x);
-				}
-
-				if constexpr (mt::DEBUG)
-				{
-					auto s = to_wstring(*input_message) + L'\n';
-					if constexpr (mt::DEBUG) OutputDebugStringW(s.c_str());
 				}
 				break;
 
@@ -106,6 +131,14 @@ void InputManager::processInput()
 
 		_message_pool.releaseMemory(input_message);
 	}
+
+	// Trigger the held buttons.
+	for (auto input_type : _held_buttons)
+	{
+		if (auto it = button_input_handler.find(input_type); it != button_input_handler.end()) it->second();
+	}
+	
+	_held_buttons.merge(pressed_buttons);
 }
 
 void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data)
@@ -115,6 +148,30 @@ void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std
 	);
 }
 
+void mt::input::InputManager::toggleRelativeMouse()
+{
+	if (isMouseRelative)
+	{
+		isMouseRelative = false;
+
+		ShowCursor(true);
+	
+		SetCursorPos(_mouse_return_position.x, _mouse_return_position.y);
+	}
+	else
+	{
+		isMouseRelative = true;
+		
+		const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
+		const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+
+		GetCursorPos(&_mouse_return_position);
+
+		SetCursorPos(half_width, half_height);
+
+		ShowCursor(false);
+	}
+}
 
 void mt::input::InputManager::registerInputHandler(InputType input_type, InputHandler input_handler)
 {

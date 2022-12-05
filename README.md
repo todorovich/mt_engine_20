@@ -1,4 +1,10 @@
 # mt_engine_20
+
+
+Dependencies:
+- truetype
+
+
 Converted to use modules and c++20
 
 ```
