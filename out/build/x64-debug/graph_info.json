@@ -1,0 +1,86 @@
+{
+ "options": [
+  [
+   "brotli:enable_debug",
+   "False"
+  ],
+  [
+   "brotli:enable_log",
+   "False"
+  ],
+  [
+   "brotli:enable_portable",
+   "False"
+  ],
+  [
+   "brotli:enable_rbit",
+   "True"
+  ],
+  [
+   "brotli:endianness",
+   "None"
+  ],
+  [
+   "brotli:shared",
+   "False"
+  ],
+  [
+   "brotli:target_bits",
+   "None"
+  ],
+  [
+   "bzip2:build_executable",
+   "True"
+  ],
+  [
+   "bzip2:shared",
+   "False"
+  ],
+  [
+   "freetype:shared",
+   "False"
+  ],
+  [
+   "freetype:subpixel",
+   "False"
+  ],
+  [
+   "freetype:with_brotli",
+   "True"
+  ],
+  [
+   "freetype:with_bzip2",
+   "True"
+  ],
+  [
+   "freetype:with_png",
+   "True"
+  ],
+  [
+   "freetype:with_zlib",
+   "True"
+  ],
+  [
+   "libpng:api_prefix",
+   ""
+  ],
+  [
+   "libpng:shared",
+   "False"
+  ],
+  [
+   "libpng:sse",
+   "True"
+  ],
+  [
+   "zlib:shared",
+   "False"
+  ]
+ ],
+ "root": {
+  "name": null,
+  "version": null,
+  "user": null,
+  "channel": null
+ }
+}

@@ -1,0 +1,11 @@
+target_sources(Engine
+	PRIVATE
+		TimeManager.cpp
+	PUBLIC
+		Alarm.ixx
+		AlarmManager.ixx
+		Stopwatch.ixx
+		Time.ixx
+		TimeManager.ixx
+		TImer.ixx
+)

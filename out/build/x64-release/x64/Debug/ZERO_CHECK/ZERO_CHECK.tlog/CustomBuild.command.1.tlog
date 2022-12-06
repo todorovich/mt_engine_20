@@ -1,0 +1,10 @@
+^C:\USERS\MICHO\SOURCE\REPOS\MT_ENGINE_20\OUT\BUILD\X64-RELEASE\CMAKEFILES\B66AB56F14860BD6B0417072D0EFFEBD\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/micho/source/repos/mt_engine_20 -BC:/Users/micho/source/repos/mt_engine_20/out/build/x64-release --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/micho/source/repos/mt_engine_20/out/build/x64-release/Engine.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -700,7 +700,7 @@ void DirectXRenderer::_logAdapters()
 		text += desc.Description;
 		text += L"\n";
 
-		OutputDebugString(text.c_str());
+		OutputDebugStringW(text.c_str());
 
 		adapterList.push_back(adapter);
 
@@ -727,7 +727,7 @@ void DirectXRenderer::_logAdapterOutputs(IDXGIAdapter* adapter)
 		std::wstring text = L"***Output: ";
 		text += desc.DeviceName;
 		text += L"\n";
-		OutputDebugString(text.c_str());
+		OutputDebugStringW(text.c_str());
 
 		_logOutputDisplayModes(output, _back_buffer_format);
 
@@ -759,7 +759,7 @@ void DirectXRenderer::_logOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT fo
 			L"Refresh = " + std::to_wstring(n) + L"/" + std::to_wstring(d) +
 			L"\n";
 
-		::OutputDebugString(text.c_str());
+		::OutputDebugStringW(text.c_str());
 	}
 }
 

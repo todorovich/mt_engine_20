@@ -1,0 +1,4 @@
+C:/Users/micho/source/repos/mt_engine_20/out/build/x64-debug/CMakeFiles/ALL_BUILD.dir
+C:/Users/micho/source/repos/mt_engine_20/out/build/x64-debug/CMakeFiles/ZERO_CHECK.dir
+C:/Users/micho/source/repos/mt_engine_20/out/build/x64-debug/Engine/CMakeFiles/Engine.dir
+C:/Users/micho/source/repos/mt_engine_20/out/build/x64-debug/Game/CMakeFiles/Game.dir

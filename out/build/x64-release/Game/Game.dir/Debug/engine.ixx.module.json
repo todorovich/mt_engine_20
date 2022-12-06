@@ -1,0 +1,14 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\engine.ixx",
+        "ProvidedModule": "Engine",
+        "ImportedModules": [
+            "Time",
+            "Status",
+            "std.core",
+            "Debug"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

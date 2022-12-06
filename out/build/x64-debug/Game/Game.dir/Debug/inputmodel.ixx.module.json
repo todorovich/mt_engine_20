@@ -1,0 +1,18 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\input\\inputmodel.ixx",
+        "ProvidedModule": "InputModel",
+        "ImportedModules": [
+            "std.core",
+            "Time",
+            "MicrosoftVirtualKeyCode",
+            "InputDevice",
+            "InputDataType",
+            "InputContext",
+            "VirtualKeyCode",
+            "InputType"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

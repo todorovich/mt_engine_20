@@ -1,0 +1,15 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\time\\timemanager.ixx",
+        "ProvidedModule": "TimeManager",
+        "ImportedModules": [
+            "Time",
+            "Timer",
+            "AlarmManager",
+            "StopWatch",
+            "std.core"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

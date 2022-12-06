@@ -1,0 +1,10 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\logging\\logmanager.ixx",
+        "ProvidedModule": "LogManager",
+        "Includes": [],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

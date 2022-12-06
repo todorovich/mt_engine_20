@@ -1,0 +1,13 @@
+target_sources(Engine
+	PRIVATE
+		InputManager.cpp
+	PUBLIC
+		InputContext.ixx
+		InputDataType.ixx
+		InputDevice.ixx
+		InputManager.ixx
+		InputModel.ixx
+		InputType.ixx
+		MicrosoftVirtualKeyCode.ixx
+		VirtualKeyCode.ixx
+)

@@ -1,0 +1,12 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\renderer\\directxutility.ixx",
+        "ProvidedModule": "DirectXUtility",
+        "ImportedModules": [
+            "MathHelper",
+            "std.core"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

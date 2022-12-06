@@ -1,0 +1,16 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\renderer\\directxrenderer.ixx",
+        "ProvidedModule": "DirectXRenderer",
+        "ImportedModules": [
+            "Camera",
+            "MathHelper",
+            "std.core",
+            "DirectXUtility",
+            "UploadBuffer",
+            "Geometry"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

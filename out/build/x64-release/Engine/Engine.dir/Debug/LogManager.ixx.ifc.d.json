@@ -1,0 +1,23 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\logging\\logmanager.ixx",
+        "ProvidedModule": "LogManager",
+        "Includes": [],
+        "ImportedModules": [
+            {
+                "Name": "Log",
+                "BMI": "C:\\Users\\micho\\source\\repos\\mt_engine_20\\out\\build\\x64-release\\Engine\\Engine.dir\\Debug\\Log.ixx.ifc"
+            },
+            {
+                "Name": "std.core",
+                "BMI": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.35.32019\\ifc\\x64\\debug\\std.core.ifc"
+            },
+            {
+                "Name": "std.filesystem",
+                "BMI": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.35.32019\\ifc\\x64\\debug\\std.filesystem.ifc"
+            }
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

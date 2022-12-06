@@ -1,0 +1,12 @@
+{
+    "Version": "1.1",
+    "Data": {
+        "Source": "c:\\users\\micho\\source\\repos\\mt_engine_20\\engine\\source\\engine\\windows\\messages\\wm_activate.ixx",
+        "ProvidedModule": "WindowsMessages.Activate",
+        "ImportedModules": [
+            "WindowsMessage",
+            "std.core"
+        ],
+        "ImportedHeaderUnits": []
+    }
+}

@@ -1,0 +1,12 @@
+target_sources(Engine
+	PRIVATE
+		Camera.cpp
+		DirectXRenderer.cpp
+	PUBLIC
+		Camera.ixx
+		d3dx12.h
+		DirectXRenderer.ixx
+		DirectXUtility.ixx
+		Geometry.ixx
+		UploadBuffer.ixx
+)
