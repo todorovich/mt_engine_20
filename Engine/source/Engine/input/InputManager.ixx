@@ -23,10 +23,10 @@ export namespace mt::input
 
         std::queue<InputMessage*> _input_queue;
 
-        std::map<InputType, std::function<void()>>              button_input_handler;
-        std::map<InputType, std::function<void(int)>>           one_dimensional_input_handler;
-        std::map<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
-        std::map<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
+        std::multimap<InputType, std::function<void()>>              button_input_handler;
+        std::multimap<InputType, std::function<void(int)>>           one_dimensional_input_handler;
+        std::multimap<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
+        std::multimap<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
 
         // Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
         // you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
@@ -63,8 +63,21 @@ export namespace mt::input
 
         using InputHandler =
             std::variant<std::function<void()>, std::function<void(int)>, std::function<void(int, int)>, std::function<void(int, int, int)>>;
+        
+        void registerInputHandler(InputHandler input_handler, InputType input_types);
 
-        void registerInputHandler(InputType input_type, InputHandler input_handler);
+        template <typename First>
+        void registerInputHandler(InputHandler input_handler, const First& first)
+        {
+            registerInputHandler(input_handler, first);
+        }
+
+        template <typename First, typename... Rest> 
+        void registerInputHandler(InputHandler input_handler, const First& first, const Rest&... rest)
+        {
+            registerInputHandler(input_handler, first);
+            registerInputHandler(input_handler, rest...); // recursive call using pack expansion syntax
+        }
 
         void toggleRelativeMouse();
     };

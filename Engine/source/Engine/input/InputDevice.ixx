@@ -20,10 +20,11 @@ export namespace mt::input
 	{
 		switch (input_device)
 		{
-			case InputDevice::KEYBOARD: return L"KEYBOARD";
-			case InputDevice::MOUSE: return L"MOUSE";
+			case InputDevice::KEYBOARD: return L"KEYBOARD"sv;
+			case InputDevice::MOUSE: return L"MOUSE"sv;
 			case InputDevice::GAMEPAD: return L"GAMEPAD";
-			case InputDevice::FLIGHTSTICK: return L"FLIGHT STICK";
+			case InputDevice::FLIGHTSTICK: return L"FLIGHT STICK"sv;
+			default: return L""sv;
 		}
 	}
 }

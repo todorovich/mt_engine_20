@@ -33,36 +33,56 @@ export namespace mt::input
 		return static_cast<InputContext>(static_cast<unsigned short>(a) & static_cast<unsigned short>(b));
 	}
 
-	constexpr std::wstring to_wstring(InputContext key)
+	constexpr std::wstring_view to_wstring(InputContext key)
 	{
 		if (key == InputContext::NO_CONTEXT) 
 		{
-			return L"NO CONTEXT";
+			return L"NO CONTEXT"sv;
 		}
 		else 
 		{
-			std::set<std::wstring> descriptions;
+			std::vector<std::wstring_view> descriptions;
 
-			if ((key & InputContext::CHIRAL) == InputContext::CHIRAL) descriptions.insert(L"CHIRAL");
-			if ((key & InputContext::RIGHT) == InputContext::RIGHT) descriptions.insert(L"RIGHT");
-			if ((key & InputContext::FUNCTION_KEY) == InputContext::FUNCTION_KEY) descriptions.insert(L"FUNCTION KEY");
-			if ((key & InputContext::EXTENDED_KEY) == InputContext::EXTENDED_KEY) descriptions.insert(L"EXTENDED KEY");
-			if ((key & InputContext::RELATIVE) == InputContext::RELATIVE) descriptions.insert(L"RELATIVE");
+			auto chiral = L"CHIRAL"sv;
+			auto right = L"RIGHT"sv;
+			auto function_key = L"FUNCTION KEY"sv;
+			auto extended_key = L"EXTENDED KEY"sv;
+			auto relative = L"RELATIVE"sv;
+			auto separator = L" | "sv;
+
+			if ((key & InputContext::CHIRAL) == InputContext::CHIRAL) descriptions.emplace_back(chiral);
+			if ((key & InputContext::RIGHT) == InputContext::RIGHT) descriptions.emplace_back(right);
+			if ((key & InputContext::FUNCTION_KEY) == InputContext::FUNCTION_KEY) descriptions.emplace_back(function_key);
+			if ((key & InputContext::EXTENDED_KEY) == InputContext::EXTENDED_KEY) descriptions.emplace_back(extended_key);
+			if ((key & InputContext::RELATIVE) == InputContext::RELATIVE) descriptions.emplace_back(relative);
+
+			// Set the size to the size of all the separators
+			std::size_t size = (descriptions.size() - 1) * separator.length() * sizeof(wchar_t);
+			for (auto description : descriptions)
+			{
+				// add in the size of the strings.
+				size += description.size() * sizeof(wchar_t);
+			}
 
 			if (auto it = descriptions.begin(); it != descriptions.end())
 			{
-				std::wstring retval = *it;
+				std::wstring retval{};
+				
+				retval.reserve(size);
+
+				retval += *it;
 
 				for (it++; it != descriptions.end(); it++)
 				{
-					retval += L" | " + *it;
+					retval += L" | ";
+					retval += *it;
 				}
 
 				return retval;
 			}
 			else
 			{
-				return L"INVALID CONTEXT";
+				return L"INVALID CONTEXT"sv;
 			}
 		}
 	}
