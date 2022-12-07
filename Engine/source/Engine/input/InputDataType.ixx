@@ -30,6 +30,7 @@ export namespace mt::input
 			case InputDataType::ONE_DIMENSIONAL:	return L"ONE DIMENSIONAL"sv;
 			case InputDataType::TWO_DIMENSIONAL:	return L"TWO DIMENSIONAL"sv;
 			case InputDataType::THREE_DIMENSIONAL:	return L"THREE DIMENSIONAL"sv;
+			default: return L"INVALID DATA TYPE"sv;
 		}
 	}
 }

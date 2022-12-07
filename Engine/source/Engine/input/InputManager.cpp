@@ -40,24 +40,35 @@ void InputManager::processInput()
 			{
 				auto held_input_type =
 					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
-				if (auto it = _held_buttons.find(held_input_type); it != _held_buttons.end())
+
+				if (auto held_it = _held_buttons.find(held_input_type); held_it != _held_buttons.end())
 				{
-					auto adjusted_input_type =
+					auto released_input_type =
 						InputType(input_type.input_device, InputDataType::BUTTON_RELEASED, input_type.input_context, input_type.virtual_key_code);
 
-					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+					auto released_range = button_input_handler.equal_range(released_input_type);
 
-					_held_buttons.erase(it);
+					for (auto released_it = released_range.first; released_it != released_range.second; ++released_it)
+					{
+						released_it->second();
+					}
+
+					_held_buttons.erase(held_it);
 				}
 				else
 				{
-					auto adjusted_input_type =
+					auto idle_input_type =
 						InputType(input_type.input_device, InputDataType::BUTTON_IDLE, input_type.input_context, input_type.virtual_key_code);
 
-					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+					auto idle_range = button_input_handler.equal_range(idle_input_type);
+
+					for (auto idle_it = idle_range.first; idle_it != idle_range.second; ++idle_it)
+					{
+						idle_it->second();
+					}
 				}
 			}
-				break;
+			break;
 
 			// check if button is in held buttons
 			// if so then noop (Wait for held buttons loop to trigger action)
@@ -67,25 +78,37 @@ void InputManager::processInput()
 			{
 				auto held_input_type =
 					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
-				if (auto it = _held_buttons.find(held_input_type); it == _held_buttons.end())
+
+				// NOT HELD
+				if (auto held_it = _held_buttons.find(held_input_type); held_it == _held_buttons.end())
 				{
-					auto adjusted_input_type =
+					auto pressed_input_type =
 						InputType(input_type.input_device, InputDataType::BUTTON_PRESSED, input_type.input_context, input_type.virtual_key_code);
 
-					if (auto it2 = button_input_handler.find(adjusted_input_type); it2 != button_input_handler.end()) it2->second();
+					auto pressed_range = button_input_handler.equal_range(pressed_input_type);
+
+					for (auto pressed_it = pressed_range.first; pressed_it != pressed_range.second; ++pressed_it)
+					{
+						pressed_it->second();
+					}
 
 					pressed_buttons.insert(held_input_type);
 				}
+				// ELSE (HELD) no op, held buttons will be executed after all input has been processed. To allow for release to happen, and to override held.
 			}
-				break;
+			break;
 			
 			case InputDataType::ONE_DIMENSIONAL:
-				if (auto it = one_dimensional_input_handler.find(input_type); it != one_dimensional_input_handler.end())
+			{
+				auto range = one_dimensional_input_handler.equal_range(input_type);
+
+				for (auto it = range.first; it != range.second; ++it)
 				{
 					InputData1D input_data = std::get<mt::input::InputData1D>(input_message->data);
 					it->second(input_data.x);
 				}
-				break;
+			}
+			break;
 
 			case InputDataType::TWO_DIMENSIONAL:
 			{
@@ -93,38 +116,45 @@ void InputManager::processInput()
 
 				if (isMouseRelative && input_type.input_device == mt::input::InputDevice::MOUSE)
 				{
-
 					auto relative_mouse_input_type = mt::input::InputType(
 						mt::input::InputDevice::MOUSE, mt::input::InputDataType::TWO_DIMENSIONAL, mt::input::InputContext::RELATIVE
 					);
 
-					if (auto it = two_dimensional_input_handler.find(relative_mouse_input_type); it != two_dimensional_input_handler.end())
+					auto range = two_dimensional_input_handler.equal_range(relative_mouse_input_type);
+
+					const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
+					const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+
+					for (auto it = range.first; it != range.second; ++it)
 					{
-						const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
-						const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
-
-						SetCursorPos(half_width, half_height);
-
 						it->second(data2d.x - half_width, data2d.y - half_height);
 					}
+
+					SetCursorPos(half_width, half_height);
 				}
 				else
 				{
-					if (auto it = two_dimensional_input_handler.find(input_type); it != two_dimensional_input_handler.end())
+					auto range = two_dimensional_input_handler.equal_range(input_type);
+
+					for (auto it = range.first; it != range.second; ++it)
 					{
 						it->second(data2d.x, data2d.y);
 					}
 				}
 			}
-				break;
+			break;
 
 			case InputDataType::THREE_DIMENSIONAL:
-				if (auto it = three_dimensional_input_handler.find(input_type); it != three_dimensional_input_handler.end())
+			{
+				auto range = three_dimensional_input_handler.equal_range(input_type);
+				auto data3d = std::get<InputData3D>(input_message->data);
+
+				for (auto it = range.first; it != range.second; ++it)
 				{
-					auto data3d = std::get<InputData3D>(input_message->data);
 					it->second(data3d.x, data3d.y, data3d.z);
 				}
-				break;
+			}
+			break;
 		}
 
 		_input_queue.pop();
@@ -173,7 +203,7 @@ void mt::input::InputManager::toggleRelativeMouse()
 	}
 }
 
-void mt::input::InputManager::registerInputHandler(InputType input_type, InputHandler input_handler)
+void mt::input::InputManager::registerInputHandler(InputHandler input_handler, InputType input_type)
 {
 	switch (input_type.input_data_type)
 	{

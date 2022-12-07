@@ -72,8 +72,8 @@ export namespace mt::input
 	// TODO: add 1-3d input as appropriate
 	struct InputMessage
 	{
-		const InputType				input_type;
 		const mt::time::TimePoint	time_point;
+		const InputType				input_type;
 
 		const std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data;
 
