@@ -1,4 +1,4 @@
-
+module;
 #include <DirectXMath.h>
 #include <Windows.h>
 // Fuck macros. This wasted like 30 minutes of my time.
@@ -15,64 +15,50 @@ using namespace mt::input;
 
 void mt::EngineDemo::map_input_controls()
 {
+	auto quit = [&]() { PostMessage(getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0); };
 	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ESCAPE),
 		// TODO: make this something I can call on the engine proper.
-		[&]() { PostMessage(getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0); }
+		quit,
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ESCAPE)
 	);
 
+	auto toggle_relative = [&]() { getInputManager()->toggleRelativeMouse(); };
 	getInputManager()->registerInputHandler(
+		toggle_relative, 
 		InputType(InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE),
-		[&]() { getInputManager()->toggleRelativeMouse(); }
+		InputType(InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE)
 	);
 
-	getInputManager()->registerInputHandler(
-		InputType(InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE),
-		[&]() { getInputManager()->toggleRelativeMouse(); }
-	);
-
-	auto walk_speed = 0.0001;// *getRenderer()->getTargetRenderInterval().;
+	constexpr float walk_speed = 0.0001f;
+	//float walk_speed = 1.0f * getRenderer()->getTargetRenderInterval();
 
 	auto walk_forward = [&]() { getRenderer()->getCurrentCamera().walk(walk_speed); };
 	getInputManager()->registerInputHandler(
+		walk_forward,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::W),
-		walk_forward
-	);
-	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::W),
-		walk_forward
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::W)
 	);
 
 	auto walk_backward = [&]() { getRenderer()->getCurrentCamera().walk(-walk_speed); };
 	getInputManager()->registerInputHandler(
+		walk_backward,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::S),
-		walk_backward
-	);
-	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::S),
-		walk_backward
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::S)
 	);
 
 	auto strafe_left = [&]() { getRenderer()->getCurrentCamera().strafe(-walk_speed); };
 	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::A ),
-		strafe_left
-	);
-	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::A),
-		strafe_left
+		strafe_left,
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::A),
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::A)
 	);
 
 	auto strafe_right = [&]() { getRenderer()->getCurrentCamera().strafe(walk_speed); };
 	getInputManager()->registerInputHandler(
+		strafe_right,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::D),
-		strafe_right
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::D)
 	);
-	getInputManager()->registerInputHandler(
-		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::D),
-		strafe_right
-	);
-
 
 	auto mouse_look = [&](int x, int y) {
 		auto& camera = getRenderer()->getCurrentCamera();
@@ -87,7 +73,7 @@ void mt::EngineDemo::map_input_controls()
 	};
 
 	getInputManager()->registerInputHandler(
-		InputType(InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE, VirtualKeyCode::NO_KEY),
-		mouse_look
+		mouse_look,
+		InputType(InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE, VirtualKeyCode::NO_KEY)
 	);
 }
