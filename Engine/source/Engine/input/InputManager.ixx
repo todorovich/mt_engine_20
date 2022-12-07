@@ -36,8 +36,6 @@ export namespace mt::input
 
         bool isMouseRelative = false;
 
-        void _centerMouseOnScreen();
-
         POINT _mouse_return_position;
 
     public:

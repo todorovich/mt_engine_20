@@ -19,7 +19,7 @@ export template<typename T> class UploadBuffer
     bool _is_constant_buffer = false;
 
 public:
-    UploadBuffer(ID3D12Device* device, UINT element_count, bool is_constant_buffer) :
+    UploadBuffer(ID3D12Device* device, UINT64 element_count, bool is_constant_buffer) :
         _is_constant_buffer(is_constant_buffer)
     {
         element_byte_size = sizeof(T);

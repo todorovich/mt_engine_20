@@ -147,7 +147,7 @@ void InputManager::processInput()
 			case InputDataType::THREE_DIMENSIONAL:
 			{
 				auto range = three_dimensional_input_handler.equal_range(input_type);
-				auto data3d = std::get<InputData3D>(input_message->data);
+				auto& data3d = std::get<InputData3D>(input_message->data);
 
 				for (auto it = range.first; it != range.second; ++it)
 				{

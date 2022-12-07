@@ -447,8 +447,6 @@ export namespace mt::input
 					return InputType(InputDevice::KEYBOARD, input_data_type, input_context, static_cast<VirtualKeyCode>(virtual_key_code_in));
 					break;
 			}
-
-			return InputType();
 		}
 
 		auto operator<=>(const InputType&) const = default;
