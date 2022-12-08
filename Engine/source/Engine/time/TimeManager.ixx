@@ -8,7 +8,7 @@ export import StopWatch;
 
 export import std.core;
 
-export using namespace std::literals::chrono_literals;
+export using namespace std::literals;
 
 export namespace mt { class Engine; }
 

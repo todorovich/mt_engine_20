@@ -1,4 +1,6 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
+module;
+
 #include <windows.h>
 #include <wrl.h>
 #include <combaseapi.h>
@@ -14,8 +16,9 @@ module DirectXRenderer;
 
 import Engine;
 import DirectXUtility;
+
 import std.core;
-import std.filesystem;
+import std.filesystem;	
 
 using Microsoft::WRL::ComPtr;
 using namespace mt::renderer;

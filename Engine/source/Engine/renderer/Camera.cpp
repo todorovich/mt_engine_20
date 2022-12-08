@@ -196,7 +196,8 @@ XMFLOAT4X4 Camera::getProjectionFloats() const
 
 Status Camera::strafe(float d)
 {
-	// mPosition += d*mRight
+	std::scoped_lock lock(_camera_mutex);
+
 	XMVECTOR scalar = XMVectorReplicate(d);
 	XMVECTOR right = XMLoadFloat3(&_right);
 	XMVECTOR position = XMLoadFloat3(&_position);
@@ -211,12 +212,27 @@ Status Camera::strafe(float d)
 Status Camera::walk(float d)
 {
 	std::scoped_lock lock(_camera_mutex);
-	// mPosition += d*_look
+
 	XMVECTOR scalar = XMVectorReplicate(d);
 	XMVECTOR look = XMLoadFloat3(&_look);
 	XMVECTOR position = XMLoadFloat3(&_position);
 
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, look, position));
+
+	_view_matrix_requires_update = true;
+
+	return Status::success;
+}
+
+Status Camera::fly(float d)
+{
+	std::scoped_lock lock(_camera_mutex);
+	
+	XMVECTOR scalar = XMVectorReplicate(d);
+	XMVECTOR up = XMLoadFloat3(&_up);
+	XMVECTOR position = XMLoadFloat3(&_position);
+
+	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, up, position));
 
 	_view_matrix_requires_update = true;
 

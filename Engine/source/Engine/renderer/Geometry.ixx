@@ -9,7 +9,7 @@ module;
 
 export module Geometry;
 
-import std.core;
+export import std.core;
 
 namespace mt::renderer 
 {

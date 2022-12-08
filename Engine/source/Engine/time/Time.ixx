@@ -2,8 +2,6 @@ export module Time;
 
 export import std.core;
 
-export using namespace std::literals::chrono_literals;
-
 export namespace mt::time
 {
     using Clock = std::chrono::steady_clock;

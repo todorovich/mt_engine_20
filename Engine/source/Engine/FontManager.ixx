@@ -5,7 +5,7 @@ module;
 
 export module FontManager;
 
-import std.core;
+export import std.core;
 
 class FontManager {
 

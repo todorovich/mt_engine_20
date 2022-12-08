@@ -22,9 +22,8 @@ void mt::EngineDemo::map_input_controls()
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ESCAPE)
 	);
 
-	auto toggle_relative = [&]() { getInputManager()->toggleRelativeMouse(); };
 	getInputManager()->registerInputHandler(
-		toggle_relative, 
+		[&]() { getInputManager()->toggleRelativeMouse(); },
 		InputType(InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE),
 		InputType(InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE)
 	);
@@ -32,33 +31,42 @@ void mt::EngineDemo::map_input_controls()
 	constexpr float walk_speed = 0.0001f;
 	//float walk_speed = 1.0f * getRenderer()->getTargetRenderInterval();
 
-	auto walk_forward = [&]() { getRenderer()->getCurrentCamera().walk(walk_speed); };
 	getInputManager()->registerInputHandler(
-		walk_forward,
+		[&]() { getRenderer()->getCurrentCamera().walk(walk_speed); },
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::W),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::W)
 	);
 
-	auto walk_backward = [&]() { getRenderer()->getCurrentCamera().walk(-walk_speed); };
 	getInputManager()->registerInputHandler(
-		walk_backward,
+		[&]() { getRenderer()->getCurrentCamera().walk(-walk_speed); },
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::S),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::S)
 	);
 
-	auto strafe_left = [&]() { getRenderer()->getCurrentCamera().strafe(-walk_speed); };
 	getInputManager()->registerInputHandler(
-		strafe_left,
+		[&]() { getRenderer()->getCurrentCamera().strafe(-walk_speed); },
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::A),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::A)
 	);
 
-	auto strafe_right = [&]() { getRenderer()->getCurrentCamera().strafe(walk_speed); };
 	getInputManager()->registerInputHandler(
-		strafe_right,
+		[&]() { getRenderer()->getCurrentCamera().strafe(walk_speed); },
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::D),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::D)
 	);
+
+	getInputManager()->registerInputHandler(
+		[&]() { getRenderer()->getCurrentCamera().fly(walk_speed); },
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::SPACE),
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::SPACE)
+	);
+
+	getInputManager()->registerInputHandler(
+		[&]() { getRenderer()->getCurrentCamera().fly(-walk_speed); },
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::CONTROL),
+		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::CONTROL)
+	);
+
 
 	auto mouse_look = [&](int x, int y) {
 		auto& camera = getRenderer()->getCurrentCamera();
