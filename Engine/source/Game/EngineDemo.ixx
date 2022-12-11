@@ -43,7 +43,7 @@ export namespace mt
 
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
+int WINAPI WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE prevInstance, [[maybe_unused]] PSTR cmdLine, [[maybe_unused]] int showCmd)
 {
 	try
 	{

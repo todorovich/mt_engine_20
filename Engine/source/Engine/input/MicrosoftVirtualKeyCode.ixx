@@ -6,8 +6,6 @@ export module MicrosoftVirtualKeyCode;
 
 export import std.core;
 
-export using namespace std::literals;
-
 export namespace mt::input
 {
 	enum struct MicrosoftVirtualKeyCode : unsigned short

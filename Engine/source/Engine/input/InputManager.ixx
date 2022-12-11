@@ -12,8 +12,6 @@ export import Time;
 
 export import InputModel;
 
-export namespace mt { class Engine; }
-
 // Todo: Relative Mouse Position and locking mouse.
 export namespace mt::input
 {
@@ -23,10 +21,10 @@ export namespace mt::input
 
         std::queue<InputMessage*> _input_queue;
 
-        std::multimap<InputType, std::function<void()>>              button_input_handler;
-        std::multimap<InputType, std::function<void(int)>>           one_dimensional_input_handler;
-        std::multimap<InputType, std::function<void(int, int)>>      two_dimensional_input_handler;
-        std::multimap<InputType, std::function<void(int, int, int)>> three_dimensional_input_handler;
+        std::multimap<InputType, button_function*>              button_input_handler;
+        std::multimap<InputType, one_dimensional_function*>     one_dimensional_input_handler;
+        std::multimap<InputType, two_dimensional_function*>     two_dimensional_input_handler;
+        std::multimap<InputType, three_dimensional_function*>   three_dimensional_input_handler;
 
         // Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
         // you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
@@ -35,8 +33,6 @@ export namespace mt::input
         mt::Engine& _engine;
 
         bool isMouseRelative = false;
-
-        void _centerMouseOnScreen();
 
         POINT _mouse_return_position;
 
@@ -61,8 +57,8 @@ export namespace mt::input
             InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
         );
 
-        using InputHandler =
-            std::variant<std::function<void()>, std::function<void(int)>, std::function<void(int, int)>, std::function<void(int, int, int)>>;
+        using InputHandler = 
+            std::variant<button_function*, one_dimensional_function*, two_dimensional_function*, three_dimensional_function*>;
         
         void registerInputHandler(InputHandler input_handler, InputType input_types);
 

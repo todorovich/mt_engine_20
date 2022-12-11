@@ -5,7 +5,7 @@ export import Time;
 export import std.core;
 
 export using namespace std::literals::chrono_literals;
-
+ 
 export namespace mt::time
 {
     class TimeManager;
@@ -115,12 +115,7 @@ export namespace mt::time
             }
         }
 
-        void doTask(std::function<void(void)> doTask)
-        {
-            startTask();
-            doTask();
-            finishTask();
-        }
+        void doTask(Task* doTask);
 
         Duration getActive() const { return _total_active; }
         Duration getPaused() const { return _total_idle; }

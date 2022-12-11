@@ -1,5 +1,7 @@
 module TimeManager;
 
+import Engine;
+
 using namespace mt::time;
 
 void TimeManager::tick()
@@ -76,9 +78,9 @@ void TimeManager::pause()
 
 void TimeManager::_addEngineAlarms()
 {
-	_alarm_manager.addAlarm(Clock::now() + _tgt_update_interval_ns, [&]() -> void { _setShouldUpdate(); }, true, _tgt_update_interval_ns);
-	_alarm_manager.addAlarm(Clock::now() + _tgt_render_interval_ns, [&]() -> void { _setShouldRender(); }, true, _tgt_render_interval_ns);
-	_alarm_manager.addAlarm(Clock::now() + _frame_interval, [&]() -> void { _setEndOfFrame(); }, true, _frame_interval);
+	_alarm_manager.addAlarm(Clock::now() + _tgt_update_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldUpdate(); }, true, _tgt_update_interval_ns);
+	_alarm_manager.addAlarm(Clock::now() + _tgt_render_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldRender(); }, true, _tgt_render_interval_ns);
+	_alarm_manager.addAlarm(Clock::now() + _frame_interval, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setEndOfFrame(); }, true, _frame_interval);
 }
 
 void TimeManager::_setShouldUpdate()

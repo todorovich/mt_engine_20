@@ -311,6 +311,9 @@
     <ClCompile Include="source\Engine\windows\messages\WM_MouseWheel.cpp" />
     <ClCompile Include="source\Engine\FontManager.ixx" />
     <ClCompile Include="source\Game\EngineDemo.cpp" />
+    <ClCompile Include="source\Engine\time\StopWatch.cpp" />
+    <ClCompile Include="source\Engine\time\Alarm.cpp" />
+    <ClCompile Include="source\Engine\time\AlarmManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

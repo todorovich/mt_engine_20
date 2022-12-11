@@ -120,4 +120,3 @@ LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, con
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 }
-
