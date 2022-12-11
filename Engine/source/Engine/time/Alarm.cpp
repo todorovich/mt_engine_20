@@ -4,7 +4,7 @@ import TimeManager;
 
 using namespace std::literals;
 
-void mt::time::Alarm::tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
+void mt::time::Alarm::tick(TimePoint current_tick_time)
 {
 	// Not triggered or paused
 	if (_has_triggered == false && _is_paused == false)

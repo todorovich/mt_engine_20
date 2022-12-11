@@ -13,7 +13,9 @@ import InputDataType;
 import InputContext;
 import MicrosoftVirtualKeyCode;
 
-LRESULT mt::windows::WM_KeyDown::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_KeyDown::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
+)
 {
 	auto key_held_mask = 0x40000000;
 

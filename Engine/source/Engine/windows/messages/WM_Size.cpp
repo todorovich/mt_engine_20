@@ -12,7 +12,9 @@ import Camera;
 import TimeManager;
 import std.core;
 
-LRESULT mt::windows::WM_Size::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_Size::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
+)
 {
 	// Save the new client area dimensions.
 	auto _window_width = LOWORD(lParam);

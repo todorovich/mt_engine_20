@@ -14,7 +14,7 @@ void TimeManager::tick()
 
 	tick_delta_time_ns = curr_tick_time - prev_tick_time;
 
-	_alarm_manager.tick(curr_tick_time, prev_tick_time, tick_delta_time_ns);
+	_alarm_manager.tick(curr_tick_time);
 
 	now = Clock::now();
 }

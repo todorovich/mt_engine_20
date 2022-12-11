@@ -398,7 +398,7 @@ void DirectXRenderer::_createConstantBuffers()
 {
 	_object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(_dx_device.Get(), 1, true);
 
-	constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
 	D3D12_GPU_VIRTUAL_ADDRESS constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
 	// Offset to the ith object constant buffer in the buffer.
@@ -465,7 +465,7 @@ void DirectXRenderer::_createShadersAndInputLayout()
 {
 	namespace fs = std::filesystem;
 
-	HRESULT hr = S_OK;
+	//HRESULT hr = S_OK;
 
 	OutputDebugStringW(std::wstring(L"Current Path: " + fs::current_path().wstring() + L'\n' + fs::current_path().parent_path().root_path().wstring() + L'\n').c_str());
 

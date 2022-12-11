@@ -9,7 +9,9 @@ import TimeManager;
 import InputManager;
 import InputModel;
 
-LRESULT mt::windows::WM_Activate::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_Activate::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	if (LOWORD(wParam) == WA_INACTIVE)
 	{

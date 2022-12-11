@@ -12,7 +12,9 @@ import WindowManager;
 
 using namespace mt::windows;
 
-LRESULT WM_ExitSizeMove::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT WM_ExitSizeMove::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	_engine.getWindowManager()->resize(
 		_engine.getRenderer()->getWindowWidth(), _engine.getRenderer()->getWindowHeight()

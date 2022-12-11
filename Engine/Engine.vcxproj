@@ -25,9 +25,6 @@
     <ClCompile Include="source\Engine\input\InputDataType.ixx" />
     <ClCompile Include="source\Engine\input\InputDevice.ixx" />
     <ClCompile Include="source\Engine\input\InputModel.ixx" />
-    <ClCompile Include="source\Engine\command\Command.cpp" />
-    <ClCompile Include="source\Engine\command\Command.ixx" />
-    <ClCompile Include="source\Engine\command\CommandManager.ixx" />
     <ClCompile Include="source\Engine\Engine.cpp" />
     <ClCompile Include="source\Engine\Engine.ixx" />
     <ClCompile Include="source\Engine\input\InputManager.cpp" />
@@ -35,8 +32,6 @@
     <ClCompile Include="source\Engine\input\InputType.ixx" />
     <ClCompile Include="source\Engine\input\MicrosoftVirtualKeyCode.ixx" />
     <ClCompile Include="source\Engine\input\VirtualKeyCode.ixx" />
-    <ClCompile Include="source\Engine\logging\Log.ixx" />
-    <ClCompile Include="source\Engine\logging\LogManager.ixx" />
     <ClCompile Include="source\Engine\MathHelper.ixx" />
     <ClCompile Include="source\Engine\ObjectPool.ixx" />
     <ClCompile Include="source\Engine\renderer\Camera.cpp" />
@@ -217,6 +212,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <AllProjectBMIsArePublic>true</AllProjectBMIsArePublic>
+    <OutDir>$(SolutionDir)\Output\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)\Intermediate\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -243,14 +240,18 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnableModules>true</EnableModules>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <FloatingPointModel />
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
