@@ -66,7 +66,7 @@ Engine::Engine()
 	, _log_manager(std::make_unique<logging::LogManager>())
 	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
 	, _window_manager(std::make_unique<windows::WindowManager>(*this))
-	, _time_manager(std::make_unique<time::TimeManager>())
+	, _time_manager(std::make_unique<time::TimeManager>(*this))
 {
 	if (_instance == nullptr)
 		_instance = this;
@@ -101,34 +101,28 @@ bool Engine::initialize(HINSTANCE instance_handle)
 
 Status Engine::run()
 {
-	auto run = [&]() {
+	auto run = [](mt::Engine& engine) {
 
-		getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->startTask();
-
-		//_engine_tick_thread = std::thread(std::ref(Engine::Tick));
-
-		// Message handler must be on same thread as the window (this thread)
-		MSG msg = { 0 };
+		engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->startTask();
 
 		// TODO: windows messages (input) should be processed on a different thread than the ticks.
-		bool quit = false;
 		long long last_frame_outputed = 0;
 
 		while (true)
 		{
 			auto now = time::Clock::now();
 
-			auto last_frame_rendered = getRenderer()->getFramesRendered();
+			auto last_frame_rendered = engine.getRenderer()->getFramesRendered();
 
 			if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
 			{
 				last_frame_outputed = last_frame_rendered;
 
-				mt::time::Duration average = getTimeManager()->
+				mt::time::Duration average = engine.getTimeManager()->
 					findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME)->getAverageTaskInterval();
 
 				OutputDebugStringW(
-					(std::to_wstring(getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
+					(std::to_wstring(engine.getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
 				);
 
 				OutputDebugStringW(
@@ -140,8 +134,9 @@ Status Engine::run()
 				);
 			}
 
-			getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME)->doTask(
-				[&]() {
+			engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME)->doTask(
+				[](mt::Engine& engine) {
+					MSG msg = {0};
 					// If there are Window messages then process them.
 					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 					{
@@ -150,17 +145,17 @@ Status Engine::run()
 						DispatchMessage(&msg);
 						if (msg.message == WM_QUIT)
 						{
-							quit = true;
+							engine.shutdown();
 							break;
 						}
 					}
 				}
 			);
 
-			if (quit) break;
+			if (engine._is_shutting_down) break;
 
-			getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME)->doTask(
-				[&]() { _tick(); } // do i need the lambda to capture this?
+			engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME)->doTask(
+				[](mt::Engine& engine) { engine._tick(); } // do i need the lambda to capture this?
 			);
 		};
 	};
@@ -205,35 +200,32 @@ void Engine::_tick()
 	getTimeManager()->tick();
 		
 	getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->doTask(
-		[&]() {
-			if (getTimeManager()->getShouldUpdate())
+		[](mt::Engine& engine) {
+			if (engine.getTimeManager()->getShouldUpdate())
 			{
-				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->pauseTask();
+				engine._update();
 
-				
-				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME)->doTask(
-					[&]() { getInputManager()->processInput(); }
-				);
-
-				getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME)->continueTask();
-				
-				_update();
+				engine.getTimeManager()->updateComplete();
 			}
 		}
 	);
 
 	getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME)->doTask(
-		[&]() {
+		[](mt::Engine& engine) {
 			// Render whenever you can, but don't wait.
-			if (getTimeManager()->getShouldRender() && getRenderer()->isCurrentFenceComplete())
+			if (engine.getTimeManager()->getShouldRender() && engine.getRenderer()->isCurrentFenceComplete())
 			{
-				getRenderer()->update();
-				_draw();
-				getRenderer()->render();
-				getRenderer()->incrementFence();
-				getTimeManager()->renderComplete();
+				engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME)->doTask(
+					[](mt::Engine& engine) { engine.getInputManager()->processInput(); }
+				);
 
-				mt::time::StopWatch* stop_watch = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
+				engine.getRenderer()->update();
+				engine._draw();
+				engine.getRenderer()->render();
+				engine.getRenderer()->incrementFence();
+				engine.getTimeManager()->renderComplete();
+
+				mt::time::StopWatch* stop_watch = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
 
 				stop_watch->finishTask();
 				stop_watch->startTask();

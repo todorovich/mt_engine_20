@@ -42,6 +42,8 @@ export namespace mt::time
 		bool _should_render;
 		bool _end_of_frame;
 
+		mt::Engine& _engine;
+
 	public:
 
 		friend Engine;
@@ -56,8 +58,10 @@ export namespace mt::time
 			static const std::string_view FRAME_TIME;
 		};
 
-		TimeManager()
-			: _tgt_update_interval_ns(16666666ns)
+		TimeManager(mt::Engine& engine)
+			: _engine(engine)
+			, _alarm_manager(engine)
+			, _tgt_update_interval_ns(1000000000ns/60)
 			, _tgt_render_interval_ns(1000000000ns/144)
 			, _frame_interval (16666666ns)
 			, _command_list_interval (0ns)
@@ -123,5 +127,10 @@ export namespace mt::time
 
 		bool IsUpdatePaused() const { return _is_paused; }
 		//bool IsRenderPaused() const { return _is_render_paused; }
+
+		Engine& getEngine()
+		{
+			return _engine;
+		}
 	};
 }

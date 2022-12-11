@@ -50,7 +50,7 @@ void InputManager::processInput()
 
 					for (auto released_it = released_range.first; released_it != released_range.second; ++released_it)
 					{
-						released_it->second();
+						released_it->second(_engine);
 					}
 
 					_held_buttons.erase(held_it);
@@ -64,7 +64,7 @@ void InputManager::processInput()
 
 					for (auto idle_it = idle_range.first; idle_it != idle_range.second; ++idle_it)
 					{
-						idle_it->second();
+						idle_it->second(_engine);
 					}
 				}
 			}
@@ -89,7 +89,7 @@ void InputManager::processInput()
 
 					for (auto pressed_it = pressed_range.first; pressed_it != pressed_range.second; ++pressed_it)
 					{
-						pressed_it->second();
+						pressed_it->second(_engine);
 					}
 
 					pressed_buttons.insert(held_input_type);
@@ -105,7 +105,7 @@ void InputManager::processInput()
 				for (auto it = range.first; it != range.second; ++it)
 				{
 					InputData1D input_data = std::get<mt::input::InputData1D>(input_message->data);
-					it->second(input_data.x);
+					it->second(_engine, input_data.x);
 				}
 			}
 			break;
@@ -127,7 +127,7 @@ void InputManager::processInput()
 
 					for (auto it = range.first; it != range.second; ++it)
 					{
-						it->second(data2d.x - half_width, data2d.y - half_height);
+						it->second(_engine, data2d.x - half_width, data2d.y - half_height);
 					}
 
 					SetCursorPos(half_width, half_height);
@@ -138,7 +138,7 @@ void InputManager::processInput()
 
 					for (auto it = range.first; it != range.second; ++it)
 					{
-						it->second(data2d.x, data2d.y);
+						it->second(_engine, data2d.x, data2d.y);
 					}
 				}
 			}
@@ -151,7 +151,7 @@ void InputManager::processInput()
 
 				for (auto it = range.first; it != range.second; ++it)
 				{
-					it->second(data3d.x, data3d.y, data3d.z);
+					it->second(_engine, data3d.x, data3d.y, data3d.z);
 				}
 			}
 			break;
@@ -165,7 +165,8 @@ void InputManager::processInput()
 	// Trigger the held buttons.
 	for (auto input_type : _held_buttons)
 	{
-		if (auto it = button_input_handler.find(input_type); it != button_input_handler.end()) it->second();
+		if (auto it = button_input_handler.find(input_type); it != button_input_handler.end())
+			it->second(_engine);
 	}
 	
 	_held_buttons.merge(pressed_buttons);
@@ -173,9 +174,7 @@ void InputManager::processInput()
 
 void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data)
 {
-	_input_queue.push(
-		new (_message_pool.getMemory()) InputMessage(input_type, mt::time::Clock::now(), data)
-	);
+	_input_queue.push(_message_pool.allocate(input_type, mt::time::Clock::now(), data));
 }
 
 void mt::input::InputManager::toggleRelativeMouse()
@@ -212,28 +211,28 @@ void mt::input::InputManager::registerInputHandler(InputHandler input_handler, I
 		case InputDataType::BUTTON_HELD: [[fallthrough]];
 		case InputDataType::BUTTON_RELEASED:
 		{
-			auto& button_handling_function = std::get<std::function<void()>>(input_handler);
+			auto button_handling_function = std::get<button_function*>(input_handler);
 			button_input_handler.insert({input_type, button_handling_function});
 		}
 		break;
 
 		case InputDataType::ONE_DIMENSIONAL:
 		{
-			auto& one_dimenaional_handling_function = std::get<std::function<void(int)>>(input_handler);
+			auto one_dimenaional_handling_function = std::get<one_dimensional_function*>(input_handler);
 			one_dimensional_input_handler.insert({input_type, one_dimenaional_handling_function});
 		}
 		break;
 
 		case InputDataType::TWO_DIMENSIONAL:
 		{
-			auto& two_dimenaional_handling_function = std::get<std::function<void(int, int)>>(input_handler);
+			auto two_dimenaional_handling_function = std::get<two_dimensional_function*>(input_handler);
 			two_dimensional_input_handler.insert({input_type, two_dimenaional_handling_function});
 		}
 		break;
 
 		case InputDataType::THREE_DIMENSIONAL:
 		{
-			auto& three_dimenaional_handling_function = std::get<std::function<void(int, int, int)>>(input_handler);
+			auto three_dimenaional_handling_function = std::get<three_dimensional_function*>(input_handler);
 			three_dimensional_input_handler.insert({input_type, three_dimenaional_handling_function});
 		}
 		break;

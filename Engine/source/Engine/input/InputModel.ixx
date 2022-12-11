@@ -19,8 +19,15 @@ export import InputType;
 
 export using namespace std::literals;
 
+export namespace mt { class Engine; }
+
 export namespace mt::input
 {
+	using button_function = void(mt::Engine&);
+	using one_dimensional_function = void(mt::Engine&, int);
+	using two_dimensional_function = void(mt::Engine&, int, int);
+	using three_dimensional_function = void(mt::Engine&, int, int, int);
+
 	struct InputData1D
 	{
 		const int x;

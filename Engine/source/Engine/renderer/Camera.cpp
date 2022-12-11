@@ -209,13 +209,18 @@ Status Camera::strafe(float d)
 	return Status::success;
 }
 
+
 Status Camera::walk(float d)
 {
+	static int i = 0;
+	
 	std::scoped_lock lock(_camera_mutex);
 
 	XMVECTOR scalar = XMVectorReplicate(d);
 	XMVECTOR look = XMLoadFloat3(&_look);
 	XMVECTOR position = XMLoadFloat3(&_position);
+
+	OutputDebugStringW((std::to_wstring(++i) + L'\n' + std::to_wstring(_position.x) + L' ' + std::to_wstring(_position.y) + L' ' + std::to_wstring(_position.z)).c_str());
 
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, look, position));
 

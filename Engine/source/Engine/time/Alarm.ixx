@@ -6,7 +6,7 @@ export import std.core;
 
 export using namespace std::literals::chrono_literals;
 
-namespace mt::time { class AlarmManager; }
+namespace mt::time { class AlarmManager; class TimeManager; }
 
 export namespace mt::time
 {
@@ -17,7 +17,9 @@ export namespace mt::time
 
 		TimePoint _time_paused;
 
-		std::function<void()> _callback;
+		mt::Engine& _engine;
+
+		Task* _callback;
 
 		Duration _reset_interval;
 
@@ -33,8 +35,9 @@ export namespace mt::time
 
 		friend AlarmManager;
 
-		Alarm(TimePoint time_point, std::function<void()> callback = []() {}, bool alarm_repeats = false, Duration reset_interval = 0ns)
-			: _alarm_time(time_point)
+		Alarm(mt::Engine& engine, TimePoint time_point, Task callback = [](mt::Engine&) {}, bool alarm_repeats = false, Duration reset_interval = 0ns)
+			: _engine(engine)
+			, _alarm_time(time_point)
 			, _time_paused(TimePoint(0ns))
 			, _callback(callback)
 			, _reset_interval(reset_interval)
@@ -44,10 +47,11 @@ export namespace mt::time
 			
 		}
 
-		Alarm() 
-			: _alarm_time(TimePoint::min())
+		Alarm(mt::Engine& engine)
+			: _engine(engine)
+			, _alarm_time(TimePoint::min())
 			, _time_paused(TimePoint::min())
-			, _callback([](){})
+			, _callback([](mt::Engine&){})
 			, _reset_interval(0ns)
 			, _alarm_repeats(false)
 			, _is_paused(true) 
@@ -60,8 +64,13 @@ export namespace mt::time
 		Alarm(const Alarm& other) = delete;
 		
 		Alarm(Alarm&& other)
-			: _alarm_time(std::move(other._alarm_time))
+			: _engine(other._engine)
+			, _alarm_time(std::move(other._alarm_time))
+			, _time_paused(std::move(other._time_paused))
 			, _callback(std::move(other._callback))
+			, _reset_interval(std::move(other._reset_interval))
+			, _alarm_repeats(std::move(other._alarm_repeats))
+			, _is_paused(std::move(other._is_paused))
 		{};
 
 		Alarm& operator=(const Alarm& other) = delete;
@@ -69,7 +78,7 @@ export namespace mt::time
 		Alarm& operator=(Alarm&& other)	
 		{
 			_alarm_time = std::move(other._alarm_time);
-			_callback = std::move(other._callback);
+			_callback = other._callback;
 
 			return *this;
 		};
@@ -88,36 +97,13 @@ export namespace mt::time
 
 		void resume(TimePoint time_continued = Clock::now());
 	};
-}
 
-module :private;
-
-void mt::time::Alarm::tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
-{
-	// Not triggered or paused
-	if (_has_triggered == false && _is_paused == false)
+	struct AlarmCompare
 	{
-		if (current_tick_time >= _alarm_time)
+	public:
+		bool operator()(Alarm* alarm_1, Alarm* alarm_2) const
 		{
-			_has_triggered = true;
-
-			_callback();
+			return *alarm_2 < *alarm_1;
 		}
-	}
-}
-
-void mt::time::Alarm::pause(TimePoint time_paused)
-{
-	_time_paused = time_paused;
-	_is_paused = true;
-}
-
-void mt::time::Alarm::resume(TimePoint time_continued)
-{
-	// Offset time time by the amount of time spent paused;
-	_alarm_time += time_continued - _time_paused;
-
-	_time_paused = TimePoint(0ns);
-
-	_is_paused = false;
+	};
 }

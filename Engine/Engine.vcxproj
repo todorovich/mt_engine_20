@@ -47,8 +47,11 @@
     <ClCompile Include="source\Engine\renderer\Geometry.ixx" />
     <ClCompile Include="source\Engine\renderer\UploadBuffer.ixx" />
     <ClCompile Include="source\Engine\Status.ixx" />
+    <ClCompile Include="source\Engine\time\Alarm.cpp" />
     <ClCompile Include="source\Engine\time\Alarm.ixx" />
+    <ClCompile Include="source\Engine\time\AlarmManager.cpp" />
     <ClCompile Include="source\Engine\time\AlarmManager.ixx" />
+    <ClCompile Include="source\Engine\time\StopWatch.cpp" />
     <ClCompile Include="source\Engine\time\Time.ixx" />
     <ClCompile Include="source\Engine\time\TimeManager.ixx" />
     <ClCompile Include="source\Engine\time\Timer.ixx" />
