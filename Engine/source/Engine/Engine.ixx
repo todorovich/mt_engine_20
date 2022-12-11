@@ -21,7 +21,7 @@ export namespace mt
 	namespace command { class CommandManager; };
 	namespace logging { class LogManager; };
 	namespace renderer { class DirectXRenderer; };
-	namespace time { class TimeManager; };
+	namespace time { class TimeManager; class StopWatch; };
 	namespace windows { 
 		class WindowManager;
 		class WindowsMessageManager; 
@@ -52,7 +52,12 @@ export namespace mt
 		virtual void _update() {};
 		virtual void _draw() {};
 
-		void _tick();
+		void _tick(
+			mt::time::StopWatch* tick_time,
+			mt::time::StopWatch* update_time, 
+			mt::time::StopWatch* render_time, 
+			mt::time::StopWatch* frame_time
+		);
 		void _updateFrameStatisticsNoTimeCheck(bool was_rendered);
 	public:
 		
