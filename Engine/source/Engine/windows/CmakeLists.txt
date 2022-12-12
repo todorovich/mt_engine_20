@@ -2,7 +2,6 @@ target_sources(Engine
 	PRIVATE
 		WindowManager.cpp
 		WindowsMessageManager.cpp
-	PUBLIC
 		WindowManager.ixx
 		WindowsMessage.ixx
 		WindowsMessageManager.ixx

@@ -38,7 +38,6 @@ target_sources(Engine
 		WM_WindowPositionChanging.cpp
 		WM_XButtonDown.cpp
 		WM_XButtonUp.cpp
-	PUBLIC
 		WM_Activate.ixx
 		WM_CaptureChanged.ixx
 		WM_Close.ixx

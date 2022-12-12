@@ -1,7 +1,6 @@
 target_sources(Engine
 	PRIVATE
 		Engine.cpp
-	PUBLIC
 		Debug.ixx
 		Engine.ixx
 		FontManager.ixx
@@ -10,9 +9,9 @@ target_sources(Engine
 		Status.ixx
 )
 
-add_subdirectory("command")
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
 add_subdirectory("input")
-add_subdirectory("logging")
 add_subdirectory("renderer")
 add_subdirectory("time")
 add_subdirectory("windows")

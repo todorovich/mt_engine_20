@@ -1,7 +1,9 @@
 target_sources(Engine
 	PRIVATE
+		Alarm.cpp
+		AlarmManager.cpp
+		StopWatch.cpp
 		TimeManager.cpp
-	PUBLIC
 		Alarm.ixx
 		AlarmManager.ixx
 		Stopwatch.ixx
@@ -9,3 +11,5 @@ target_sources(Engine
 		TimeManager.ixx
 		TImer.ixx
 )
+
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

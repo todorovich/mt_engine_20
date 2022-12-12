@@ -2,7 +2,6 @@ target_sources(Engine
 	PRIVATE
 		Camera.cpp
 		DirectXRenderer.cpp
-	PUBLIC
 		Camera.ixx
 		d3dx12.h
 		DirectXRenderer.ixx
@@ -10,3 +9,5 @@ target_sources(Engine
 		Geometry.ixx
 		UploadBuffer.ixx
 )
+
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

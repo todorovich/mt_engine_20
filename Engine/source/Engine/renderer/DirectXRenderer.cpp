@@ -20,8 +20,8 @@ import DirectXUtility;
 import std.core;
 import std.filesystem;	
 
-using Microsoft::WRL::ComPtr;
 using namespace mt::renderer;
+using Microsoft::WRL::ComPtr;
 
 void DirectXRenderer::render()
 {

@@ -1,7 +1,0 @@
-target_sources(Engine
-	PRIVATE
-		Command.cpp
-	PUBLIC
-		Command.ixx
-		CommandManager.ixx
-)
