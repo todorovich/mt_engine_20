@@ -29,7 +29,7 @@ export namespace mt::time
 
 		bool _is_paused;
 
-		void tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time);
+		void tick(TimePoint current_tick_time);
 
 	public:
 

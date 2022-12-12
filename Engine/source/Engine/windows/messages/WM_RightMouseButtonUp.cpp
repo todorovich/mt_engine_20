@@ -15,7 +15,9 @@ import InputDataType;
 import InputContext;
 import VirtualKeyCode;
 
-LRESULT mt::windows::WM_RightMouseButtonUp::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
+LRESULT mt::windows::WM_RightMouseButtonUp::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	_input_manager->acceptInput(
 		mt::input::InputType(

@@ -5,10 +5,8 @@ module;
 module Engine;
 
 import Camera;
-import CommandManager;
 import DirectXRenderer;
 import InputManager;
-import LogManager;
 import Status;
 import StopWatch;
 import TimeManager;
@@ -61,10 +59,8 @@ using namespace mt;
 Engine* Engine::_instance = nullptr;
 
 Engine::Engine()
-	: _command_manager(std::make_unique<command::CommandManager>())
-	, _direct_x_renderer(std::make_unique<renderer::DirectXRenderer>(*this))
+	: _direct_x_renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::InputManager>(*this))
-	, _log_manager(std::make_unique<logging::LogManager>())
 	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
 	, _window_manager(std::make_unique<windows::WindowManager>(*this))
 	, _time_manager(std::make_unique<time::TimeManager>(*this))

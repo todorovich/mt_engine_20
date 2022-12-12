@@ -103,9 +103,10 @@ namespace mt::renderer
 		{
 			// Get the string description of the error code.
 			_com_error err(error_code);
-			std::wstring msg = err.ErrorMessage();
+			
+			//std::wstring msg = std::wstring(err.ErrorMessage());
 
-			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: " + msg;
+			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: ";// +msg;
 		}
 	};
 

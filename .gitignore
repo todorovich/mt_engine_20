@@ -2,5 +2,5 @@
 **/.vs/*
 Intermediate/*
 Output/*
-Engine/Release/*
+out/*
 **/Logs/*

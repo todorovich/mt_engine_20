@@ -20,8 +20,8 @@ import DirectXUtility;
 import std.core;
 import std.filesystem;	
 
-using Microsoft::WRL::ComPtr;
 using namespace mt::renderer;
+using Microsoft::WRL::ComPtr;
 
 void DirectXRenderer::render()
 {
@@ -398,7 +398,7 @@ void DirectXRenderer::_createConstantBuffers()
 {
 	_object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(_dx_device.Get(), 1, true);
 
-	constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
 	D3D12_GPU_VIRTUAL_ADDRESS constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
 	// Offset to the ith object constant buffer in the buffer.
@@ -465,7 +465,7 @@ void DirectXRenderer::_createShadersAndInputLayout()
 {
 	namespace fs = std::filesystem;
 
-	HRESULT hr = S_OK;
+	//HRESULT hr = S_OK;
 
 	OutputDebugStringW(std::wstring(L"Current Path: " + fs::current_path().wstring() + L'\n' + fs::current_path().parent_path().root_path().wstring() + L'\n').c_str());
 
@@ -702,7 +702,7 @@ void DirectXRenderer::_logAdapters()
 		text += desc.Description;
 		text += L"\n";
 
-		OutputDebugString(text.c_str());
+		OutputDebugStringW(text.c_str());
 
 		adapterList.push_back(adapter);
 	}
@@ -727,7 +727,7 @@ void DirectXRenderer::_logAdapterOutputs(IDXGIAdapter* adapter)
 		std::wstring text = L"***Output: ";
 		text += desc.DeviceName;
 		text += L"\n";
-		OutputDebugString(text.c_str());
+		OutputDebugStringW(text.c_str());
 
 		_logOutputDisplayModes(output, _back_buffer_format);
 
@@ -759,7 +759,7 @@ void DirectXRenderer::_logOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT fo
 			L"Refresh = " + std::to_wstring(n) + L"/" + std::to_wstring(d) +
 			L"\n";
 
-		::OutputDebugString(text.c_str());
+		::OutputDebugStringW(text.c_str());
 	}
 }
 

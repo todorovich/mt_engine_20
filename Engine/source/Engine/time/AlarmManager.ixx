@@ -38,13 +38,13 @@ export namespace mt::time
 
 		AlarmManager& operator=(AlarmManager&& other) = delete;
 
-		void tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
+		void tick(TimePoint current_tick_time)
 		{
 			if (!_alarm_queue.empty())
 			{
 				Alarm* alarm = _alarm_queue.top();
 
-				alarm->tick(current_tick_time, previous_tick_time, delta_time);
+				alarm->tick(current_tick_time);
 
 				while (alarm->HasTriggered())
 				{
@@ -63,7 +63,7 @@ export namespace mt::time
 					}
 
 					alarm = _alarm_queue.top();
-					alarm->tick(current_tick_time, previous_tick_time, delta_time);
+					alarm->tick(current_tick_time);
 				}
 			}
 		}
