@@ -13,7 +13,9 @@ import InputModel;
 import InputDataType;
 import InputContext;
 
-LRESULT mt::windows::WM_SystemKeyUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_SystemKeyUp::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	_input_manager->acceptInput(
 		mt::input::InputType(mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam))

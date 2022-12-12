@@ -1,4 +1,6 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
+module;
+
 #include <windows.h>
 #include <wrl.h>
 #include <combaseapi.h>
@@ -14,8 +16,9 @@ module DirectXRenderer;
 
 import Engine;
 import DirectXUtility;
+
 import std.core;
-import std.filesystem;
+import std.filesystem;	
 
 using Microsoft::WRL::ComPtr;
 using namespace mt::renderer;
@@ -395,7 +398,7 @@ void DirectXRenderer::_createConstantBuffers()
 {
 	_object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(_dx_device.Get(), 1, true);
 
-	UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
 	D3D12_GPU_VIRTUAL_ADDRESS constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
 	// Offset to the ith object constant buffer in the buffer.
@@ -421,7 +424,7 @@ void DirectXRenderer::_createRootSignature()
 	// thought of as defining the function signature.  
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[1]{};
 
 	// Create a single descriptor table of CBVs.
 	CD3DX12_DESCRIPTOR_RANGE cbvTable;
@@ -462,7 +465,7 @@ void DirectXRenderer::_createShadersAndInputLayout()
 {
 	namespace fs = std::filesystem;
 
-	HRESULT hr = S_OK;
+	//HRESULT hr = S_OK;
 
 	OutputDebugStringW(std::wstring(L"Current Path: " + fs::current_path().wstring() + L'\n' + fs::current_path().parent_path().root_path().wstring() + L'\n').c_str());
 
@@ -688,10 +691,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const
 
 void DirectXRenderer::_logAdapters()
 {
-	UINT i = 0;
 	IDXGIAdapter* adapter = nullptr;
 	std::vector<IDXGIAdapter*> adapterList;
-	while (_dx_dxgi_factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND)
+	for (UINT i = 0; _dx_dxgi_factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
 	{
 		DXGI_ADAPTER_DESC desc;
 		adapter->GetDesc(&desc);
@@ -703,8 +705,6 @@ void DirectXRenderer::_logAdapters()
 		OutputDebugStringW(text.c_str());
 
 		adapterList.push_back(adapter);
-
-		++i;
 	}
 
 	for (size_t i = 0; i < adapterList.size(); ++i)

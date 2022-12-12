@@ -15,7 +15,9 @@ import InputDataType;
 import InputContext;
 import VirtualKeyCode;
 
-LRESULT mt::windows::WM_MouseWheel::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_MouseWheel::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	// wParam is the WHEEL_DELTA
 

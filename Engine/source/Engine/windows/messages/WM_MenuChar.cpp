@@ -7,7 +7,8 @@ module WindowsMessages.MenuChar;
 
 import Engine;
 
-LRESULT mt::windows::WM_MenuChar::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
+LRESULT mt::windows::WM_MenuChar::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam)
 {
 	return MAKELRESULT(0, MNC_CLOSE);
 }

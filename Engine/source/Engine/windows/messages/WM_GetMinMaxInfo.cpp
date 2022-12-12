@@ -7,7 +7,9 @@ module WindowsMessages.GetMinMaxInfo;
 
 import Engine;
 
-LRESULT  mt::windows::WM_GetMinMaxInfo::execute(const HWND & hwnd, const UINT & msg, const WPARAM & wParam, const LPARAM & lParam)
+LRESULT  mt::windows::WM_GetMinMaxInfo::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	((MINMAXINFO*)lParam)->ptMinTrackSize.x = 200;
 	((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;

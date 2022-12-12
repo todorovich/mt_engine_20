@@ -2,7 +2,7 @@ export module Time;
 
 export import std.core;
 
-export using namespace std::literals::chrono_literals;
+export namespace mt { class Engine; }
 
 export namespace mt::time
 {
@@ -10,4 +10,6 @@ export namespace mt::time
     using Period = Clock::period;
     using Duration = Clock::duration;
     using TimePoint = Clock::time_point;
+
+    using Task = void(mt::Engine&);
 }

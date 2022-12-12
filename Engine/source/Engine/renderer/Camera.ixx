@@ -113,6 +113,8 @@ export namespace mt::renderer
 
         mt::Status walk(float d);
 
+        Status fly(float d);
+
         // Rotate the camera.
         mt::Status pitch(float angle);
 

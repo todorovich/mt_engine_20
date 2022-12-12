@@ -7,18 +7,11 @@ export import std.core;
 
 export using namespace std::literals::chrono_literals;
 
+export namespace mt { class Engine; }
+
 export namespace mt::time
 {
-	struct AlarmCompare
-	{
-	public:
-		bool operator()(Alarm* alarm_1, Alarm* alarm_2) const
-		{
-			return *alarm_2 < *alarm_1;
-		}
-	};
-
-	export class AlarmManager
+	class AlarmManager
 	{
 	private:
 		mt::ObjectPool<Alarm, 1024>				_alarm_pool;
@@ -27,9 +20,13 @@ export namespace mt::time
 
 		std::set <Alarm*>													_alarms_and_timers;
 
+		mt::Engine& _engine;
+
 	public:
 
-		AlarmManager() = default;
+		AlarmManager(mt::Engine& engine)
+			: _engine(engine)
+		{}
 
 		~AlarmManager() = default;
 
@@ -41,13 +38,13 @@ export namespace mt::time
 
 		AlarmManager& operator=(AlarmManager&& other) = delete;
 
-		void tick(TimePoint current_tick_time, TimePoint previous_tick_time, Duration delta_time)
+		void tick(TimePoint current_tick_time)
 		{
 			if (!_alarm_queue.empty())
 			{
 				Alarm* alarm = _alarm_queue.top();
 
-				alarm->tick(current_tick_time, previous_tick_time, delta_time);
+				alarm->tick(current_tick_time);
 
 				while (alarm->HasTriggered())
 				{
@@ -66,7 +63,7 @@ export namespace mt::time
 					}
 
 					alarm = _alarm_queue.top();
-					alarm->tick(current_tick_time, previous_tick_time, delta_time);
+					alarm->tick(current_tick_time);
 				}
 			}
 		}
@@ -79,7 +76,6 @@ export namespace mt::time
 			}
 		}
 
-
 		void resume(TimePoint time_continued = Clock::now())
 		{
 			for (auto& alarm : _alarms_and_timers)
@@ -88,12 +84,6 @@ export namespace mt::time
 			}
 		}
 
-		void addAlarm(TimePoint time_point, std::function<void()> function, bool repeats = false, Duration repeat_interval = 0ns)
-		{
-			Alarm* alarm = new (_alarm_pool.getMemory()) Alarm(time_point, function, repeats, repeat_interval);
-
-			_alarm_queue.push(alarm);
-			_alarms_and_timers.insert(alarm);
-		}
+		void addAlarm(TimePoint time_point, Task* callback, bool repeats = false, Duration repeat_interval = 0ns);
 	};
 }

@@ -3,14 +3,16 @@ export module Timer;
 export import Time;
 export import Alarm;
 
+export namespace mt { class Engine; }
+
 export namespace mt::time
 {
 	class Timer : public Alarm
 	{		
 	public:
 
-		Timer(Duration offset, std::function<void()> callback)
-			: Alarm(Clock::now() + offset, callback)
+		Timer(mt::Engine& engine, Duration offset, Task* callback)
+			: Alarm(engine, Clock::now() + offset, callback)
 		{}
 
 		~Timer() = default;

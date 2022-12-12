@@ -18,10 +18,8 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 export namespace mt
 {
 	namespace input { class InputManager; };
-	namespace command { class CommandManager; };
-	namespace logging { class LogManager; };
 	namespace renderer { class DirectXRenderer; };
-	namespace time { class TimeManager; };
+	namespace time { class TimeManager; class StopWatch; };
 	namespace windows { 
 		class WindowManager;
 		class WindowsMessageManager; 
@@ -31,13 +29,11 @@ export namespace mt
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-		const std::unique_ptr<command::CommandManager>			_command_manager;
-		const std::unique_ptr<logging::LogManager>				_log_manager;
 		const std::unique_ptr<input::InputManager>				_input_manager;
-		const std::unique_ptr<time::TimeManager>				_time_manager;
 		const std::unique_ptr<renderer::DirectXRenderer>		_direct_x_renderer;
 		const std::unique_ptr<windows::WindowManager>			_window_manager;
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
+		const std::unique_ptr<time::TimeManager>				_time_manager;
 
 		time::Duration _time_since_stat_update = time::Duration(0);
 		
@@ -52,7 +48,12 @@ export namespace mt
 		virtual void _update() {};
 		virtual void _draw() {};
 
-		void _tick();
+		void _tick(
+			mt::time::StopWatch* tick_time,
+			mt::time::StopWatch* update_time, 
+			mt::time::StopWatch* render_time, 
+			mt::time::StopWatch* frame_time
+		);
 		void _updateFrameStatisticsNoTimeCheck(bool was_rendered);
 	public:
 		
@@ -67,9 +68,7 @@ export namespace mt
 		Engine& operator=(Engine&& other) = delete;
 		 
 		// ACCESSOR
-		command::CommandManager * const			getCommandManager()			{ return _command_manager.get(); }
 		input::InputManager * const				getInputManager()			{ return _input_manager.get(); }
-		logging::LogManager * const				getLogManager()				{ return _log_manager.get(); }
 		renderer::DirectXRenderer * const		getRenderer()				{ return _direct_x_renderer.get(); };
 		windows::WindowManager * const			getWindowManager()			{ return _window_manager.get(); };
 		windows::WindowsMessageManager * const	getWindowsMessageManager()	{ return _windows_message_manager.get(); };

@@ -12,7 +12,7 @@ import InputModel;
 import InputContext;
 import MicrosoftVirtualKeyCode;
 
-LRESULT mt::windows::WM_KeyUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_KeyUp::execute([[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam)
 {
 	_input_manager->acceptInput(
 		mt::input::InputType(

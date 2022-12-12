@@ -18,4 +18,9 @@ export namespace mt::windows
 
 module : private;
 
-LRESULT mt::windows::WindowsMessage::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam) { return 0; };
+LRESULT mt::windows::WindowsMessage::execute(
+    [[maybe_unused]]const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+) 
+{ 
+    return 0; 
+};

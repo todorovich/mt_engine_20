@@ -11,7 +11,9 @@ import Engine;
 // the window being destroyed after the window is removed from the screen.
 // This message is sent first to the window being destroyed and then to the child windows, if any, 
 // as they are destroyed.During the processing of the message, it can be assumed that all child windows still exist.
-LRESULT mt::windows::WM_Destroy::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WM_Destroy::execute(
+	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
+)
 {
 	OutputDebugStringW(L"WM_Destroy\n");
 

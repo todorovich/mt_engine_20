@@ -4,18 +4,18 @@ export import std.core;
 
 export namespace mt 
 {
-	template<typename T, int number_of_objects>
+	template<typename T, std::size_t number_of_objects>
 	class ObjectPool
 	{
 	private:
-		std::vector<T>													_data;
+		// Had to resort to malloc to get uninitialized memory. Not ideal, this is not modern cpp.
+		T*																_data = (T*)malloc(sizeof(T) * number_of_objects);
 		std::priority_queue<int, std::vector<int>, std::greater<int>> 	_unused_indicies;
 		std::set<int>													_used_indicies;
 
 	public:
 
 		ObjectPool()
-			: _data(std::vector<T>(number_of_objects))
 		{
 			for (auto i = 0; i < number_of_objects; i++)
 			{
@@ -23,7 +23,13 @@ export namespace mt
 			}
 		}
 
-		~ObjectPool() = default;
+		~ObjectPool() 
+		{
+			for (auto index = _unused_indicies.top(); !_unused_indicies.empty(); _unused_indicies.pop())
+			{
+				_data[index].~T();
+			}
+		};
 
 		ObjectPool(const ObjectPool& other) = delete;
 
@@ -33,7 +39,8 @@ export namespace mt
 		
 		ObjectPool operator=(ObjectPool&& other) = delete;
 
-		T* getMemory()
+		template<class... Types>
+		T* allocate(Types&&... args)
 		{
 			if (_unused_indicies.size() == 0)
 			{
@@ -47,25 +54,27 @@ export namespace mt
 
 			_used_indicies.insert(index);
 
-			return &_data[index];
-
+			return new (&_data[index]) T(std::forward<Types>(args)...);
 		}
 
 		void releaseMemory(T* returned_memory)
 		{
 			// Check if we actually own this object.
-			int index = static_cast<int>(returned_memory - &_data[0]);
+			int index = static_cast<int>(returned_memory - _data);
 			if (index < 0 || index >= number_of_objects)
 			{
 				return;
 			}
+			else {
+				returned_memory->~T();
 
-			// zero out the retruned memory
-			//std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
+				// zero out the retruned memory
+				//std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
 
-			_used_indicies.erase(index);
+				_used_indicies.erase(index);
 
-			_unused_indicies.push(index);
+				_unused_indicies.push(index);
+			}
 		}
 	};
 }
