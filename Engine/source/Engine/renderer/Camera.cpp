@@ -3,7 +3,14 @@ module;
 #include <d3d12.h>
 #include <DirectXMath.h>
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module Camera;
+
+import std.core;
+//import std.threading;
+#pragma warning( pop )
+
 
 using namespace mt::renderer;
 using namespace DirectX;

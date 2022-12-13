@@ -12,13 +12,18 @@ module;
 #include <DirectXColors.h>
 #include "d3dx12.h"
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module DirectXRenderer;
+
+import std.core;
+//import std.threading;
+import std.filesystem;	
+#pragma warning( pop )
+
 
 import Engine;
 import DirectXUtility;
-
-import std.core;
-import std.filesystem;	
 
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;

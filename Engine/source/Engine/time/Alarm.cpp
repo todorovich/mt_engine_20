@@ -1,4 +1,9 @@
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module Alarm;
+
+import std.core;
+#pragma warning( pop )
 
 import TimeManager;
 

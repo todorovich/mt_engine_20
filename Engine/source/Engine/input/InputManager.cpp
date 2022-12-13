@@ -6,7 +6,13 @@ module;
 
 #undef RELATIVE
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module InputManager;
+
+import std.core;
+//import std.threading;
+#pragma warning( pop )
 
 import DirectXRenderer;
 import Engine;

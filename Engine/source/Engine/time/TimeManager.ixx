@@ -1,12 +1,20 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module TimeManager;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+export import std.core;
+#pragma warning( pop )
+
 export import Time;
 export import Timer;
 export import AlarmManager;
 export import StopWatch;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 export using namespace std::literals;
 

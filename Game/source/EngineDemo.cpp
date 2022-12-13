@@ -4,7 +4,12 @@ module;
 // Fuck macros. This wasted like 30 minutes of my time.
 #undef RELATIVE
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module EngineDemo;
+
+import std.core;
+#pragma warning( pop )
 
 import Engine;
 import InputManager;

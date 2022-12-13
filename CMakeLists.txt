@@ -18,18 +18,32 @@ find_package(freetype CONFIG REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
 
 
-add_definitions(-DUNICODE -D_UNICODE -DWIN32)
 
 # Include sub-projects.
 add_library (Engine STATIC "")
-
+target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 target_link_libraries(Engine PRIVATE freetype)
+
 #target_link_libraries(Engine PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
 
 add_subdirectory ("Engine")
 
 add_executable (Game WIN32 "")
+target_compile_definitions(Game PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 add_subdirectory ("Game")
 
 #Link stuff
 target_link_libraries(Game PRIVATE Engine)
+
+include(CMakePrintHelpers)
+
+cmake_print_variables(
+	CMAKE_CXX_COMPILER_ID 
+	CMAKE_CXX_COMPILER_VERSION
+)
+
+cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG_INIT)
+cmake_print_variables(CMAKE_CXX_FLAGS_INIT)
+cmake_print_variables(CMAKE_CXX_FLAGS_MINSIZEREL_INIT)
+cmake_print_variables(CMAKE_CXX_FLAGS_RELEASE_INIT)
+cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT)

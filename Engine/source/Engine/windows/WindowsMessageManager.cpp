@@ -3,7 +3,13 @@ module;
 
 #include <windows.h>
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module WindowsMessageManager;
+
+import std.core;
+#pragma warning( pop )
+
 
 import WindowsMessages.Activate;
 import WindowsMessages.CaptureChanged;

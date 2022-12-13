@@ -4,7 +4,10 @@ module;
 
 export module MicrosoftVirtualKeyCode;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 export namespace mt::input
 {

@@ -9,7 +9,6 @@ export import WindowsMessage;
 
 export namespace mt::input { class InputManager; }
 
-export import std.core;
 
 export namespace mt::windows
 {

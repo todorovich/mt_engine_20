@@ -1,6 +1,9 @@
 export module InputDataType;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 using namespace std::literals;
 

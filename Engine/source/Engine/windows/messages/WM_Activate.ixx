@@ -10,8 +10,6 @@ export import WindowsMessage;
 export namespace mt::time { class TimeManager; }
 export namespace mt::input { class InputManager; }
 
-export import std.core;
-
 export namespace mt::windows
 {
     class WM_Activate : public WindowsMessage
