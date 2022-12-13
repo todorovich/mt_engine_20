@@ -5,6 +5,11 @@ module;
 
 module WindowsMessages.SystemKeyUp;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+import std.core;
+#pragma warning( pop )
+
 import Engine;
 
 import InputManager;

@@ -5,6 +5,11 @@ module;
 
 module WindowsMessages.Activate;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+import std.core;
+#pragma warning( pop )
+
 import TimeManager;
 import InputManager;
 import InputModel;

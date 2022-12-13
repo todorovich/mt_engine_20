@@ -9,7 +9,10 @@ module;
 
 export module Geometry;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 namespace mt::renderer 
 {

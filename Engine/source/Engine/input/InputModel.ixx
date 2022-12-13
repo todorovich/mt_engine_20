@@ -5,7 +5,10 @@ module;
 
 export module InputModel;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 export import Time;
 

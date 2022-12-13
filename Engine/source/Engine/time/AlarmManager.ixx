@@ -1,9 +1,13 @@
 export module AlarmManager;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+export import std.core;
+#pragma warning( pop )
+
 export import Time;
 export import Alarm;
 export import ObjectPool;
-export import std.core;
 
 export using namespace std::literals::chrono_literals;
 

@@ -1,10 +1,14 @@
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module AlarmManager;
+
+import std.core;
+#pragma warning( pop )
 
 import Time;
 import Alarm;
 import ObjectPool;
 import Engine;
-import std.core;
 
 using namespace std::literals::chrono_literals;
 

@@ -5,6 +5,12 @@ module;
 
 module WindowsMessages.Size;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+import std.core;
+//import std.threading;
+#pragma warning( pop )
+
 import Engine;
 import WindowManager;
 import DirectXRenderer;

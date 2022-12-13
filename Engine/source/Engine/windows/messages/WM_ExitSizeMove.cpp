@@ -5,6 +5,12 @@ module;
 
 module WindowsMessages.ExitSizeMove;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+import std.core;
+//import std.threading;
+#pragma warning( pop )
+
 import Engine;
 import TimeManager;
 import DirectXRenderer;

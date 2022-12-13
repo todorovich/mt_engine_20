@@ -5,6 +5,11 @@ module;
 
 module WindowsMessages.MenuChar;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
+import std.core;
+#pragma warning( pop )
+
 import Engine;
 
 LRESULT mt::windows::WM_MenuChar::execute(

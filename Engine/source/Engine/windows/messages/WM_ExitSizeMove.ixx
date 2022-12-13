@@ -9,8 +9,6 @@ export import WindowsMessage;
 
 export namespace mt { class Engine; }
 
-export import std.core;
-
 export namespace mt::windows
 {
     class WM_ExitSizeMove : public WindowsMessage

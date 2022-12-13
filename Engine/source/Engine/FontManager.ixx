@@ -1,13 +1,14 @@
 module;
 
-extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
-}
 
 export module FontManager;
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 export import std.core;
+#pragma warning( pop )
 
 class FontManager {
 

@@ -2,7 +2,14 @@ module;
 
 #include <windows.h>
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module Engine;
+
+import std.core;
+//import std.threading;
+import std.filesystem;
+#pragma warning( pop )
 
 import Camera;
 import DirectXRenderer;
@@ -12,9 +19,6 @@ import StopWatch;
 import TimeManager;
 import WindowManager;
 import WindowsMessageManager;
-
-import std.core;
-import std.filesystem;
 
 using namespace std::literals;
 

@@ -2,7 +2,14 @@ module;
 
 #include <windows.h>
 
+#pragma warning( push )
+#pragma warning( disable : 5050 )
 module WindowManager;
+
+import std.core;
+//import std.threading;
+#pragma warning( pop )
+
 
 import Engine;
 import DirectXRenderer;
