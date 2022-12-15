@@ -27,8 +27,6 @@ export struct MathHelper
 	static float AngleFromXY(float x, float y);
 };
 
-module : private;
-
 using namespace DirectX;
 
 const float MathHelper::Infinity = FLT_MAX;
