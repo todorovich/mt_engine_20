@@ -1,4 +1,4 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
+ // Copyright 2022 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -12,15 +12,10 @@ module;
 #include <DirectXColors.h>
 #include "d3dx12.h"
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module DirectXRenderer;
 
-import std.core;
-//import std.threading;
-import std.filesystem;	
-#pragma warning( pop )
-
+import <filesystem>;
+import <array>;
 
 import Engine;
 import DirectXUtility;

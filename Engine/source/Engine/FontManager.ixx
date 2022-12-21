@@ -5,10 +5,9 @@ module;
 
 export module FontManager;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+import <string>;
+import <stdexcept>;
+import <format>;
 
 class FontManager {
 

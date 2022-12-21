@@ -5,20 +5,16 @@ module;
 
 export module InputModel;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+export import <string>;
+export import <variant>;
+export import <chrono>;
 
-export import Time;
-
-export import MicrosoftVirtualKeyCode;
-
-export import InputDevice;
-export import InputDataType;
 export import InputContext;
-export import VirtualKeyCode;
+export import InputDataType;
+export import InputDevice;
 export import InputType;
+export import MicrosoftVirtualKeyCode;
+export import VirtualKeyCode;
 
 export using namespace std::literals;
 
@@ -82,14 +78,14 @@ export namespace mt::input
 	// TODO: add 1-3d input as appropriate
 	struct InputMessage
 	{
-		const mt::time::TimePoint	time_point;
+		const std::chrono::steady_clock::time_point	time_point;
 		const InputType				input_type;
 
 		const std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data;
 
 		InputMessage(
 			const InputType input_type = InputType(),
-			const mt::time::TimePoint time_point = mt::time::Clock::now(),
+			const std::chrono::steady_clock::time_point time_point = std::chrono::steady_clock::now(),
 			const std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
 		)
 			: input_type(input_type)

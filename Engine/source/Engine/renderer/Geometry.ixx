@@ -9,10 +9,8 @@ module;
 
 export module Geometry;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+import <string>;
+import <unordered_map>;
 
 namespace mt::renderer 
 {

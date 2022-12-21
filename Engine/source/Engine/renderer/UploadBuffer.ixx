@@ -6,11 +6,6 @@ module;
 
 export module UploadBuffer;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
 export import DirectXUtility;
 
 export template<typename T> class UploadBuffer

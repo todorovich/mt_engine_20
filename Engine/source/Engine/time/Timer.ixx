@@ -1,14 +1,8 @@
 export module Timer;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
-export import Time;
 export import Alarm;
 
-export namespace mt { class Engine; }
+import Engine;
 
 export namespace mt::time
 {
@@ -16,8 +10,8 @@ export namespace mt::time
 	{		
 	public:
 
-		Timer(mt::Engine& engine, Duration offset, Task* callback)
-			: Alarm(engine, Clock::now() + offset, callback)
+		Timer(mt::Engine& engine, std::chrono::steady_clock::duration offset, Task* callback)
+			: Alarm(engine, std::chrono::steady_clock::now() + offset, callback)
 		{}
 
 		~Timer() = default;

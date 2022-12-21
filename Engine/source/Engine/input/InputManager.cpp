@@ -6,13 +6,7 @@ module;
 
 #undef RELATIVE
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module InputManager;
-
-import std.core;
-//import std.threading;
-#pragma warning( pop )
 
 import DirectXRenderer;
 import Engine;
@@ -180,7 +174,7 @@ void InputManager::processInput()
 
 void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data)
 {
-	_input_queue.push(_message_pool.allocate(input_type, mt::time::Clock::now(), data));
+	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
 }
 
 void mt::input::InputManager::toggleRelativeMouse()

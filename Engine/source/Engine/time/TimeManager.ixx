@@ -1,24 +1,17 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 export module TimeManager;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+export import <map>;
+export import <string_view>;
+export import <chrono>;
 
-export import Time;
 export import Timer;
 export import AlarmManager;
 export import StopWatch;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
 export using namespace std::literals;
 
-export namespace mt { class Engine; }
+import Engine;
 
 // TODO: need a tick and a physics tick. 
 export namespace mt::time
@@ -34,15 +27,15 @@ export namespace mt::time
 		AlarmManager											_alarm_manager;
 		std::map<std::string_view, std::unique_ptr<StopWatch>>	_stop_watches;
 
-		Duration	_tgt_update_interval_ns;
-		Duration	_tgt_render_interval_ns;
-		Duration	_frame_interval;
-		Duration	_command_list_interval;
+		std::chrono::steady_clock::duration	_tgt_update_interval_ns;
+		std::chrono::steady_clock::duration	_tgt_render_interval_ns;
+		std::chrono::steady_clock::duration	_frame_interval;
+		std::chrono::steady_clock::duration	_command_list_interval;
 
-		TimePoint curr_tick_time = TimePoint(0ns);
-		TimePoint prev_tick_time = TimePoint(0ns);
+		std::chrono::steady_clock::time_point curr_tick_time = std::chrono::steady_clock::time_point(0ns);
+		std::chrono::steady_clock::time_point prev_tick_time = std::chrono::steady_clock::time_point(0ns);
 
-		Duration tick_delta_time_ns = 0ns;
+		std::chrono::steady_clock::duration tick_delta_time_ns = 0ns;
 
 		bool _is_paused;
 
@@ -86,27 +79,27 @@ export namespace mt::time
 
 			_addEngineAlarms();
 
-			curr_tick_time = Clock::now();
-			prev_tick_time = TimePoint(0ns);
+			curr_tick_time = std::chrono::steady_clock::now();
+			prev_tick_time = std::chrono::steady_clock::time_point::min();
 
-			tick_delta_time_ns = 0ns;
+			tick_delta_time_ns = std::chrono::steady_clock::duration::min();
 
 			_is_paused = false;
 		}
 
 		~TimeManager() = default;
 	
-		TimePoint getCurrentTickTime() const { return curr_tick_time; };
+		std::chrono::steady_clock::time_point getCurrentTickTime() const { return curr_tick_time; };
 
-		TimePoint getPreviousTickTime() const { return prev_tick_time; };
+		std::chrono::steady_clock::time_point getPreviousTickTime() const { return prev_tick_time; };
 
-		Duration getTickDeltaTime() const { return tick_delta_time_ns; };
+		std::chrono::steady_clock::duration getTickDeltaTime() const { return tick_delta_time_ns; };
 
-		Duration getTargetUpdateInterval() const { return _tgt_update_interval_ns; }
+		std::chrono::steady_clock::duration getTargetUpdateInterval() const { return _tgt_update_interval_ns; }
 
 		// need to be able to detect if we are dropping frames and adjust this
 		// accordingly
-		Duration getTargetRenderInterval() const { return _tgt_render_interval_ns; }
+		std::chrono::steady_clock::duration getTargetRenderInterval() const { return _tgt_render_interval_ns; }
 
 		bool getShouldUpdate() const { return _should_update; }
 		bool getShouldRender() const { return _should_render; }

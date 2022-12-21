@@ -1,11 +1,8 @@
 export module ObjectPool;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
-
+import <ctime>;
+import <queue>;
+import <set>;
 
 export namespace mt 
 {

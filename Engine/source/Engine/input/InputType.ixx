@@ -1,9 +1,7 @@
 export module InputType;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+export import <compare>;
+export import <string>;
 
 export import InputContext;
 export import InputDataType;

@@ -3,19 +3,15 @@ module;
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 
-#include <Windows.h>
+#include <windows.h>
 
 export module EngineTest;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+import <chrono>;
+import <thread>;
 
 import Engine;
-import Time;
 import InputManager;
-
 
 using namespace std::literals::chrono_literals;
 

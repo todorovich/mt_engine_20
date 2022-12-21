@@ -21,21 +21,8 @@ module;
 
 export module DirectXRenderer;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-//export import std.threading;
-#pragma warning( pop )
-
-//import UploadBuffer;
 export import Camera;
 export import MathHelper;
-
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
 export import DirectXUtility;
 export import UploadBuffer;
 export import Geometry;
