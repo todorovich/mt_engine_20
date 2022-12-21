@@ -1,12 +1,9 @@
-﻿set_property(TARGET Engine PROPERTY CXX_STANDARD 23)
+﻿set_property(TARGET STL PROPERTY CXX_STANDARD 23)
 
 target_compile_options(
-	Engine PRIVATE 
+	STL PRIVATE 
 	/experimental:module
-	/wd4005
-	/wd5106
-	#/WX
-	/W4
+	/W1
 	"$<$<CONFIG:Debug>:/ZI>"
 )
 

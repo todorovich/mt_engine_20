@@ -18,8 +18,13 @@ find_package(freetype CONFIG REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
 
 # Include sub-projects.
+add_library (STL STATIC "")
+target_compile_definitions(STL PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+add_subdirectory ("STL")
+
 add_library (Engine STATIC "")
 target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+target_link_libraries(Engine PRIVATE STL)
 target_link_libraries(Engine PRIVATE freetype)
 add_subdirectory ("Engine")
 

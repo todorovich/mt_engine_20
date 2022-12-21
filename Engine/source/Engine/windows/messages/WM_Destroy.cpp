@@ -5,11 +5,6 @@ module;
 
 module WindowsMessages.destroy;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-import std.core;
-#pragma warning( pop )
-
 import Engine;
 
 // This message is sent when a window is being destroyed. It is sent to the window procedure of 

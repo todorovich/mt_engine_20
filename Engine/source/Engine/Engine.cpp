@@ -2,14 +2,10 @@ module;
 
 #include <windows.h>
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module Engine;
 
-import std.core;
-//import std.threading;
-import std.filesystem;
-#pragma warning( pop )
+import <string_view>;
+import <chrono>;
 
 import Camera;
 import DirectXRenderer;
@@ -104,6 +100,7 @@ Status Engine::run()
 {
 	auto run = [](mt::Engine& engine) {
 
+		auto input_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME);
 		auto frame_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
 		auto update_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME);
 		auto render_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME);
@@ -116,7 +113,7 @@ Status Engine::run()
 
 		while (true)
 		{
-			auto now = time::Clock::now();
+			auto now = std::chrono::steady_clock::now();
 
 			auto last_frame_rendered = engine.getRenderer()->getFramesRendered();
 
@@ -124,7 +121,7 @@ Status Engine::run()
 			{
 				last_frame_outputed = last_frame_rendered;
 
-				mt::time::Duration average = frame_time->getAverageTaskInterval();
+				std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
 
 				OutputDebugStringW(
 					(std::to_wstring(engine.getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
@@ -160,7 +157,7 @@ Status Engine::run()
 			if (engine._is_shutting_down) break;
 
 			
-			engine._tick(tick_time, update_time, render_time, frame_time);
+			engine._tick(tick_time, update_time, render_time, frame_time, input_time);
 		};
 	};
 
@@ -204,7 +201,8 @@ void Engine::_tick(
 	mt::time::StopWatch* tick_time, 
 	mt::time::StopWatch* update_time, 
 	mt::time::StopWatch* render_time, 
-	mt::time::StopWatch* frame_time
+	mt::time::StopWatch* frame_time,
+	mt::time::StopWatch* input_time
 )
 {
 	tick_time->startTask();
@@ -226,9 +224,7 @@ void Engine::_tick(
 	// Render whenever you can, but don't wait.
 	if (getTimeManager()->getShouldRender() && getRenderer()->isCurrentFenceComplete())
 	{
-		getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME)->doTask(
-			[](mt::Engine& engine) { engine.getInputManager()->processInput(); }
-		);
+		input_time->doTask([](mt::Engine& engine) { engine.getInputManager()->processInput(); });
 
 		getRenderer()->update();
 		_draw();

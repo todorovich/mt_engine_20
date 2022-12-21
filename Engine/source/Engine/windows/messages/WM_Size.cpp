@@ -5,18 +5,11 @@ module;
 
 module WindowsMessages.Size;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-import std.core;
-//import std.threading;
-#pragma warning( pop )
-
 import Engine;
 import WindowManager;
 import DirectXRenderer;
 import Camera;
 import TimeManager;
-import std.core;
 
 LRESULT mt::windows::WM_Size::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam

@@ -1,9 +1,4 @@
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module StopWatch;
-
-import std.core;
-#pragma warning( pop )
 
 import TimeManager;
 

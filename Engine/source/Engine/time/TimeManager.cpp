@@ -1,9 +1,6 @@
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module TimeManager;
 
-import std.core;
-#pragma warning( pop )
+import <chrono>;
 
 import Engine;
 
@@ -11,17 +8,17 @@ using namespace mt::time;
 
 void TimeManager::tick()
 {
-	auto now = Clock::now();
+	//auto now = std::chrono::steady_clock::now();
 
 	prev_tick_time = curr_tick_time;
 
-	curr_tick_time = Clock::now();
+	curr_tick_time = std::chrono::steady_clock::now();
 
 	tick_delta_time_ns = curr_tick_time - prev_tick_time;
 
 	_alarm_manager.tick(curr_tick_time);
 
-	now = Clock::now();
+	//now = std::chrono::steady_clock::now();
 }
 
 void TimeManager::updateComplete()
@@ -46,7 +43,7 @@ void TimeManager::resume()
 	{
 		_is_paused = false;
 
-		auto continue_time = Clock::now();
+		auto continue_time = std::chrono::steady_clock::now();
 
 		_alarm_manager.resume(continue_time);
 
@@ -67,7 +64,7 @@ void TimeManager::pause()
 	{
 		_is_paused = true;
 
-		auto time_paused = Clock::now();
+		auto time_paused = std::chrono::steady_clock::now();
 
 		_alarm_manager.pause(time_paused);
 
@@ -83,9 +80,9 @@ void TimeManager::pause()
 
 void TimeManager::_addEngineAlarms()
 {
-	_alarm_manager.addAlarm(Clock::now() + _tgt_update_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldUpdate(); }, true, _tgt_update_interval_ns);
-	_alarm_manager.addAlarm(Clock::now() + _tgt_render_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldRender(); }, true, _tgt_render_interval_ns);
-	_alarm_manager.addAlarm(Clock::now() + _frame_interval, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setEndOfFrame(); }, true, _frame_interval);
+	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _tgt_update_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldUpdate(); }, true, _tgt_update_interval_ns);
+	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _tgt_render_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldRender(); }, true, _tgt_render_interval_ns);
+	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _frame_interval, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setEndOfFrame(); }, true, _frame_interval);
 }
 
 void TimeManager::_setShouldUpdate()

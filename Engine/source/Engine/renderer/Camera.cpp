@@ -3,14 +3,10 @@ module;
 #include <d3d12.h>
 #include <DirectXMath.h>
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
 module Camera;
 
-import std.core;
-//import std.threading;
-#pragma warning( pop )
-
+import <string>;
+import <mutex>;
 
 using namespace mt::renderer;
 using namespace DirectX;
@@ -110,7 +106,7 @@ float Camera::getFovY() const
 float Camera::getFovX() const
 {
 	float halfWidth = 0.5f * getNearWindowWidth();
-	return 2.0f * atan(halfWidth / _frustum_near_z);
+	return 2.0f * atanf(halfWidth / _frustum_near_z);
 }
 
 float Camera::getNearWindowWidth() const

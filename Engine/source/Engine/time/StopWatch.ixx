@@ -1,14 +1,13 @@
 export module StopWatch;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+import <chrono>;
+import <string_view>;
+import <vector>;
 
-export import Time;
+export using namespace std::literals;
 
-export using namespace std::literals::chrono_literals;
- 
+import Engine;
+
 export namespace mt::time
 {
     class TimeManager;
@@ -21,25 +20,25 @@ export namespace mt::time
 
         const std::string_view _name;
 
-        const TimePoint _created;
+        const std::chrono::steady_clock::time_point _created;
         
-        TimePoint _task_started;
-        TimePoint _task_finished;
-        TimePoint _task_paused;
+        std::chrono::steady_clock::time_point _task_started;
+        std::chrono::steady_clock::time_point _task_finished;
+        std::chrono::steady_clock::time_point _task_paused;
         
-        Duration _paused;
+        std::chrono::steady_clock::duration _paused;
 
         // The total amount of time since the StopWatch was created;
-        Duration _total; 
+        std::chrono::steady_clock::duration _total;
 
         // The total amount of time spent doing the Task
-        Duration _total_active;
+        std::chrono::steady_clock::duration _total_active;
 
         // The total amount spent not doing the task
-        Duration _total_idle;
+        std::chrono::steady_clock::duration _total_idle;
         
-        std::vector<Duration> _task_intervals{ _number_of_samples, 0ns };
-        Duration _average_task_interval;
+        std::vector<std::chrono::steady_clock::duration> _task_intervals{ _number_of_samples, 0ns };
+        std::chrono::steady_clock::duration _average_task_interval;
 
         int sample_index = 0;
 
@@ -47,22 +46,22 @@ export namespace mt::time
 
     public:
 
-        StopWatch(TimeManager& _time_manager, std::string_view name, TimePoint created = Clock::now())
+        StopWatch(TimeManager& _time_manager, std::string_view name, std::chrono::steady_clock::time_point created = std::chrono::steady_clock::now())
             : _time_manager(_time_manager)
             , _name(name)
             , _created(created)
             , _task_finished(created)
             , _task_started(created)
-            , _task_paused(TimePoint::min())
-            , _paused(0ns)
-            , _total(0ns)
-            , _total_active(0ns)
-            , _total_idle(0ns)
+            , _task_paused(std::chrono::steady_clock::time_point::min())
+            , _paused(std::chrono::steady_clock::duration::min())
+            , _total(std::chrono::steady_clock::duration::min())
+            , _total_active(std::chrono::steady_clock::duration::min())
+            , _total_idle(std::chrono::steady_clock::duration::min())
         {}
 
         void reset() {}
 
-        void startTask(TimePoint start_time = Clock::now())
+        void startTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now())
         {
             if (!_isActive)
             {
@@ -73,26 +72,26 @@ export namespace mt::time
             }
         }
 
-        void pauseTask(TimePoint pause_time = Clock::now()) 
+        void pauseTask(std::chrono::steady_clock::time_point pause_time = std::chrono::steady_clock::now())
         {  
-            if (_task_paused == TimePoint::min())
+            if (_task_paused == std::chrono::steady_clock::time_point::min())
             {
                 _task_paused = pause_time;
                 _total = _task_paused - _task_started;
             }
         }
 
-        void continueTask(TimePoint start_time = Clock::now()) 
+        void continueTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now())
         { 
-            if (_task_paused != TimePoint::min())
+            if (!(_task_paused == std::chrono::steady_clock::time_point::min()))
             {
                 _paused += start_time - _task_paused;
                 _total = _task_paused - _task_started;
-                _task_paused = TimePoint::min();
+                _task_paused = std::chrono::steady_clock::time_point::min();
             }
         }
 
-        void finishTask(TimePoint finish_time = Clock::now())
+        void finishTask(std::chrono::steady_clock::time_point finish_time = std::chrono::steady_clock::now())
         {
             if (_isActive)
             {
@@ -120,10 +119,10 @@ export namespace mt::time
 
         void doTask(Task* doTask);
 
-        Duration getActive() const { return _total_active; }
-        Duration getPaused() const { return _total_idle; }
-        Duration getAverageTaskInterval() const { return _average_task_interval; }
+        std::chrono::steady_clock::duration getActive() const { return _total_active; }
+        std::chrono::steady_clock::duration getPaused() const { return _total_idle; }
+        std::chrono::steady_clock::duration getAverageTaskInterval() const { return _average_task_interval; }
 
-        std::vector<Duration> get() const { return _task_intervals; }
+        std::vector<std::chrono::steady_clock::duration> get() const { return _task_intervals; }
     };
 }

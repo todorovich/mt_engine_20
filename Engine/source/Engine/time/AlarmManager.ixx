@@ -1,17 +1,15 @@
 export module AlarmManager;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
+import <set>;
+import <queue>;
+import <chrono>;
 
-export import Time;
 export import Alarm;
 export import ObjectPool;
 
 export using namespace std::literals::chrono_literals;
 
-export namespace mt { class Engine; }
+import Engine;
 
 export namespace mt::time
 {
@@ -42,7 +40,7 @@ export namespace mt::time
 
 		AlarmManager& operator=(AlarmManager&& other) = delete;
 
-		void tick(TimePoint current_tick_time)
+		void tick(std::chrono::steady_clock::time_point current_tick_time)
 		{
 			if (!_alarm_queue.empty())
 			{
@@ -72,7 +70,7 @@ export namespace mt::time
 			}
 		}
 
-		void pause(TimePoint time_paused = Clock::now())
+		void pause(std::chrono::steady_clock::time_point  time_paused = std::chrono::steady_clock::now())
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
@@ -80,7 +78,7 @@ export namespace mt::time
 			}
 		}
 
-		void resume(TimePoint time_continued = Clock::now())
+		void resume(std::chrono::steady_clock::time_point  time_continued = std::chrono::steady_clock::now())
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
@@ -88,6 +86,11 @@ export namespace mt::time
 			}
 		}
 
-		void addAlarm(TimePoint time_point, Task* callback, bool repeats = false, Duration repeat_interval = 0ns);
+		void addAlarm(
+			std::chrono::steady_clock::time_point time_point, 
+			Task* callback, 
+			bool repeats = false, 
+			std::chrono::steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
+		);
 	};
 }

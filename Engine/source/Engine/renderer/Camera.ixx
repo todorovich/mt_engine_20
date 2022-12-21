@@ -4,11 +4,7 @@ module;
 
 export module Camera;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-//export import std.threading;
-#pragma warning( pop )
+import <mutex>;
 
 export import DirectXUtility;
 export import Status;

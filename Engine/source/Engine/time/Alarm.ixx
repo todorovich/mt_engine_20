@@ -1,30 +1,29 @@
 export module Alarm;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
-import Time;
+import <chrono>;
 
 export using namespace std::literals::chrono_literals;
 
-namespace mt::time { class AlarmManager; class TimeManager; }
+import Engine;
+
+namespace mt {
+	namespace time{ class AlarmManager; class TimeManager; }
+}
 
 export namespace mt::time
 {
 	class Alarm
 	{
 	private:
-		TimePoint _alarm_time;
+		std::chrono::steady_clock::time_point _alarm_time;
 
-		TimePoint _time_paused;
+		std::chrono::steady_clock::time_point _time_paused;
 
 		mt::Engine& _engine;
 
 		Task* _callback;
 
-		Duration _reset_interval;
+		std::chrono::steady_clock::duration _reset_interval;
 
 		bool _alarm_repeats;
 
@@ -32,16 +31,22 @@ export namespace mt::time
 
 		bool _is_paused;
 
-		void tick(TimePoint current_tick_time);
+		void tick(std::chrono::steady_clock::time_point current_tick_time);
 
 	public:
 
 		friend AlarmManager;
 
-		Alarm(mt::Engine& engine, TimePoint time_point, Task callback = [](mt::Engine&) {}, bool alarm_repeats = false, Duration reset_interval = 0ns)
+		Alarm(
+			mt::Engine& engine, 
+			std::chrono::steady_clock::time_point time_point, 
+			Task* callback = [](mt::Engine&) {}, 
+			bool alarm_repeats = false, 
+			std::chrono::steady_clock::duration reset_interval = std::chrono::steady_clock::duration::min()
+		)
 			: _engine(engine)
 			, _alarm_time(time_point)
-			, _time_paused(TimePoint(0ns))
+			, _time_paused(std::chrono::steady_clock::time_point::min())
 			, _callback(callback)
 			, _reset_interval(reset_interval)
 			, _alarm_repeats(alarm_repeats)
@@ -52,10 +57,10 @@ export namespace mt::time
 
 		Alarm(mt::Engine& engine)
 			: _engine(engine)
-			, _alarm_time(TimePoint::min())
-			, _time_paused(TimePoint::min())
+			, _alarm_time(std::chrono::steady_clock::time_point::min())
+			, _time_paused(std::chrono::steady_clock::time_point::min())
 			, _callback([](mt::Engine&){})
-			, _reset_interval(0ns)
+			, _reset_interval(std::chrono::steady_clock::duration::min())
 			, _alarm_repeats(false)
 			, _is_paused(true) 
 		{
@@ -96,9 +101,9 @@ export namespace mt::time
 			return _has_triggered; 
 		}
 
-		void pause(TimePoint time_paused = Clock::now());
+		void pause(std::chrono::steady_clock::time_point time_paused = std::chrono::steady_clock::now());
 
-		void resume(TimePoint time_continued = Clock::now());
+		void resume(std::chrono::steady_clock::time_point time_continued = std::chrono::steady_clock::now());
 	};
 
 	struct AlarmCompare

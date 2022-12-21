@@ -5,11 +5,6 @@ module;
 
 module WindowsMessages.EnterSizeMove;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-import std.core;
-#pragma warning( pop )
-
 import Engine;
 import TimeManager;
 import WindowManager;

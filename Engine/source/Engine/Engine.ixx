@@ -3,17 +3,16 @@ module;
 
 #include <windows.h>
 
+#undef min
+
 export module Engine;
 
-#pragma warning( push )
-#pragma warning( disable : 5050 )
-export import std.core;
-#pragma warning( pop )
-
-export import Time;
 export import Status;
 
 export import Debug;
+
+import <memory>;
+import <chrono>;
 
 export using namespace std::literals::chrono_literals;
 
@@ -39,7 +38,7 @@ export namespace mt
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 		const std::unique_ptr<time::TimeManager>				_time_manager;
 
-		time::Duration _time_since_stat_update = time::Duration(0);
+		std::chrono::steady_clock::duration _time_since_stat_update = std::chrono::steady_clock::duration::min();
 		
 		volatile bool _is_shutting_down = false;    // Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 
@@ -56,8 +55,10 @@ export namespace mt
 			mt::time::StopWatch* tick_time,
 			mt::time::StopWatch* update_time, 
 			mt::time::StopWatch* render_time, 
-			mt::time::StopWatch* frame_time
+			mt::time::StopWatch* frame_time,
+			mt::time::StopWatch* input_time
 		);
+
 		void _updateFrameStatisticsNoTimeCheck(bool was_rendered);
 	public:
 		
@@ -91,5 +92,7 @@ export namespace mt
 
 		void destroy();
 	};
+
+	using Task = void(mt::Engine&);
 }
 
