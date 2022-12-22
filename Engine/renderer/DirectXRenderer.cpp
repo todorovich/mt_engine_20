@@ -40,7 +40,7 @@ void mt::renderer::DirectXRenderer::render()
 	_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// swap the back and front buffers_
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_swap_chain->Present(0, 0),
 		__FUNCTION__,
 		__FILE__,
@@ -71,7 +71,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	// Enable the D3D12 debug layer.
 	ComPtr<ID3D12Debug> debugController;
 
-	ThrowIfFailed(
+	throwIfFailed(
 		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)),
 		__FUNCTION__,
 		__FILE__,
@@ -82,7 +82,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 #endif
 
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
-	ThrowIfFailed(
+	throwIfFailed(
 		CreateDXGIFactory1(IID_PPV_ARGS(&_dx_dxgi_factory)),
 		__FUNCTION__,
 		__FILE__,
@@ -98,14 +98,14 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	{
 		ComPtr<IDXGIAdapter> pWarpAdapter;
 	
-		ThrowIfFailed(
+		throwIfFailed(
 			_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)),
 			__FUNCTION__,
 			__FILE__,
 			__LINE__
 		);
 
-		ThrowIfFailed(
+		throwIfFailed(
 			D3D12CreateDevice(pWarpAdapter.Get(),	D3D_FEATURE_LEVEL_11_0,	IID_PPV_ARGS(&_dx_device)),
 			__FUNCTION__,
 			__FILE__,
@@ -114,7 +114,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	}
 
 	// create a fence
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE,	IID_PPV_ARGS(&_fence)),
 		__FUNCTION__,
 		__FILE__,
@@ -136,7 +136,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	msQualityLevels.Flags			 = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 	msQualityLevels.NumQualityLevels = 0;
 	
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CheckFeatureSupport(
 			D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 			&msQualityLevels,
@@ -163,7 +163,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	_createDescriptorHeaps();
 
 	// Reset the command list to prep for initialization commands.
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
 		__FUNCTION__,
 		__FILE__,
@@ -181,7 +181,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	_createPipelineStateObject();
 
 	// Execute the initialization commands.
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_list->Close(),
 		__FUNCTION__,
 		__FILE__,
@@ -201,7 +201,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 void DirectXRenderer::_createCommandList()
 {
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_list_allocator->Reset(),
 		__FUNCTION__,
 		__FILE__,
@@ -210,7 +210,7 @@ void DirectXRenderer::_createCommandList()
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pso.Get()),
 		__FUNCTION__,
 		__FILE__,
@@ -262,7 +262,7 @@ void DirectXRenderer::_createCommandList()
 	_dx_command_list->ResourceBarrier(1, &resource_barrier);
 
 	// Done recording commands.
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_list->Close(),
 		__FUNCTION__,
 		__FILE__,
@@ -277,7 +277,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	command_queue_description.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 	// Create a command queue
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateCommandQueue(&command_queue_description, IID_PPV_ARGS(&_dx_command_queue)),
 		__FUNCTION__,
 		__FILE__,
@@ -285,7 +285,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	);
 
 	// Create a command allocator
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateCommandAllocator(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			IID_PPV_ARGS(_dx_command_list_allocator.GetAddressOf())
@@ -296,7 +296,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	);
 
 	// Create a command list
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateCommandList(
 			0,
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -339,7 +339,7 @@ void DirectXRenderer::_createSwapChain()
 	swap_chain_description.Flags								= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	// Note: Swap chain uses queue to perform flush.
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_dxgi_factory->CreateSwapChain(
 			_dx_command_queue.Get(),
 			&swap_chain_description,
@@ -361,7 +361,7 @@ void DirectXRenderer::_createDescriptorHeaps()
 	rtv_heap_description.NodeMask		= 0;
 
 	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf())),
 		__FUNCTION__,
 		__FILE__,
@@ -376,7 +376,7 @@ void DirectXRenderer::_createDescriptorHeaps()
 	dsv_heap_description.NodeMask			= 0;
 
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf())),
 		__FUNCTION__,
 		__FILE__,
@@ -391,7 +391,7 @@ void DirectXRenderer::_createDescriptorHeaps()
 	cbv_heap_description.NodeMask		= 0;
 
 	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&cbv_heap_description,IID_PPV_ARGS(&_dx_cbv_heap)),
 		__FUNCTION__,
 		__FILE__,
@@ -452,9 +452,9 @@ void DirectXRenderer::_createRootSignature()
 		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
 	}
 
-	ThrowIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
+	throwIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
 
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateRootSignature(
 			0,
 			serializedRootSig->GetBufferPointer(),
@@ -530,7 +530,7 @@ void DirectXRenderer::_createPipelineStateObject()
 	psoDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 	psoDesc.DSVFormat = _depth_stencil_format;
 	
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&_pso)),
 		__FUNCTION__,
 		__FILE__,
@@ -553,7 +553,7 @@ void DirectXRenderer::incrementFence()
 	// Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-	ThrowIfFailed(
+	throwIfFailed(
 		_dx_command_queue->Signal(_fence.Get(), _current_fence_index),
 		__FUNCTION__,
 		__FILE__,
@@ -571,7 +571,7 @@ void DirectXRenderer::waitForFence()
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.  
-		ThrowIfFailed(
+		throwIfFailed(
 			_fence->SetEventOnCompletion(_current_fence_index, eventHandle),
 			__FUNCTION__,
 			__FILE__,
@@ -694,7 +694,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			// Flush before changing any resources.
 			flush_command_queue();
 
-			ThrowIfFailed(
+			throwIfFailed(
 				_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
 				__FUNCTION__,
 				__FILE__,
@@ -707,7 +707,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_depth_stencil_buffer.Reset();
 
 			// Resize the swap chain.
-			ThrowIfFailed(
+			throwIfFailed(
 				_dx_swap_chain->ResizeBuffers(
 					_swap_chain_buffer_count,
 					_window_width, _window_height,
@@ -724,7 +724,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
 			for (UINT i = 0; i < _swap_chain_buffer_count; i++)
 			{
-				ThrowIfFailed(
+				throwIfFailed(
 					_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i])),
 					__FUNCTION__,
 					__FILE__,
@@ -756,7 +756,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 
 			auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-			ThrowIfFailed(
+			throwIfFailed(
 				_dx_device->CreateCommittedResource(
 					&heap_properties,
 					D3D12_HEAP_FLAG_NONE,
@@ -782,7 +782,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_dx_command_list->ResourceBarrier(1, &resource_barrier);
 
 			// Execute the Resize commands.
-			ThrowIfFailed(
+			throwIfFailed(
 				_dx_command_list->Close(),
 				__FUNCTION__,
 				__FILE__,

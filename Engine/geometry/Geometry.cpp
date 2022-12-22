@@ -19,8 +19,8 @@ import Geometry;
 
 using namespace mt::geometry;
 
-using mt::renderer::ThrowIfFailed;
-using mt::renderer::CreateDefaultBuffer;
+using mt::renderer::throwIfFailed;
+using mt::renderer::createDefaultBuffer;
 using Microsoft::WRL::ComPtr;
 
 namespace mt::geometry
@@ -74,7 +74,7 @@ namespace mt::geometry
 		std::unique_ptr<mt::geometry::MeshGeometry> _box_mesh_geometry = std::make_unique<MeshGeometry>();
 		_box_mesh_geometry->name = "boxGeo";
 
-		ThrowIfFailed(
+		throwIfFailed(
 			D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
 			__FUNCTION__,
 			__FILE__,
@@ -82,7 +82,7 @@ namespace mt::geometry
 		);
 		memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
-		ThrowIfFailed(
+		throwIfFailed(
 			D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
 			__FUNCTION__,
 			__FILE__,
@@ -90,7 +90,7 @@ namespace mt::geometry
 		);
 		memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
 
-		_box_mesh_geometry->vertex_buffer_gpu = CreateDefaultBuffer(
+		_box_mesh_geometry->vertex_buffer_gpu = createDefaultBuffer(
 			dx_device.Get(),
 			dx_command_list.Get(),
 			vertices.data(),
@@ -98,7 +98,7 @@ namespace mt::geometry
 			_box_mesh_geometry->vertex_buffer_uploader
 		);
 
-		_box_mesh_geometry->index_buffer_gpu = CreateDefaultBuffer(
+		_box_mesh_geometry->index_buffer_gpu = createDefaultBuffer(
 			dx_device.Get(),
 			dx_command_list.Get(),
 			indices.data(),
