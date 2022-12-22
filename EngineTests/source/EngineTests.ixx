@@ -20,13 +20,14 @@ TEST_CASE("Start the Engine", "[input]")
     auto hwnd = GetModuleHandle(nullptr);
     auto instance = (HINSTANCE)GetWindowLong((HWND)hwnd, GWLP_HINSTANCE);
 
-    mt::Engine engine = mt::Engine();
+    mt::Engine engine = mt::Engine(instance);
+    mt::Game game = mt::Game();
 
-    engine.initialize(instance);
+    auto thread = new std::jthread([&]() { 
+        engine.run(game); 
+    });
 
-    auto thread = new std::jthread([&]() { engine.run(); });
-
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(2s);
 
     engine.shutdown();
 

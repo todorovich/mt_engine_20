@@ -27,11 +27,11 @@ export import DirectXUtility;
 export import UploadBuffer;
 export import Geometry;
 
+import Engine;
+
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
-
-export namespace mt { class Engine; }
 
 export namespace mt::renderer
 {

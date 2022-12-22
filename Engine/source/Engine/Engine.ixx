@@ -11,6 +11,8 @@ export import Status;
 
 export import Debug;
 
+export import Game;
+
 import <memory>;
 import <chrono>;
 
@@ -38,35 +40,29 @@ export namespace mt
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 		const std::unique_ptr<time::TimeManager>				_time_manager;
 
-		std::chrono::steady_clock::duration _time_since_stat_update = std::chrono::steady_clock::duration::min();
+		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
 		
-		volatile bool _is_shutting_down = false;    // Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
+		volatile bool	_is_shutting_down = false;    // Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 
 	protected:	
 		static Engine* _instance;
 
 		std::thread _engine_tick_thread;
 
-		// CALLBACKS
-		virtual void _update() {};
-		virtual void _draw() {};
-
 		void _tick(
 			mt::time::StopWatch* tick_time,
 			mt::time::StopWatch* update_time, 
 			mt::time::StopWatch* render_time, 
 			mt::time::StopWatch* frame_time,
-			mt::time::StopWatch* input_time
+			mt::time::StopWatch* input_time,
+			mt::Game& game
 		);
 
-		void _updateFrameStatisticsNoTimeCheck(bool was_rendered);
 	public:
 		
 		// Big 5
-		Engine();
-
-		virtual ~Engine();
-
+		Engine(HINSTANCE hInstance);
+		~Engine();
 		Engine(const Engine& other) = delete;
 		Engine(Engine&& other) = delete;
 		Engine& operator=(const Engine& other) = delete;
@@ -83,9 +79,7 @@ export namespace mt
 
 		// MUTATOR
 
-		virtual bool initialize(HINSTANCE hInstance);
-
-		Status run();
+		Status run(Game& game);
 
 		// Called to begin orderly shutdown.
 		void shutdown();

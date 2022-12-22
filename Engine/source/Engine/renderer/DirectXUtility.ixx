@@ -24,8 +24,6 @@ export namespace mt::renderer
 
 	struct ObjectConstants;
 
-	void ThrowIfFailed(HRESULT result, std::string function, std::string file, int line);
-
 	std::wstring AnsiToWString(const std::string& str);
 
 	constexpr UINT CalcConstantBufferByteSize(UINT byteSize)
@@ -111,16 +109,18 @@ namespace mt::renderer
 	struct ObjectConstants {
 		DirectX::XMFLOAT4X4 world_view_projection = Identity4x4();
 	};
+
+	export inline void ThrowIfFailed(const HRESULT result, const std::string& function, const std::string& file, int line)
+	{
+		if (result < 0) { throw DxException(result, AnsiToWString(function), AnsiToWString(file), line); }
+	}
 }
 
 module : private;
 
 namespace mt::renderer
 {
-	void ThrowIfFailed(HRESULT result, std::string function, std::string file, int line)
-	{
-		if (result < 0) { throw DxException(result, AnsiToWString(""), AnsiToWString(file), line); }
-	}
+	
 
 	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
 		const std::wstring& filename,

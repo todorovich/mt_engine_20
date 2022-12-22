@@ -37,12 +37,12 @@ export namespace mt::time
         // The total amount spent not doing the task
         std::chrono::steady_clock::duration _total_idle;
         
-        std::vector<std::chrono::steady_clock::duration> _task_intervals{ _number_of_samples, 0ns };
+        std::vector<std::chrono::steady_clock::duration> _task_intervals{ _number_of_samples, 1ns };
         std::chrono::steady_clock::duration _average_task_interval;
 
         int sample_index = 0;
 
-        bool _isActive;
+        bool _isActive = false;
 
     public:
 
@@ -54,9 +54,10 @@ export namespace mt::time
             , _task_started(created)
             , _task_paused(std::chrono::steady_clock::time_point::min())
             , _paused(std::chrono::steady_clock::duration::min())
-            , _total(std::chrono::steady_clock::duration::min())
-            , _total_active(std::chrono::steady_clock::duration::min())
-            , _total_idle(std::chrono::steady_clock::duration::min())
+            , _average_task_interval(1ns)
+            , _total(0ns)
+            , _total_active(0ns)
+            , _total_idle(0ns)
         {}
 
         void reset() {}
