@@ -8,6 +8,8 @@ export namespace mt { class Engine; }
 
 export import <string>;
 
+LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 export namespace mt::windows 
 {
 	class WindowManager 
@@ -26,11 +28,20 @@ export namespace mt::windows
 		std::wstring _main_window_caption = L"mt_engine";
 		std::string _main_window_caption_string = "mt_engine";
 
+		WNDCLASS _window_class;
+
 	public:
+
+		friend LRESULT CALLBACK ::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 		WindowManager(mt::Engine& engine)
 			: _engine(engine)
 		{}
+		
+		~WindowManager()
+		{
+			UnregisterClass(_window_class.lpszClassName, _window_class.hInstance);
+		}
 
 		HINSTANCE getInstanceHandle() const { return _instance_handle; }
 

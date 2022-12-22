@@ -53,15 +53,6 @@ WindowsMessageManager::WindowsMessageManager(mt::Engine& engine)
 	: _engine(engine)
 {}
 
-mt::windows::WindowsMessageManager::~WindowsMessageManager()
-{
-	// clean up all those message handlers
-	for (auto& pair : _message_handler_map)
-	{
-		delete pair.second;
-	}
-}
-
 void WindowsMessageManager::initialize()
 {
 	// Add all the message handlers to the message handler map
@@ -103,6 +94,15 @@ void WindowsMessageManager::initialize()
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONDOWN, new WM_XButtonDown(_engine.getInputManager())));
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONUP, new WM_XButtonUp(_engine.getInputManager())));
 	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
+}
+
+mt::windows::WindowsMessageManager::~WindowsMessageManager()
+{
+	// clean up all those message handlers
+	for (auto& pair : _message_handler_map)
+	{
+		delete pair.second;
+	}
 }
 
 LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

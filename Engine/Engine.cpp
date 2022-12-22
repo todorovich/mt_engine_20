@@ -71,7 +71,7 @@ Engine::Engine(HINSTANCE instance_handle)
 		throw new std::runtime_error("Only one mt:::Engine may exist at a time.");
 
 	_windows_message_manager->initialize();
-
+	 
 	// Will Register Message Handler WNDPROC
 	if (!getWindowManager()->initializeMainWindow(instance_handle))
 		throw new std::runtime_error("Could not initalize main window");
@@ -113,7 +113,7 @@ Status Engine::run(Game& game)
 
 		auto last_frame_rendered = getRenderer()->getFramesRendered();
 
-		if (last_frame_rendered % 144 == 0 && last_frame_outputed != last_frame_rendered)
+		if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
 		{
 			last_frame_outputed = last_frame_rendered;
 

@@ -1,4 +1,4 @@
-﻿set_property(TARGET STL PROPERTY CXX_STANDARD 23)
+set_property(TARGET STL PROPERTY CXX_STANDARD 23)
 
 target_compile_options(
 	STL PRIVATE 
@@ -7,4 +7,10 @@ target_compile_options(
 	"$<$<CONFIG:Debug>:/ZI>"
 )
 
-add_subdirectory ("source")
+target_sources(STL
+	PRIVATE
+		STL.ixx
+		d3dx12.h
+)
+
+target_include_directories(STL PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

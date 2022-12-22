@@ -118,7 +118,7 @@ export namespace mt::time
             }
         }
 
-        void doTask(Task* doTask);
+        void doTask(mt::Task* doTask);
 
         std::chrono::steady_clock::duration getActive() const { return _total_active; }
         std::chrono::steady_clock::duration getPaused() const { return _total_idle; }

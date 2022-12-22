@@ -1,8 +1,6 @@
 module;
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/benchmark/catch_benchmark.hpp>
-
+#include <catch.hpp>
 #include <windows.h>
 
 export module EngineTest;

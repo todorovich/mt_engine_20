@@ -19,14 +19,14 @@ export namespace mt::windows
 		
 		Engine& _engine;
 
-	protected:
-		void initialize();
-
 	public:
+
 		WindowsMessageManager(Engine& engine);
 	
 		~WindowsMessageManager();
 	
+		void initialize();
+
 		LRESULT handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam);
 	
 		std::map<int, WindowsMessage*> _message_handler_map;

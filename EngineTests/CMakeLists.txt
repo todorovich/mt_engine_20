@@ -7,4 +7,11 @@ target_compile_options(
 	/wd5106
 )
 
-add_subdirectory("source")
+target_sources(EngineTests
+	PRIVATE
+		StopWatchTests.ixx
+		EngineTests.ixx
+		TestMain.ixx
+)
+
+target_include_directories(EngineTests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
