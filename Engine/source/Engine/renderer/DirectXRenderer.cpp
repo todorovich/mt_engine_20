@@ -2,14 +2,19 @@
 module;
 
 #include <windows.h>
+#include <windowsx.h>
 #include <wrl.h>
 #include <combaseapi.h>
 #include <assert.h>
+
 #include <d3d12.h>
-#include <d3dcompiler.h>
 #include <dxgi.h>
+#include <dxgi1_4.h>
+#include <d3dcompiler.h>
+#include <DirectXCollision.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
+
 #include "d3dx12.h"
 
 module DirectXRenderer;
@@ -23,7 +28,7 @@ import DirectXUtility;
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
 
-void DirectXRenderer::render()
+void mt::renderer::DirectXRenderer::render()
 {
 	_is_rendering = true;
 
@@ -550,7 +555,7 @@ void DirectXRenderer::_createBoxGeometry()
 		__FILE__,
 		__LINE__
 	);
-	CopyMemory(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
+	memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
 	ThrowIfFailed(
 		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
@@ -558,7 +563,7 @@ void DirectXRenderer::_createBoxGeometry()
 		__FILE__,
 		__LINE__
 	);
-	CopyMemory(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
+	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
 
 	_box_mesh_geometry->vertex_buffer_gpu = CreateDefaultBuffer(
 		_dx_device.Get(),

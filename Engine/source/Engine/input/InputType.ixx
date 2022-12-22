@@ -9,6 +9,8 @@ export import InputDevice;
 export import VirtualKeyCode;
 export import MicrosoftVirtualKeyCode;
 
+using namespace mt::input;
+
 export namespace mt::input
 {
 	struct InputType

@@ -20,6 +20,8 @@ export using namespace std::literals;
 
 export namespace mt { class Engine; }
 
+using namespace mt::input;
+
 export namespace mt::input
 {
 	using button_function = void(mt::Engine&);
@@ -79,7 +81,7 @@ export namespace mt::input
 	struct InputMessage
 	{
 		const std::chrono::steady_clock::time_point	time_point;
-		const InputType				input_type;
+		const mt::input::InputType				input_type;
 
 		const std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data;
 

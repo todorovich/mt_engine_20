@@ -6,15 +6,22 @@ module;
 
 module EngineDemo;
 
+import <chrono>;
+
 import Engine;
 import InputManager;
+import InputDevice;
+import InputDataType;
+import InputContext;
+import VirtualKeyCode;
+import InputType;
 import WindowManager;
 import DirectXRenderer;
 import TimeManager;
 
 using namespace mt::input;
 
-using namespace std::literals::chrono_literals;
+using namespace std::literals;
 
 void mt::EngineDemo::map_input_controls()
 {
@@ -22,7 +29,7 @@ void mt::EngineDemo::map_input_controls()
 	auto quit = [](mt::Engine& engine) { 
 		PostMessage(engine.getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		quit,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ESCAPE)
 	);
@@ -30,7 +37,7 @@ void mt::EngineDemo::map_input_controls()
 	auto toggle_relative_mouse = [](mt::Engine& engine) {
 		engine.getInputManager()->toggleRelativeMouse();
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		toggle_relative_mouse,
 		InputType(InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE),
 		InputType(InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE)
@@ -43,7 +50,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		walk_forward,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::W),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::W)
@@ -53,7 +60,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		walk_backward,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::S),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::S)
@@ -63,7 +70,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		strafe_left,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::A),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::A)
@@ -73,7 +80,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		strafe_right,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::D),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::D)
@@ -83,7 +90,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		fly_up,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::SPACE),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::SPACE)
@@ -93,7 +100,7 @@ void mt::EngineDemo::map_input_controls()
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		fly_down,
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::CONTROL),
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::CONTROL)
@@ -110,7 +117,7 @@ void mt::EngineDemo::map_input_controls()
 		camera.pitch(dy);
 		camera.rotateY(dx);
 	};
-	getInputManager()->registerInputHandler(
+	_engine.getInputManager()->registerInputHandler(
 		mouse_look,
 		InputType(InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE, VirtualKeyCode::NO_KEY)
 	);

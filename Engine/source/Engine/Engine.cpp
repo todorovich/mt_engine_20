@@ -58,7 +58,7 @@ using namespace mt;
 
 Engine* Engine::_instance = nullptr;
 
-Engine::Engine()
+Engine::Engine(HINSTANCE instance_handle)
 	: _direct_x_renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::InputManager>(*this))
 	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
@@ -69,6 +69,18 @@ Engine::Engine()
 		_instance = this;
 	else
 		throw new std::runtime_error("Only one mt:::Engine may exist at a time.");
+
+	_windows_message_manager->initialize();
+
+	// Will Register Message Handler WNDPROC
+	if (!getWindowManager()->initializeMainWindow(instance_handle))
+		throw new std::runtime_error("Could not initalize main window");
+
+	if (!getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()))
+		throw new std::runtime_error("Could not initalize direct3d");
+
+	// Do the initial Resize code. 
+	getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
 }
 
 Engine::~Engine()
@@ -79,96 +91,71 @@ Engine::~Engine()
 	}
 };
 
-bool Engine::initialize(HINSTANCE instance_handle)
+Status Engine::run(Game& game)
 {
-	_windows_message_manager->initialize();
+	auto run_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME);
+	run_time->startTask();
 
-	// Will Register Message Handler WNDPROC
-	if (!getWindowManager()->initializeMainWindow(instance_handle))
-		return false;
+	auto input_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME);
+	auto frame_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
+	auto update_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME);
+	auto render_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME);
+	auto tick_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME);
+	auto windows_message_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME);
 
-	if (!getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()))
-		return false;
+	frame_time->startTask();
+	// TODO: windows messages (input) should be processed on a different thread than the ticks.
+	long long last_frame_outputed = 0;
 
-	// Do the initial Resize code. 
-	getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
+	while (true)
+	{
+		auto now = std::chrono::steady_clock::now();
 
-	return true;
-}
+		auto last_frame_rendered = getRenderer()->getFramesRendered();
 
-Status Engine::run()
-{
-	auto run = [](mt::Engine& engine) {
-
-		auto input_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME);
-		auto frame_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
-		auto update_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME);
-		auto render_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME);
-		auto tick_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME);
-		auto windows_message_time = engine.getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME);
-
-		frame_time->startTask();
-		// TODO: windows messages (input) should be processed on a different thread than the ticks.
-		long long last_frame_outputed = 0;
-
-		while (true)
+		if (last_frame_rendered % 144 == 0 && last_frame_outputed != last_frame_rendered)
 		{
-			auto now = std::chrono::steady_clock::now();
+			last_frame_outputed = last_frame_rendered;
 
-			auto last_frame_rendered = engine.getRenderer()->getFramesRendered();
+			std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
 
-			if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
-			{
-				last_frame_outputed = last_frame_rendered;
-
-				std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
-
-				OutputDebugStringW(
-					(std::to_wstring(engine.getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
-				);
-
-				OutputDebugStringW(
-					(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
-				);
-
-				OutputDebugStringW(
-					(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
-				);
-			}
-
-			windows_message_time->doTask(
-				[](mt::Engine& engine) {
-					MSG msg = {0};
-					// If there are Window messages then process them.
-					while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-					{
-						//VK_ACCEPT
-						TranslateMessage(&msg);
-						DispatchMessage(&msg);
-						if (msg.message == WM_QUIT)
-						{
-							engine.shutdown();
-							break;
-						}
-					}
-				}
+			OutputDebugStringW(
+				(std::to_wstring(getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
 			);
 
-			if (engine._is_shutting_down) break;
+			OutputDebugStringW(
+				(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
+			);
 
-			
-			engine._tick(tick_time, update_time, render_time, frame_time, input_time);
-		};
+			OutputDebugStringW(
+				(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
+			);
+		}
+
+		windows_message_time->doTask(
+			[](mt::Engine& engine) {
+				MSG msg = {0};
+				// If there are Window messages then process them.
+				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+				{
+					//VK_ACCEPT
+					TranslateMessage(&msg);
+					DispatchMessage(&msg);
+					if (msg.message == WM_QUIT)
+					{
+						engine.shutdown();
+						break;
+					}
+				}
+			}
+		);
+
+		if (this->_is_shutting_down) break;
+
+		_tick(tick_time, update_time, render_time, frame_time, input_time, game);
 	};
 
-	auto run_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME);
-	run_time->doTask(run);
-		
-
-	// Join the Tick thread (ensuring it has actually shut down)
-	//if (_engine_tick_thread.joinable()) _engine_tick_thread.join();
-
-	//OutputDebugStringW(L"Engine Has Stopped.\n");
+	run_time->finishTask();
 
 	return Status::success;
 }
@@ -202,32 +189,34 @@ void Engine::_tick(
 	mt::time::StopWatch* update_time, 
 	mt::time::StopWatch* render_time, 
 	mt::time::StopWatch* frame_time,
-	mt::time::StopWatch* input_time
+	mt::time::StopWatch* input_time,
+	mt::Game& game
 )
 {
 	tick_time->startTask();
 
 	getTimeManager()->tick();
 		
-	update_time->doTask(
-		[](mt::Engine& engine) {
-			if (engine.getTimeManager()->getShouldUpdate())
-			{
-				engine._update();
+	update_time->startTask();
+	if (getTimeManager()->getShouldUpdate())
+	{
+		game.physicsUpdate();
 
-				engine.getTimeManager()->updateComplete();
-			}
-		}
-	);
+		getTimeManager()->updateComplete();
+	}
+	update_time->finishTask();
 
 	render_time->startTask();
 	// Render whenever you can, but don't wait.
 	if (getTimeManager()->getShouldRender() && getRenderer()->isCurrentFenceComplete())
 	{
-		input_time->doTask([](mt::Engine& engine) { engine.getInputManager()->processInput(); });
+		input_time->startTask();
+		getInputManager()->processInput(); 
+		game.inputUpdate();
+		input_time->finishTask();
 
+		game.renderUpdate();
 		getRenderer()->update();
-		_draw();
 		getRenderer()->render();
 		getRenderer()->incrementFence();
 		getTimeManager()->renderComplete();
