@@ -176,7 +176,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	
 	_createShadersAndInputLayout();
 	
-	_createBoxGeometry();
+	_box_mesh_geometry = mt::geometry::createBoxGeometry(_dx_device, _dx_command_list);
 	
 	_createPipelineStateObject();
 
@@ -501,98 +501,6 @@ void DirectXRenderer::_createShadersAndInputLayout()
 		{ "POSITION",	0,	DXGI_FORMAT_R32G32B32_FLOAT,	0,	0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	0 },
 		{ "COLOR",		0,	DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	12,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	0 }
 	};
-}
-
-void DirectXRenderer::_createBoxGeometry()
-{
-	std::array<Vertex, 8> vertices
-	{
-		Vertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::White) }),
-		Vertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Black) }),
-		Vertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Red) }),
-		Vertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Green) }),
-		Vertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Blue) }),
-		Vertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Yellow) }),
-		Vertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Cyan) }),
-		Vertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Magenta) })
-	};
-
-	std::array<std::uint16_t, 36> indices =
-	{
-		// front face
-		0, 1, 2,
-		0, 2, 3,
-
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
-	};
-
-	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
-
-	_box_mesh_geometry = std::make_unique<MeshGeometry>();
-	_box_mesh_geometry->name = "boxGeo";
-
-	ThrowIfFailed(
-		D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
-	);
-	memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
-
-	ThrowIfFailed(
-		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
-	);
-	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
-
-	_box_mesh_geometry->vertex_buffer_gpu = CreateDefaultBuffer(
-		_dx_device.Get(),
-		_dx_command_list.Get(), 
-		vertices.data(), 
-		vbByteSize, 
-		_box_mesh_geometry->vertex_buffer_uploader
-	);
-
-	_box_mesh_geometry->index_buffer_gpu = CreateDefaultBuffer(
-		_dx_device.Get(),
-		_dx_command_list.Get(),
-		indices.data(),
-		ibByteSize, 
-		_box_mesh_geometry->index_buffer_uploader
-	);
-
-	_box_mesh_geometry->vertex_byte_stride = sizeof(Vertex);
-	_box_mesh_geometry->vertex_buffer_byte_size = vbByteSize;
-	_box_mesh_geometry->index_format = DXGI_FORMAT_R16_UINT;
-	_box_mesh_geometry->index_buffer_byte_size = ibByteSize;
-
-	SubmeshGeometry submesh;
-	submesh.index_count = (UINT)indices.size();
-	submesh.start_index_location = 0;
-	submesh.base_vertex_location = 0;
-
-	_box_mesh_geometry->draw_arguments["box"] = submesh;
 }
 
 void DirectXRenderer::_createPipelineStateObject()
