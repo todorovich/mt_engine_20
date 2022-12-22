@@ -1,6 +1,0 @@
-add_subdirectory ("Engine")
-
-#Supossedly you just add files to add them to the project but that doesnt work with .hlsl
-#add_subdirectory ("Shaders")
-
-target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

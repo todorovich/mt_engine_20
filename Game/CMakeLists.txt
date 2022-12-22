@@ -1,4 +1,4 @@
-﻿set_property(TARGET Game PROPERTY CXX_STANDARD 23)
+set_property(TARGET Game PROPERTY CXX_STANDARD 23)
   
 target_compile_options(Game PRIVATE 
 	/experimental:module
@@ -6,4 +6,11 @@ target_compile_options(Game PRIVATE
 	/wd5106
 )
 
-add_subdirectory("source")
+target_sources(Game
+	PRIVATE
+		EngineDemo.cpp
+	PUBLIC
+		EngineDemo.ixx
+)
+
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

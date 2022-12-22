@@ -153,11 +153,7 @@ export namespace mt::renderer
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
-        {
-            //auto string = L"sizeof vector: " + std::to_wstring(sizeof(camera)) + L" bytes \n";
-
-            //OutputDebugStringW(string.c_str());
-        }
+        {}
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)

@@ -1,4 +1,4 @@
-﻿set_property(TARGET Engine PROPERTY CXX_STANDARD 23)
+set_property(TARGET Engine PROPERTY CXX_STANDARD 23)
 
 target_compile_options(
 	Engine PRIVATE 
@@ -10,4 +10,21 @@ target_compile_options(
 	"$<$<CONFIG:Debug>:/ZI>"
 )
 
-add_subdirectory ("source")
+target_sources(Engine
+	PRIVATE
+		Engine.cpp
+		Debug.ixx
+		Engine.ixx
+		FontManager.ixx
+		MathHelper.ixx
+		ObjectPool.ixx
+		Status.ixx
+		Game.ixx
+)
+
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_subdirectory("input")
+add_subdirectory("renderer")
+add_subdirectory("time")
+add_subdirectory("windows")

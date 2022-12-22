@@ -24,6 +24,7 @@ import <array>;
 
 import Engine;
 import DirectXUtility;
+import WindowManager;
 
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
@@ -488,8 +489,8 @@ void DirectXRenderer::_createShadersAndInputLayout()
 
 	OutputDebugStringW((L"P = " + p.wstring()).c_str());
 
-	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Engine\\source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Engine\\source\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
 
 	// D3D_INPUT_ELEMENT_DESC
 	mInputLayout =

@@ -21,19 +21,19 @@ bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 {
 	_instance_handle = instance_handle;
 
-	WNDCLASS wc;
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = ::MainWndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = _instance_handle;
-	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(0, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
-	wc.lpszMenuName = 0;
-	wc.lpszClassName = L"MainWnd";
+	
+	_window_class.style = CS_HREDRAW | CS_VREDRAW;
+	_window_class.lpfnWndProc = ::MainWndProc;
+	_window_class.cbClsExtra = 0;
+	_window_class.cbWndExtra = 0;
+	_window_class.hInstance = _instance_handle;
+	_window_class.hIcon = LoadIcon(0, IDI_APPLICATION);
+	_window_class.hCursor = LoadCursor(0, IDC_ARROW);
+	_window_class.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+	_window_class.lpszMenuName = 0;
+	_window_class.lpszClassName = L"MainWnd";
 
-	if (!RegisterClass(&wc))
+	if (!RegisterClass(&_window_class))
 	{
 		MessageBox(0, L"RegisterClass Failed.", 0, 0);
 		return false;
