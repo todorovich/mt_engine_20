@@ -33,7 +33,7 @@ public:
 
         auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(element_byte_size * element_count);
-        mt::renderer::ThrowIfFailed(
+        mt::renderer::throwIfFailed(
             device->CreateCommittedResource(
                 &heap_properties,
                 D3D12_HEAP_FLAG_NONE,
@@ -47,7 +47,7 @@ public:
             __LINE__
         );
 
-        mt::renderer::ThrowIfFailed(
+        mt::renderer::throwIfFailed(
             _upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&_mapped_data)),
             "",
             __FILE__,

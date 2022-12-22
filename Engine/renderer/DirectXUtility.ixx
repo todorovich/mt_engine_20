@@ -59,7 +59,7 @@ export namespace mt::renderer
 		const std::string& target
 	);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const void* initData,
@@ -110,7 +110,7 @@ namespace mt::renderer
 		DirectX::XMFLOAT4X4 world_view_projection = Identity4x4();
 	};
 
-	export inline void ThrowIfFailed(const HRESULT result, const std::string& function, const std::string& file, int line)
+	export inline void throwIfFailed(const HRESULT result, const std::string& function, const std::string& file, int line)
 	{
 		if (result < 0) { throw DxException(result, AnsiToWString(function), AnsiToWString(file), line); }
 	}
@@ -154,7 +154,7 @@ namespace mt::renderer
 		if (errors != nullptr)
 			OutputDebugStringA((char*)errors->GetBufferPointer());
 
-		ThrowIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
+		throwIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
 
 		return byteCode;
 	}
@@ -166,7 +166,7 @@ namespace mt::renderer
 		return std::wstring(buffer);
 	}
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* command_list,
 		const void* initialization_data,
@@ -179,7 +179,7 @@ namespace mt::renderer
 		auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 		auto buffer = CD3DX12_RESOURCE_DESC::Buffer(byte_size);
 		// Create the actual default buffer resource.
-		ThrowIfFailed(
+		throwIfFailed(
 			device->CreateCommittedResource(
 				&heap_properties,
 				D3D12_HEAP_FLAG_NONE,
@@ -198,7 +198,7 @@ namespace mt::renderer
 
 		// In order to copy CPU memory data into our default buffer, we need to create
 		// an intermediate upload heap. 
-		ThrowIfFailed(
+		throwIfFailed(
 			device->CreateCommittedResource(
 				&heap_properties_2,
 				D3D12_HEAP_FLAG_NONE,
