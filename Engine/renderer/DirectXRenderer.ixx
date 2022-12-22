@@ -32,6 +32,7 @@ import Engine;
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
+using mt::Engine;
 
 export namespace mt::renderer
 {
@@ -139,16 +140,7 @@ export namespace mt::renderer
 
         void _createShadersAndInputLayout();
 
-        void _createBoxGeometry();
-
         void _createPipelineStateObject();
-
-        void _logAdapters();
-
-        void _logAdapterOutputs(IDXGIAdapter* adapter);
-
-        void _logOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
-
 
     public:
         DirectXRenderer(Engine& engine)

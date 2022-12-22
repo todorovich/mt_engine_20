@@ -120,8 +120,6 @@ module : private;
 
 namespace mt::renderer
 {
-	
-
 	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
