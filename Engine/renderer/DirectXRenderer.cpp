@@ -13,6 +13,7 @@ module;
 #include <DirectXCollision.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
+#include <d3dcompiler.h>
 
 #include "d3dx12.h"
 
@@ -24,9 +25,12 @@ import <array>;
 import Engine;
 import DirectXUtility;
 import WindowManager;
+import MeshGeometry;
 
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
+using mt::geometry::MeshGeometry;
+using mt::geometry::SubmeshGeometry;
 
 void mt::renderer::DirectXRenderer::render()
 {
@@ -174,8 +178,10 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	_createRootSignature();
 	
 	_createShadersAndInputLayout();
-	
-	_box_mesh_geometry = mt::geometry::createBoxGeometry(_dx_device, _dx_command_list);
+
+	_createGeometry();
+
+	//_box_mesh_geometry = mt::geometry::createBoxGeometry(_dx_device, _dx_command_list);
 	
 	_createPipelineStateObject();
 
@@ -198,7 +204,69 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	return true;
 }
 
-void DirectXRenderer::_createCommandList()
+ void DirectXRenderer::_createGeometry()
+ {
+	 auto box =  mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
+
+	 std::vector<mt::renderer::Vertex> vertices(box->vertices.size());
+	 for (std::size_t index = 0; index < box->vertices.size(); ++index)
+	 {
+		 vertices[index].position = box->vertices[index].position;
+		 vertices[index].color = DirectX::XMFLOAT4{DirectX::Colors::Green};
+	 }
+
+	 const UINT vbByteSize = (UINT)vertices.size() * sizeof(mt::renderer::Vertex);
+	 const UINT ibByteSize = (UINT)box->indices.size() * sizeof(uint16_t);
+
+	 _box_mesh_geometry = std::make_unique<MeshGeometry>();
+	 _box_mesh_geometry->name = "box";
+
+	 throwIfFailed(
+		 D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
+		 __FUNCTION__,
+		 __FILE__,
+		 __LINE__
+	 );
+	 memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
+
+	 throwIfFailed(
+		 D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
+		 __FUNCTION__,
+		 __FILE__,
+		 __LINE__
+	 );
+	 memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box->indices.data(), ibByteSize);
+
+	 _box_mesh_geometry->vertex_buffer_gpu = createDefaultBuffer(
+		 _dx_device.Get(),
+		 _dx_command_list.Get(),
+		 vertices.data(),
+		 vbByteSize,
+		 _box_mesh_geometry->vertex_buffer_uploader
+	 );
+
+	 _box_mesh_geometry->index_buffer_gpu = createDefaultBuffer(
+		 _dx_device.Get(),
+		 _dx_command_list.Get(),
+		 box->indices.data(),
+		 ibByteSize,
+		 _box_mesh_geometry->index_buffer_uploader
+	 );
+
+	 _box_mesh_geometry->vertex_byte_stride = sizeof(Vertex);
+	 _box_mesh_geometry->vertex_buffer_byte_size = vbByteSize;
+	 _box_mesh_geometry->index_format = DXGI_FORMAT_R16_UINT;
+	 _box_mesh_geometry->index_buffer_byte_size = ibByteSize;
+
+	 _box_mesh_geometry->draw_arguments.emplace(
+		 std::make_pair(
+			 "box",
+			 SubmeshGeometry{ static_cast<uint32_t>(box->indices.size()), 0, 0, DirectX::BoundingBox()}
+		 )
+	 );
+ }
+
+ void DirectXRenderer::_createCommandList()
 {
 	throwIfFailed(
 		_dx_command_list_allocator->Reset(),

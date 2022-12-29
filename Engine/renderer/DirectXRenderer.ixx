@@ -142,6 +142,8 @@ export namespace mt::renderer
 
         void _createPipelineStateObject();
 
+		void _createGeometry();
+
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)

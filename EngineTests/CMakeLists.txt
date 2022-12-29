@@ -9,9 +9,10 @@ target_compile_options(
 
 target_sources(EngineTests
 	PRIVATE
-		StopWatchTests.ixx
-		EngineTests.ixx
-		TestMain.ixx
+	StopWatchTests.ixx
+	EngineTests.ixx
+	TestMain.ixx
+	MicrosoftTests.ixx
 )
 
 target_include_directories(EngineTests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

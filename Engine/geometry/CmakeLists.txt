@@ -1,9 +1,9 @@
 target_sources(
 	Engine PRIVATE
-	"Vertex.ixx"
 	"Geometry.ixx"
 	"Geometry.cpp"
-	"SubmeshGeometry.ixx" 
+	"SubmeshGeometry.ixx"
+	"MeshData.ixx"
 	"MeshGeometry.ixx"
 )
 

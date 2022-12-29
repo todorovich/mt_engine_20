@@ -3,7 +3,7 @@
 
 Dependencies:
 - truetype
-
+- catch2
 
 Converted to use modules and c++20
 
