@@ -5,13 +5,13 @@ import <cstdint>;
 
 namespace mt::geometry
 {
-	constexpr std::unique_ptr<MeshData> createBoxGeometry(float width, float height, float depth)
+	constexpr MeshData createBoxGeometry(float width, float height, float depth)
 	{
 		float half_width = width / 2.0f;
 		float half_height = height / 2.0f;
 		float half_depth = depth / 2.0f;
 
-		return std::make_unique<MeshData>(
+		return MeshData{
 			std::vector < Vertex > {
 				// front face
 				Vertex(-half_width, -half_height, -half_depth, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f),
@@ -44,7 +44,7 @@ namespace mt::geometry
 				Vertex(+half_width, +half_height, +half_depth, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f),
 				Vertex(+half_width, -half_height, +half_depth, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f),
 			},
-			std::vector<std::uint16_t> {
+			std::vector < std::uint16_t > {
 				// front face
 				0, 1, 2,
 				0, 2, 3,
@@ -69,6 +69,6 @@ namespace mt::geometry
 				20, 21, 22,
 				20, 22, 23
 			}
-		);
+		};
 	}
 }
