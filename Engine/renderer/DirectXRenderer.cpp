@@ -227,7 +227,7 @@ void DirectXRenderer::_createCommandList()
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pipeline_state_objects[1].Get()),
+		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
@@ -651,7 +651,7 @@ void DirectXRenderer::_createGeometry()
 	for (std::size_t index = 0; index < box.vertices.size(); ++index)
 	{
 		vertices[index].position = box.vertices[index].position;
-		vertices[index].color = DirectX::XMFLOAT4{ DirectX::Colors::Green };
+		vertices[index].color = box.vertices[index].color;
 	}
 
 	const UINT vbByteSize = (UINT) vertices.size() * sizeof(mt::renderer::Vertex);
