@@ -1,8 +1,8 @@
-.vs/*
-**/.vs/*
 Intermediate/*
 Output/*
 out/*
 **/Logs/*
 **/*.pdb
 **/*.idb
+/.vs/
+/out/

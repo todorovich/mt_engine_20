@@ -64,7 +64,7 @@ export namespace mt::renderer
         HWND _main_window_handle;
 
         unique_ptr<UploadBuffer<ObjectConstants>> _object_constants_upload_buffer = nullptr;
-        unique_ptr<mt::geometry::MeshGeometry> _box_mesh_geometry = nullptr;
+        unique_ptr<MeshGeometry> _box_mesh_geometry = nullptr;
 
         ComPtr<IDXGIFactory4> _dx_dxgi_factory;
         ComPtr<IDXGISwapChain> _dx_swap_chain;
@@ -141,6 +141,8 @@ export namespace mt::renderer
         void _createShadersAndInputLayout();
 
         void _createPipelineStateObject();
+
+		void _createGeometry();
 
     public:
         DirectXRenderer(Engine& engine)
