@@ -11,7 +11,7 @@ import <unordered_map>;
 
 export import SubmeshGeometry;
 
-namespace mt::geometry
+namespace mt::renderer
 {
     export struct MeshGeometry
     {

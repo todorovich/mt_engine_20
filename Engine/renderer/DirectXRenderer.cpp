@@ -29,8 +29,6 @@ import MeshGeometry;
 
 using namespace mt::renderer;
 using Microsoft::WRL::ComPtr;
-using mt::geometry::MeshGeometry;
-using mt::geometry::SubmeshGeometry;
 
 void mt::renderer::DirectXRenderer::render()
 {
