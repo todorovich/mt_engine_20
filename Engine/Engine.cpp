@@ -218,7 +218,6 @@ void Engine::_tick(
 		game.renderUpdate();
 		getRenderer()->update();
 		getRenderer()->render();
-		getRenderer()->incrementFence();
 		getTimeManager()->renderComplete();
 
 		frame_time->finishTask();

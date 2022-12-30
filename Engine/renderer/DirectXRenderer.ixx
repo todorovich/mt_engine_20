@@ -134,7 +134,7 @@ export namespace mt::renderer
 
         virtual void _createDescriptorHeaps();
 
-        void _createConstantBuffers();
+        void _createConstantBufferViews();
 
         void _createRootSignature();
 
@@ -144,6 +144,8 @@ export namespace mt::renderer
 
 		void _createGeometry();
 
+		void _flushCommandQueue();
+
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
@@ -151,7 +153,7 @@ export namespace mt::renderer
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)
-                flush_command_queue();
+				_flushCommandQueue();
         }
         
         DirectXRenderer(const DirectXRenderer&) = delete;
@@ -180,23 +182,15 @@ export namespace mt::renderer
         long long getFramesRendered() const { return _frames_rendered; }
 
         // Mutators
-        bool initializeDirect3d(HWND main_window_handle);
-        
         void set4xMsaaState(bool value);
-
-        void render();
 
         void resize(int client_width, int client_height);
 
+        void render();
+
         void update();
 
-        void flush_command_queue();
-
-        // Fence Stuff
-
-        void incrementFence();
-
-        void waitForFence();
+        bool initializeDirect3d(HWND main_window_handle);
 
         bool isCurrentFenceComplete() { return _fence->GetCompletedValue() >= _current_fence_index; }
     };

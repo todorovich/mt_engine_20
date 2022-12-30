@@ -45,7 +45,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			assert(_dx_command_list_allocator);
 
 			// Flush before changing any resources.
-			flush_command_queue();
+			_flushCommandQueue();
 
 			throwIfFailed(
 				_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
@@ -150,7 +150,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 			// Wait until Resize is complete.
-			flush_command_queue();
+			_flushCommandQueue();
 
 			// Update the viewport transform to cover the client area.
 			_screen_viewport.TopLeftX = 0;
@@ -218,7 +218,7 @@ void mt::renderer::DirectXRenderer::render()
 	// Wait until frame commands are complete.  This waiting is inefficient and is
 	// done for simplicity.  Later we will show how to organize our rendering code
 	// so we do not have to wait per frame.
-	//flush_command_queue();
+	_flushCommandQueue();
 
 	// NOTE: Moved this to happen outside of the render as it ends up syncing the render time_manager_
 	// to the framerate. Instead I moved it to flush just before the idle is reset, this should
@@ -320,9 +320,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	throwIfFailed(
 		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	debugController->EnableDebugLayer();
@@ -331,9 +329,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
 	throwIfFailed(
 		CreateDXGIFactory1(IID_PPV_ARGS(&_dx_dxgi_factory)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Try to create hardware device.
@@ -347,25 +343,19 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 		throwIfFailed(
 			_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 
 		throwIfFailed(
 			D3D12CreateDevice(pWarpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device)),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 	}
 
 	// create a fence
 	throwIfFailed(
 		_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	_rtv_descriptor_size = _dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -389,19 +379,12 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 			&msQualityLevels,
 			sizeof(msQualityLevels)
 		),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	_4x_msaa_quality = msQualityLevels.NumQualityLevels;
 
 	assert(_4x_msaa_quality > 0 && "Unexpected MSAA quality level.");
-
-#ifdef _DEBUG
-	// This is just annoying, but could be useful in the future when logs are better.
-	//log_adapters();
-#endif
 
 	_createDxCommandObjects();
 
@@ -412,12 +395,10 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	// Reset the command list to prep for initialization commands.
 	throwIfFailed(
 		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
-	_createConstantBuffers();
+	_createConstantBufferViews();
 
 	_createRootSignature();
 
@@ -425,35 +406,32 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	_createGeometry();
 
+	// RENDER ITEMS
+
+	// FRAME RESOURCES
+
+	// ANOTHER DESCRIPTOR HEAP
+
 	_createPipelineStateObject();
 
 	// Execute the initialization commands.
 	throwIfFailed(
 		_dx_command_list->Close(),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
 	_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Wait until initialization is complete.
-	flush_command_queue();
+	_flushCommandQueue();
 
 	_is_initialized = true;
 
 	return true;
 }
 
-void DirectXRenderer::flush_command_queue()
-{
-	incrementFence();
-
-	waitForFence();
-}
-
-void DirectXRenderer::incrementFence()
+void DirectXRenderer::_flushCommandQueue()
 {
 	// Advance the fence value to mark commands up to this fence point.
 	_current_fence_index++;
@@ -463,14 +441,9 @@ void DirectXRenderer::incrementFence()
 	// processing all the commands prior to this Signal().
 	throwIfFailed(
 		_dx_command_queue->Signal(_fence.Get(), _current_fence_index),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
-}
 
-void DirectXRenderer::waitForFence()
-{
 	// Wait until the GPU has completed commands up to this fence point.
 	if (_fence->GetCompletedValue() < _current_fence_index)
 	{
@@ -480,9 +453,7 @@ void DirectXRenderer::waitForFence()
 		// Fire event when GPU hits current fence.
 		throwIfFailed(
 			_fence->SetEventOnCompletion(_current_fence_index, eventHandle),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 
 		// Wait until the GPU hits current fence event is fired.
@@ -501,9 +472,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	// Create a command queue
 	throwIfFailed(
 		_dx_device->CreateCommandQueue(&command_queue_description, IID_PPV_ARGS(&_dx_command_queue)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Create a command allocator
@@ -512,9 +481,7 @@ void DirectXRenderer::_createDxCommandObjects()
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			IID_PPV_ARGS(_dx_command_list_allocator.GetAddressOf())
 		),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Create a command list
@@ -526,9 +493,7 @@ void DirectXRenderer::_createDxCommandObjects()
 			nullptr,                                        // Initial PipelineStateObject
 			IID_PPV_ARGS(_dx_command_list.GetAddressOf())
 		),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Start off in a closed state.  This is because the first time_manager_ we refer
@@ -567,9 +532,7 @@ void DirectXRenderer::_createSwapChain()
 			&swap_chain_description,
 			_dx_swap_chain.GetAddressOf()
 		),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 }
 
@@ -585,9 +548,7 @@ void DirectXRenderer::_createDescriptorHeaps()
 	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
 	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf())),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
@@ -600,9 +561,7 @@ void DirectXRenderer::_createDescriptorHeaps()
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
 	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf())),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
@@ -615,14 +574,12 @@ void DirectXRenderer::_createDescriptorHeaps()
 	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
 	throwIfFailed(
 		_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 }
 
-void DirectXRenderer::_createConstantBuffers()
+void DirectXRenderer::_createConstantBufferViews()
 {
 	_object_constants_upload_buffer = std::make_unique<UploadBuffer < ObjectConstants>>
 	(_dx_device.Get(), 1, true);
@@ -688,9 +645,7 @@ void DirectXRenderer::_createRootSignature()
 			serializedRootSig->GetBufferSize(),
 			IID_PPV_ARGS(&_dx_root_signature)
 		),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 }
 
@@ -753,17 +708,13 @@ void DirectXRenderer::_createGeometry()
 
 	throwIfFailed(
 		D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 	memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
 	throwIfFailed(
 		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box->indices.data(), ibByteSize);
 
@@ -825,9 +776,7 @@ void DirectXRenderer::_createPipelineStateObject()
 
 	throwIfFailed(
 		_dx_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&_pso)),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 }
 
@@ -851,5 +800,3 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const
 {
 	return _dx_dsv_heap->GetCPUDescriptorHandleForHeapStart();
 }
-
-
