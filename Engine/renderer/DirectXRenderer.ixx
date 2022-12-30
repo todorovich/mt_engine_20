@@ -21,6 +21,8 @@ module;
 
 export module DirectXRenderer;
 
+import <ctime>;
+
 export import Camera;
 export import MathHelper;
 export import DirectXUtility;
@@ -53,7 +55,7 @@ export namespace mt::renderer
 
         // 32 byte type
         vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout; // 32 bytes according to sizeof
-
+		vector<ComPtr<ID3D12PipelineState>> _pipeline_state_objects{std::size_t{2}};
         // 24 byte type
         D3D12_VIEWPORT _screen_viewport;
 
@@ -87,7 +89,7 @@ export namespace mt::renderer
 
         ComPtr<ID3DBlob> _mvs_byte_code;
         ComPtr<ID3DBlob> _mps_byte_code;
-        ComPtr<ID3D12PipelineState> _pso;
+
 
         // 8 byte types
         UINT64 _current_fence_index = 0;

@@ -49,9 +49,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 
 			throwIfFailed(
 				_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
-				__FUNCTION__,
-				__FILE__,
-				__LINE__
+				__FUNCTION__, __FILE__, __LINE__
 			);
 
 			// Release the previous resources we will be recreating.
@@ -69,9 +67,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 					_back_buffer_format,
 					DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 				),
-				__FUNCTION__,
-				__FILE__,
-				__LINE__
+				__FUNCTION__, __FILE__, __LINE__
 			);
 
 			_current_back_buffer = 0;
@@ -81,9 +77,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			{
 				throwIfFailed(
 					_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i])),
-					__FUNCTION__,
-					__FILE__,
-					__LINE__
+					__FUNCTION__, __FILE__, __LINE__
 				);
 
 				_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
@@ -120,9 +114,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 					&optClear,
 					IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
 				),
-				__FUNCTION__,
-				__FILE__,
-				__LINE__
+				__FUNCTION__, __FILE__, __LINE__
 			);
 
 			// Create descriptor to mip level 0 of entire resource using the format of the resource.
@@ -141,9 +133,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			// Execute the Resize commands.
 			throwIfFailed(
 				_dx_command_list->Close(),
-				__FUNCTION__,
-				__FILE__,
-				__LINE__
+				__FUNCTION__, __FILE__, __LINE__
 			);
 
 			ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
@@ -234,18 +224,14 @@ void DirectXRenderer::_createCommandList()
 {
 	throwIfFailed(
 		_dx_command_list_allocator->Reset(),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pso.Get()),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pipeline_state_objects[1].Get()),
+		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	_dx_command_list->RSSetViewports(1, &_screen_viewport);
@@ -749,33 +735,43 @@ void DirectXRenderer::_createGeometry()
 
 void DirectXRenderer::_createPipelineStateObject()
 {
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	psoDesc.InputLayout = { mInputLayout.data(), (UINT) mInputLayout.size() };
-	psoDesc.pRootSignature = _dx_root_signature.Get();
-	psoDesc.VS =
-		{
-			reinterpret_cast<BYTE*>(_mvs_byte_code->GetBufferPointer()),
-			_mvs_byte_code->GetBufferSize()
-		};
-	psoDesc.PS =
-		{
-			reinterpret_cast<BYTE*>(_mps_byte_code->GetBufferPointer()),
-			_mps_byte_code->GetBufferSize()
-		};
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = _back_buffer_format;
-	psoDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
-	psoDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
-	psoDesc.DSVFormat = _depth_stencil_format;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC standard_pipeline_state_object;
+	ZeroMemory(&standard_pipeline_state_object, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	standard_pipeline_state_object.InputLayout = { mInputLayout.data(), (UINT) mInputLayout.size() };
+	standard_pipeline_state_object.pRootSignature = _dx_root_signature.Get();
+	standard_pipeline_state_object.VS = {
+		reinterpret_cast<BYTE*>(_mvs_byte_code->GetBufferPointer()),
+		_mvs_byte_code->GetBufferSize()
+	};
+	standard_pipeline_state_object.PS = {
+		reinterpret_cast<BYTE*>(_mps_byte_code->GetBufferPointer()),
+		_mps_byte_code->GetBufferSize()
+	};
+	standard_pipeline_state_object.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	standard_pipeline_state_object.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	standard_pipeline_state_object.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	standard_pipeline_state_object.SampleMask = UINT_MAX;
+	standard_pipeline_state_object.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	standard_pipeline_state_object.NumRenderTargets = 1;
+	standard_pipeline_state_object.RTVFormats[0] = _back_buffer_format;
+	standard_pipeline_state_object.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+	standard_pipeline_state_object.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
+	standard_pipeline_state_object.DSVFormat = _depth_stencil_format;
 
 	throwIfFailed(
-		_dx_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&_pso)),
+		_dx_device->CreateGraphicsPipelineState(
+			&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[0])
+		),
+		__FUNCTION__, __FILE__, __LINE__
+	);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC wireframe_pipeline_state_object = standard_pipeline_state_object;
+	wireframe_pipeline_state_object.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+
+	throwIfFailed(
+		_dx_device->CreateGraphicsPipelineState(
+			&wireframe_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[1])
+		),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 }
