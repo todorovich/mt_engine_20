@@ -198,10 +198,7 @@ void mt::renderer::DirectXRenderer::render()
 
 	// swap the back and front buffers_
 	throwIfFailed(
-		_dx_swap_chain->Present(0, 0),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		_dx_swap_chain->Present(0, 0), __FUNCTION__, __FILE__, __LINE__
 	);
 	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
 
@@ -305,8 +302,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	ComPtr<ID3D12Debug> debugController;
 
 	throwIfFailed(
-		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)),
-		__FUNCTION__, __FILE__, __LINE__
+		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	debugController->EnableDebugLayer();
@@ -314,8 +310,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
 	throwIfFailed(
-		CreateDXGIFactory1(IID_PPV_ARGS(&_dx_dxgi_factory)),
-		__FUNCTION__, __FILE__, __LINE__
+		CreateDXGIFactory1(IID_PPV_ARGS(&_dx_dxgi_factory)), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Try to create hardware device.
@@ -328,8 +323,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 		ComPtr<IDXGIAdapter> pWarpAdapter;
 
 		throwIfFailed(
-			_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)),
-			__FUNCTION__, __FILE__, __LINE__
+			_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)), __FUNCTION__, __FILE__, __LINE__
 		);
 
 		throwIfFailed(
@@ -340,8 +334,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// create a fence
 	throwIfFailed(
-		_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)),
-		__FUNCTION__, __FILE__, __LINE__
+		_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	_rtv_descriptor_size = _dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -380,11 +373,8 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// Reset the command list to prep for initialization commands.
 	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
-		__FUNCTION__, __FILE__, __LINE__
+		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
 	);
-
-	_createConstantBufferViews();
 
 	_createRootSignature();
 
@@ -398,12 +388,13 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// ANOTHER DESCRIPTOR HEAP
 
+	_createConstantBufferViews();
+
 	_createPipelineStateObject();
 
 	// Execute the initialization commands.
 	throwIfFailed(
-		_dx_command_list->Close(),
-		__FUNCTION__, __FILE__, __LINE__
+		_dx_command_list->Close(), 	__FUNCTION__, __FILE__, __LINE__
 	);
 
 	ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
@@ -565,29 +556,6 @@ void DirectXRenderer::_createDescriptorHeaps()
 
 }
 
-void DirectXRenderer::_createConstantBufferViews()
-{
-	_object_constants_upload_buffer = std::make_unique<UploadBuffer < ObjectConstants>>
-	(_dx_device.Get(), 1, true);
-
-	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
-
-	D3D12_GPU_VIRTUAL_ADDRESS
-		constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
-	// Offset to the ith object constant buffer in the buffer.
-	// int boxCBufIndex = 0;
-	// cbAddress += boxCBufIndex*object_constant_buffer_size_bytes;
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
-	cbv_description.BufferLocation = constant_buffer_address;
-	cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
-
-	_dx_device->CreateConstantBufferView(
-		&cbv_description,
-		_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart()
-	);
-}
-
 void DirectXRenderer::_createRootSignature()
 {
 	// Shader programs typically require resources as input (constant buffers,
@@ -679,15 +647,15 @@ void DirectXRenderer::_createGeometry()
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
 
-	std::vector<mt::renderer::Vertex> vertices(box->vertices.size());
-	for (std::size_t index = 0; index < box->vertices.size(); ++index)
+	std::vector<mt::renderer::Vertex> vertices(box.vertices.size());
+	for (std::size_t index = 0; index < box.vertices.size(); ++index)
 	{
-		vertices[index].position = box->vertices[index].position;
+		vertices[index].position = box.vertices[index].position;
 		vertices[index].color = DirectX::XMFLOAT4{ DirectX::Colors::Green };
 	}
 
 	const UINT vbByteSize = (UINT) vertices.size() * sizeof(mt::renderer::Vertex);
-	const UINT ibByteSize = (UINT) box->indices.size() * sizeof(uint16_t);
+	const UINT ibByteSize = (UINT) box.indices.size() * sizeof(uint16_t);
 
 	_box_mesh_geometry = std::make_unique<MeshGeometry>();
 	_box_mesh_geometry->name = "box";
@@ -702,7 +670,7 @@ void DirectXRenderer::_createGeometry()
 		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
 		__FUNCTION__, __FILE__, __LINE__
 	);
-	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box->indices.data(), ibByteSize);
+	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box.indices.data(), ibByteSize);
 
 	_box_mesh_geometry->vertex_buffer_gpu = createDefaultBuffer(
 		_dx_device.Get(),
@@ -715,7 +683,7 @@ void DirectXRenderer::_createGeometry()
 	_box_mesh_geometry->index_buffer_gpu = createDefaultBuffer(
 		_dx_device.Get(),
 		_dx_command_list.Get(),
-		box->indices.data(),
+		box.indices.data(),
 		ibByteSize,
 		_box_mesh_geometry->index_buffer_uploader
 	);
@@ -728,8 +696,31 @@ void DirectXRenderer::_createGeometry()
 	_box_mesh_geometry->draw_arguments.emplace(
 		std::make_pair(
 			"box",
-			SubmeshGeometry{ static_cast<uint32_t>(box->indices.size()), 0, 0, DirectX::BoundingBox() }
+			SubmeshGeometry{ static_cast<uint32_t>(box.indices.size()), 0, 0, DirectX::BoundingBox() }
 		)
+	);
+}
+
+void DirectXRenderer::_createConstantBufferViews()
+{
+	_object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>
+	(_dx_device.Get(), 1, true);
+
+	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+	D3D12_GPU_VIRTUAL_ADDRESS
+		constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
+	// Offset to the ith object constant buffer in the buffer.
+	// int boxCBufIndex = 0;
+	// cbAddress += boxCBufIndex*object_constant_buffer_size_bytes;
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
+	cbv_description.BufferLocation = constant_buffer_address;
+	cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+	_dx_device->CreateConstantBufferView(
+		&cbv_description,
+		_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart()
 	);
 }
 

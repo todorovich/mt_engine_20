@@ -186,9 +186,7 @@ namespace mt::renderer
 				nullptr,
 				IID_PPV_ARGS(default_buffer.GetAddressOf())
 			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 
 		auto heap_properties_2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -205,9 +203,7 @@ namespace mt::renderer
 				nullptr,
 				IID_PPV_ARGS(upload_buffer.GetAddressOf())
 			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 
 
@@ -228,9 +224,11 @@ namespace mt::renderer
 		command_list->ResourceBarrier(1, &resourceBarrier);
 		UpdateSubresources<1>(command_list, default_buffer.Get(), upload_buffer.Get(), 0, 0, 1, &sub_resource_data);
 
-		resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(default_buffer.Get(),
+		resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			default_buffer.Get(),
 			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_GENERIC_READ);
+			D3D12_RESOURCE_STATE_GENERIC_READ
+		);
 		command_list->ResourceBarrier(1, &resourceBarrier);
 
 		// Note: uploadBuffer has to be kept alive after the above function calls because
