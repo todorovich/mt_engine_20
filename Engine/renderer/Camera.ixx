@@ -37,15 +37,10 @@ export namespace mt::renderer
     public:
 
         Camera();
-
         ~Camera();
-        
 		Camera(const Camera& other) = delete;
-
 		Camera(Camera&& other) = default;
-
 		Camera& operator=(const Camera& other) = delete;
-
 		Camera& operator=(Camera&& other) = default;
 
 
