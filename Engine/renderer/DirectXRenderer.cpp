@@ -19,15 +19,18 @@ module;
 
 module DirectXRenderer;
 
-import <filesystem>;
 import <array>;
+import <filesystem>;
+import <numbers>;
 
 import Engine;
+import FrameResource;
 import DirectXUtility;
 import WindowManager;
 import MeshGeometry;
 
 using namespace mt::renderer;
+using namespace std::numbers;
 using Microsoft::WRL::ComPtr;
 
 void DirectXRenderer::resize(int client_width, int client_height)
@@ -42,13 +45,13 @@ void DirectXRenderer::resize(int client_width, int client_height)
 		{
 			assert(_dx_device);
 			assert(_dx_swap_chain);
-			assert(_dx_command_list_allocator);
+			assert(_frame_resources[_frame_resource_index]->command_list_allocator);
 
 			// Flush before changing any resources.
 			_flushCommandQueue();
 
 			throwIfFailed(
-				_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr),
+				_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), nullptr),
 				__FUNCTION__, __FILE__, __LINE__
 			);
 
@@ -136,8 +139,8 @@ void DirectXRenderer::resize(int client_width, int client_height)
 				__FUNCTION__, __FILE__, __LINE__
 			);
 
-			ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
-			_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+			ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
+			_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 			// Wait until Resize is complete.
 			_flushCommandQueue();
@@ -155,8 +158,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
 
 			// The window resized, so update the aspect ratio and recompute the projection matrix.
-			getCurrentCamera().setLens(0.25f * MathHelper::Pi, getWindowAspectRatio(), 1.0f, 1000.0f);
-			//XMStoreFloat4x4(&_projection_transform, P);
+			getCurrentCamera().setLens(0.25f * pi_v<float>, getWindowAspectRatio(), 1.0f, 1000.0f);
 		}
 	}
 }
@@ -179,11 +181,28 @@ void DirectXRenderer::update()
 
 	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 
+	if (_frame_resources[_frame_resource_index]->fence != 0 && _fence->GetCompletedValue() < _frame_resources[_frame_resource_index]->fence)
+	{
+		// second parameter was false, compiler claims its being converted to nullptr so i made it explicit.
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+
+		// Fire event when GPU hits current fence.
+		throwIfFailed(
+			_fence->SetEventOnCompletion(_frame_resources[_frame_resource_index]->fence, eventHandle),
+			__FUNCTION__, __FILE__, __LINE__
+		);
+
+		// Wait until the GPU hits current fence event is fired.
+		WaitForSingleObject(eventHandle, INFINITE);
+
+		CloseHandle(eventHandle);
+	}
+
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants object_constants;
+	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
 	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
-	_object_constants_upload_buffer->CopyData(0, object_constants);
-
+	_frame_resources[_frame_resource_index]->object_constants_upload_buffer->CopyData(0, object_constants);
 }
 
 void mt::renderer::DirectXRenderer::render()
@@ -193,24 +212,21 @@ void mt::renderer::DirectXRenderer::render()
 	_createCommandList();
 
 	// Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
-	_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
+	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 	// swap the back and front buffers_
 	throwIfFailed(
 		_dx_swap_chain->Present(0, 0), __FUNCTION__, __FILE__, __LINE__
 	);
+
 	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
 
-	// Wait until frame commands are complete.  This waiting is inefficient and is
-	// done for simplicity.  Later we will show how to organize our rendering code
-	// so we do not have to wait per frame.
-	_flushCommandQueue();
+	_frame_resources[_frame_resource_index]->fence = ++_fence_index;
 
-	// NOTE: Moved this to happen outside of the render as it ends up syncing the render time_manager_
-	// to the framerate. Instead I moved it to flush just before the idle is reset, this should
-	// force the game to actually stay synced with the gpu without screwing up the stats. Given
-	// the note above I imagine a real fix is incoming.
+	_dx_command_queue->Signal(_fence.Get(), _frame_resources[_frame_resource_index]->fence);
+
+	_frame_resource_index = (_frame_resource_index + 1) % _number_of_frame_resources;
 
 	_is_rendering = false;
 
@@ -220,14 +236,14 @@ void mt::renderer::DirectXRenderer::render()
 void DirectXRenderer::_createCommandList()
 {
 	throwIfFailed(
-		_dx_command_list_allocator->Reset(),
+		_frame_resources[_frame_resource_index]->command_list_allocator->Reset(),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
+		_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
@@ -285,9 +301,7 @@ void DirectXRenderer::_createCommandList()
 	// Done recording commands.
 	throwIfFailed(
 		_dx_command_list->Close(),
-		__FUNCTION__,
-		__FILE__,
-		__LINE__
+		__FUNCTION__, __FILE__, __LINE__
 	);
 }
 
@@ -365,6 +379,8 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	assert(_4x_msaa_quality > 0 && "Unexpected MSAA quality level.");
 
+	_createFrameResources();
+
 	_createDxCommandObjects();
 
 	_createSwapChain();
@@ -373,7 +389,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// Reset the command list to prep for initialization commands.
 	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
+		_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	_createRootSignature();
@@ -383,8 +399,6 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	_createGeometry();
 
 	// RENDER ITEMS
-
-	// FRAME RESOURCES
 
 	// ANOTHER DESCRIPTOR HEAP
 
@@ -397,8 +411,8 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 		_dx_command_list->Close(), 	__FUNCTION__, __FILE__, __LINE__
 	);
 
-	ID3D12CommandList* cmdsLists[] = { _dx_command_list.Get() };
-	_dx_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
+	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 	// Wait until initialization is complete.
 	_flushCommandQueue();
@@ -411,25 +425,25 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 void DirectXRenderer::_flushCommandQueue()
 {
 	// Advance the fence value to mark commands up to this fence point.
-	_current_fence_index++;
+	_fence_index++;
 
 	// Add an instruction to the command queue to set a new fence point.  Because we
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
 	throwIfFailed(
-		_dx_command_queue->Signal(_fence.Get(), _current_fence_index),
+		_dx_command_queue->Signal(_fence.Get(), _fence_index),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Wait until the GPU has completed commands up to this fence point.
-	if (_fence->GetCompletedValue() < _current_fence_index)
+	if (_fence->GetCompletedValue() < _fence_index)
 	{
 		// second parameter was false, compiler claims its being converted to nullptr so i made it explicit.
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.
 		throwIfFailed(
-			_fence->SetEventOnCompletion(_current_fence_index, eventHandle),
+			_fence->SetEventOnCompletion(_fence_index, eventHandle),
 			__FUNCTION__, __FILE__, __LINE__
 		);
 
@@ -456,7 +470,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	throwIfFailed(
 		_dx_device->CreateCommandAllocator(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			IID_PPV_ARGS(_dx_command_list_allocator.GetAddressOf())
+			IID_PPV_ARGS(_frame_resources[_frame_resource_index]->command_list_allocator.GetAddressOf())
 		),
 		__FUNCTION__, __FILE__, __LINE__
 	);
@@ -466,7 +480,7 @@ void DirectXRenderer::_createDxCommandObjects()
 		_dx_device->CreateCommandList(
 			0,
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			_dx_command_list_allocator.Get(),                // Associated command allocator
+			_frame_resources[_frame_resource_index]->command_list_allocator.Get(),                // Associated command allocator
 			nullptr,                                        // Initial PipelineStateObject
 			IID_PPV_ARGS(_dx_command_list.GetAddressOf())
 		),
@@ -701,9 +715,17 @@ void DirectXRenderer::_createGeometry()
 	);
 }
 
+void DirectXRenderer::_createFrameResources()
+{
+	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
+	{
+		_frame_resources[index] = std::make_unique<FrameResource>(_dx_device.Get(), 1, 1);
+	}
+}
+
 void DirectXRenderer::_createConstantBufferViews()
 {
-	_object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>
+	auto& _object_constants_upload_buffer = _frame_resources[_frame_resource_index]->object_constants_upload_buffer;
 	(_dx_device.Get(), 1, true);
 
 	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
