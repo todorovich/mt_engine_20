@@ -16,7 +16,6 @@ target_sources(Engine
 		Debug.ixx
 		Engine.ixx
 		FontManager.ixx
-		MathHelper.ixx
 		ObjectPool.ixx
 		Status.ixx
 		Game.ixx
@@ -24,8 +23,9 @@ target_sources(Engine
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
+add_subdirectory("geometry")
 add_subdirectory("input")
+add_subdirectory("math")
 add_subdirectory("renderer")
 add_subdirectory("time")
 add_subdirectory("windows")
-add_subdirectory("geometry")

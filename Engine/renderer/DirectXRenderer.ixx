@@ -21,11 +21,13 @@ module;
 
 export module DirectXRenderer;
 
+import <ctime>;
+
 export import Camera;
-export import MathHelper;
-export import DirectXUtility;
+export import MathUtility;
 export import UploadBuffer;
 export import Geometry;
+export import FrameResource;
 
 import Engine;
 
@@ -40,19 +42,19 @@ export namespace mt::renderer
     {
     protected:
         // Data
+		static const std::size_t _number_of_frame_resources = 3;
         static const int _swap_chain_buffer_count = 2;
 
         Engine& _engine;
 
         Camera _camera; // 204 bytes (getting kind of bloated)
 
-        // 64 byte types
-        XMFLOAT4X4 _world_transform = Identity4x4(); // Transformation from Local Space to World Space
-        XMFLOAT4X4 _view_tranform = Identity4x4();    // Transformation from World Space to the camera's View Space
-        XMFLOAT4X4 _projection_transform = Identity4x4();    // Transformation from View Space to Projection Space (Normalized Device Coordinates (GPU Space?))
-
         // 32 byte type
         vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout; // 32 bytes according to sizeof
+		vector<ComPtr<ID3D12PipelineState>> _pipeline_state_objects{std::size_t{2}};
+
+		vector<unique_ptr<FrameResource>> _frame_resources =
+			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
 
         // 24 byte type
         D3D12_VIEWPORT _screen_viewport;
@@ -63,7 +65,6 @@ export namespace mt::renderer
         // Pointers - 8 byte each
         HWND _main_window_handle;
 
-        unique_ptr<UploadBuffer<ObjectConstants>> _object_constants_upload_buffer = nullptr;
         unique_ptr<MeshGeometry> _box_mesh_geometry = nullptr;
 
         ComPtr<IDXGIFactory4> _dx_dxgi_factory;
@@ -73,7 +74,6 @@ export namespace mt::renderer
         ComPtr<ID3D12Fence> _fence;
 
         ComPtr<ID3D12CommandQueue> _dx_command_queue;
-        ComPtr<ID3D12CommandAllocator> _dx_command_list_allocator;
         ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
 
         ComPtr<ID3D12Resource> _swap_chain_buffer[_swap_chain_buffer_count];
@@ -87,12 +87,11 @@ export namespace mt::renderer
 
         ComPtr<ID3DBlob> _mvs_byte_code;
         ComPtr<ID3DBlob> _mps_byte_code;
-        ComPtr<ID3D12PipelineState> _pso;
 
         // 8 byte types
-        UINT64 _current_fence_index = 0;
-
-        POINT _last_mouse_position;
+        UINT64 _fence_index = 0;
+		std::size_t _frame_resource_index = 0;
+		std::size_t _current_back_buffer = 0;
 
         // 4 byte types
         UINT _rtv_descriptor_size = 0;
@@ -100,13 +99,11 @@ export namespace mt::renderer
         UINT _cbv_srv_uav_descriptor_size = 0;
         UINT _4x_msaa_quality = 0;      // quality level of 4X MSAA
 
-        D3D_DRIVER_TYPE _d3d_driver_type = D3D_DRIVER_TYPE_HARDWARE;
         DXGI_FORMAT _back_buffer_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         DXGI_FORMAT _depth_stencil_format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
         long long _frames_rendered = 0;
 
-        int _current_back_buffer = 0;
         int _window_width = 0;
         int _window_height = 0;
 
@@ -117,6 +114,7 @@ export namespace mt::renderer
         bool _is_initialized = false;
         bool _is_rendering = false;
 
+		FrameResource* _getCurrentFrameResource() const;
         // Accessors
         ID3D12Resource* _getCurrentBackBuffer() const;
 
@@ -126,15 +124,17 @@ export namespace mt::renderer
 
         // Mutators
 
+		void _flushCommandQueue();
+
         void _createCommandList();
 
         void _createDxCommandObjects();
 
         void _createSwapChain();
 
-        virtual void _createDescriptorHeaps();
+        void _createDescriptorHeaps();
 
-        void _createConstantBuffers();
+        void _createConstantBufferViews();
 
         void _createRootSignature();
 
@@ -144,6 +144,8 @@ export namespace mt::renderer
 
 		void _createGeometry();
 
+		void _createFrameResources();
+
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
@@ -151,7 +153,7 @@ export namespace mt::renderer
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)
-                flush_command_queue();
+				_flushCommandQueue();
         }
         
         DirectXRenderer(const DirectXRenderer&) = delete;
@@ -180,24 +182,16 @@ export namespace mt::renderer
         long long getFramesRendered() const { return _frames_rendered; }
 
         // Mutators
-        bool initializeDirect3d(HWND main_window_handle);
-        
         void set4xMsaaState(bool value);
-
-        void render();
 
         void resize(int client_width, int client_height);
 
+        void render();
+
         void update();
 
-        void flush_command_queue();
+        bool initializeDirect3d(HWND main_window_handle);
 
-        // Fence Stuff
-
-        void incrementFence();
-
-        void waitForFence();
-
-        bool isCurrentFenceComplete() { return _fence->GetCompletedValue() >= _current_fence_index; }
+        bool isCurrentFenceComplete() { return _fence->GetCompletedValue() >= _fence_index; }
     };
 }

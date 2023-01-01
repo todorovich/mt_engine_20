@@ -13,9 +13,10 @@ export namespace mt::geometry
 {
 	struct Vertex
 	{
+		DirectX::XMFLOAT4 color;
 		DirectX::XMFLOAT3 position;
 		DirectX::XMFLOAT3 normal;
-		DirectX::XMFLOAT3 tangent;
+		DirectX::XMFLOAT3 right;
 		DirectX::XMFLOAT2 texture_coordinate;
 
 		Vertex() {}
@@ -23,25 +24,15 @@ export namespace mt::geometry
 		Vertex(
 			const DirectX::XMFLOAT3& position,
 			const DirectX::XMFLOAT3& normal,
-			const DirectX::XMFLOAT3& tangent,
+			const DirectX::XMFLOAT3& right,
+			const DirectX::XMFLOAT4& color,
 			const DirectX::XMFLOAT2& texture_coordinate
 		)
 			: position(position)
 			, normal(normal)
-			, tangent(tangent)
+			, right(right)
+			, color(color)
 			, texture_coordinate(texture_coordinate)
-		{}
-
-		Vertex(
-			float px, float py, float pz,
-			float nx, float ny, float nz,
-			float tx, float ty, float tz,
-			float u, float v
-		)
-			: position(px, py, pz)
-			, normal(nx, ny, nz)
-			, tangent(tx, ty, tz)
-			, texture_coordinate(u, v)
 		{}
 	};
 

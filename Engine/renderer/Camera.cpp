@@ -7,15 +7,17 @@ module Camera;
 
 import <string>;
 import <mutex>;
+import <numbers>;
 
 using namespace mt::renderer;
 using namespace DirectX;
 using namespace mt;
+using namespace std::numbers;
 
 Camera::Camera()
 	: _view_matrix_requires_update(false)
 {
-	setLens(0.25f * MathHelper::Pi, 1.0f, 1.0f, 1000.0f);
+	setLens(0.25f * pi_v<float>, 1.0f, 1.0f, 1000.0f);
 	lookAt(_position, XMFLOAT3(0.0f, 0.0f, 0.0f), _up);
 }
 

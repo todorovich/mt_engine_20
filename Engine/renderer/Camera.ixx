@@ -6,15 +6,15 @@ export module Camera;
 
 import <mutex>;
 
-export import DirectXUtility;
+export import MathUtility;
 export import Status;
 
 export namespace mt::renderer
 {
     class Camera
     {
-		DirectX::XMFLOAT4X4 _view = Identity4x4();
-		DirectX::XMFLOAT4X4 _projection = Identity4x4();
+		DirectX::XMFLOAT4X4 _view = mt::math::Identity4x4();
+		DirectX::XMFLOAT4X4 _projection = mt::math::Identity4x4();
 
 		// Camera coordinate system with coordinates relative to world space.
 		DirectX::XMFLOAT3 _position = { 0.0f, 0.0f, 10.0f };
@@ -37,15 +37,10 @@ export namespace mt::renderer
     public:
 
         Camera();
-
         ~Camera();
-        
 		Camera(const Camera& other) = delete;
-
 		Camera(Camera&& other) = default;
-
 		Camera& operator=(const Camera& other) = delete;
-
 		Camera& operator=(Camera&& other) = default;
 
 

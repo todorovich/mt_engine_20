@@ -11,18 +11,15 @@ module;
 
 export module DirectXUtility;
 
-export import MathHelper;
-
 export namespace mt::renderer
 {
+	// TODO: Find me a better home.
 	struct Vertex {
 		DirectX::XMFLOAT3 position;
 		DirectX::XMFLOAT4 color;
 	};
 
 	class DxException;
-
-	struct ObjectConstants;
 
 	std::wstring AnsiToWString(const std::string& str);
 
@@ -40,16 +37,6 @@ export namespace mt::renderer
 		// 0x0200
 		// 512
 		return (byteSize + 255) & ~255;
-	}
-
-	constexpr DirectX::XMFLOAT4X4 Identity4x4()
-	{
-		return DirectX::XMFLOAT4X4(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		);
 	}
 
 	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
@@ -104,10 +91,6 @@ namespace mt::renderer
 
 			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: ";// +msg;
 		}
-	};
-
-	struct ObjectConstants {
-		DirectX::XMFLOAT4X4 world_view_projection = Identity4x4();
 	};
 
 	export inline void throwIfFailed(const HRESULT result, const std::string& function, const std::string& file, int line)
@@ -166,7 +149,7 @@ namespace mt::renderer
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
 		ID3D12Device* device,
-		ID3D12GraphicsCommandList* command_list,
+		ID3D12GraphicsCommandList* command_lists,
 		const void* initialization_data,
 		UINT64 byte_size,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& upload_buffer
@@ -186,9 +169,7 @@ namespace mt::renderer
 				nullptr,
 				IID_PPV_ARGS(default_buffer.GetAddressOf())
 			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
 
 		auto heap_properties_2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -205,11 +186,8 @@ namespace mt::renderer
 				nullptr,
 				IID_PPV_ARGS(upload_buffer.GetAddressOf())
 			),
-			__FUNCTION__,
-			__FILE__,
-			__LINE__
+			__FUNCTION__, __FILE__, __LINE__
 		);
-
 
 		// Describe the data we want to copy into the default buffer.
 		D3D12_SUBRESOURCE_DATA sub_resource_data = {};
@@ -225,13 +203,15 @@ namespace mt::renderer
 		// Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
 		// will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
 		// the intermediate upload heap data will be copied to mBuffer.
-		command_list->ResourceBarrier(1, &resourceBarrier);
-		UpdateSubresources<1>(command_list, default_buffer.Get(), upload_buffer.Get(), 0, 0, 1, &sub_resource_data);
+		command_lists->ResourceBarrier(1, &resourceBarrier);
+		UpdateSubresources<1>(command_lists, default_buffer.Get(), upload_buffer.Get(), 0, 0, 1, &sub_resource_data);
 
-		resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(default_buffer.Get(),
+		resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			default_buffer.Get(),
 			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_GENERIC_READ);
-		command_list->ResourceBarrier(1, &resourceBarrier);
+			D3D12_RESOURCE_STATE_GENERIC_READ
+		);
+		command_lists->ResourceBarrier(1, &resourceBarrier);
 
 		// Note: uploadBuffer has to be kept alive after the above function calls because
 		// the command list has not been executed yet that performs the actual copy.
@@ -240,82 +220,4 @@ namespace mt::renderer
 		return default_buffer;
 	}
 
-	DirectX::XMVECTOR SphericalToCartesian(float radius, float theta, float phi)
-	{
-		return DirectX::XMVectorSet(
-			radius * sinf(phi) * cosf(theta),
-			radius * cosf(phi),
-			radius * sinf(phi) * sinf(theta),
-			1.0f);
-	}
-
-	DirectX::XMMATRIX IverseTranspose(DirectX::CXMMATRIX M)
-	{
-		// Inverse-transpose is just applied to normals.  So zero out 
-		// translation row so that it doesn't get into our inverse-transpose
-		// calculation--we don't want the inverse-transpose of the translation.
-		DirectX::XMMATRIX A = M;
-		A.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-
-		DirectX::XMVECTOR determinant = DirectX::XMMatrixDeterminant(A);
-		return DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&determinant, A));
-	}
-
-	DirectX::XMVECTOR RandomUnitVector3()
-	{
-		DirectX::XMVECTOR one = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
-		DirectX::XMVECTOR zero = DirectX::XMVectorZero();
-
-		// Keep trying until we get a point on/in the hemisphere.
-		while (true)
-		{
-			// Generate random point in the cube [-1,1]^3.
-			DirectX::XMVECTOR vector = DirectX::XMVectorSet(
-				MathHelper::RandF(-1.0f, 1.0f),
-				MathHelper::RandF(-1.0f, 1.0f),
-				MathHelper::RandF(-1.0f, 1.0f),
-				0.0f
-			);
-
-			// Ignore points outside the unit sphere in order to get an even distribution 
-			// over the unit sphere.  Otherwise points will clump more on the sphere near 
-			// the corners of the cube.
-
-			if (DirectX::XMVector3Greater(DirectX::XMVector3LengthSq(vector), one))
-				continue;
-
-			return DirectX::XMVector3Normalize(vector);
-		}
-	}
-
-	DirectX::XMVECTOR RandomHemisphereUnitVector3(DirectX::XMVECTOR n)
-	{
-		DirectX::XMVECTOR one = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
-		DirectX::XMVECTOR zero = DirectX::XMVectorZero();
-
-		// Keep trying until we get a point on/in the hemisphere.
-		while (true)
-		{
-			// Generate random point in the cube [-1,1]^3.
-			DirectX::XMVECTOR vector = DirectX::XMVectorSet(
-				MathHelper::RandF(-1.0f, 1.0f),
-				MathHelper::RandF(-1.0f, 1.0f),
-				MathHelper::RandF(-1.0f, 1.0f),
-				0.0f
-			);
-
-			// Ignore points outside the unit sphere in order to get an even distribution 
-			// over the unit sphere.  Otherwise points will clump more on the sphere near 
-			// the corners of the cube.
-
-			if (DirectX::XMVector3Greater(DirectX::XMVector3LengthSq(vector), one))
-				continue;
-
-			// Ignore points in the bottom hemisphere.
-			if (DirectX::XMVector3Less(DirectX::XMVector3Dot(n, vector), zero))
-				continue;
-
-			return DirectX::XMVector3Normalize(vector);
-		}
-	}
 }
