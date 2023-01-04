@@ -41,40 +41,7 @@ using mt::Engine;
 
 export namespace mt::renderer
 {
-
-	inline void ReportLiveObjects()
-	{
-		OutputDebugStringW(L"Attempting to report Live Objects\n");
-
-		auto mod_handle = GetModuleHandle(L"Dxgidebug.dll");
-
-		using function_t = HRESULT WINAPI (REFIID, void**);
-		auto DXGIGetDebugInterface =
-			reinterpret_cast<HRESULT (WINAPI*) (REFIID, void**)>(GetProcAddress(mod_handle, "DXGIGetDebugInterface"));
-
-		Microsoft::WRL::ComPtr<IDXGIDebug> dxgi_debug;
-		auto hr = DXGIGetDebugInterface(	IID_PPV_ARGS(&dxgi_debug));
-//		auto hr = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgi_debug));
-		if (SUCCEEDED(hr))
-		{
-			OutputDebugStringW(L"Reporting Live Objects\n");
-			dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
-		}
-		else
-		{
-			OutputDebugStringW(L"Failed to report.\n");
-		}
-/*
-		ComPtr<ID3D12DebugDevice> debug_device;
-
-		throwIfFailed(
-			D3D12GetDebugInterface(IID_PPV_ARGS(&debug_device)), __FUNCTION__, __FILE__, __LINE__
-		);
-
-		debug_device->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);*/
-	}
-
-    class DirectXRenderer 
+	class DirectXRenderer
     {
     protected:
         // Data
@@ -104,7 +71,9 @@ export namespace mt::renderer
 		ComPtr<ID3D12Fence> _fence;
 
         ComPtr<ID3D12CommandQueue> _dx_command_queue;
-        ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
+
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> _dx_command_list_allocator;
+		ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
 
         ComPtr<ID3D12Resource> _swap_chain_buffer[_swap_chain_buffer_count];
         ComPtr<ID3D12Resource> _depth_stencil_buffer;
