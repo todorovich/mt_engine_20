@@ -45,7 +45,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 		{
 			assert(_dx_device);
 			assert(_dx_swap_chain);
-			assert(_frame_resources[_frame_resource_index]->command_list_allocator);
+			assert(_dx_command_list_allocator.Get());
 
 			// Flush before changing any resources.
 			_flushCommandQueue();
@@ -324,7 +324,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
 	throwIfFailed(
-		CreateDXGIFactory1(IID_PPV_ARGS(&_dx_dxgi_factory)), __FUNCTION__, __FILE__, __LINE__
+		CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG , IID_PPV_ARGS(&_dx_dxgi_factory)), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	// Try to create hardware device.
@@ -389,7 +389,7 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	// Reset the command list to prep for initialization commands.
 	throwIfFailed(
-		_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
+		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
 	);
 
 	_createRootSignature();
@@ -470,7 +470,7 @@ void DirectXRenderer::_createDxCommandObjects()
 	throwIfFailed(
 		_dx_device->CreateCommandAllocator(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			IID_PPV_ARGS(_frame_resources[_frame_resource_index]->command_list_allocator.GetAddressOf())
+			IID_PPV_ARGS(_dx_command_list_allocator.GetAddressOf())
 		),
 		__FUNCTION__, __FILE__, __LINE__
 	);
@@ -480,7 +480,7 @@ void DirectXRenderer::_createDxCommandObjects()
 		_dx_device->CreateCommandList(
 			0,
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			_frame_resources[_frame_resource_index]->command_list_allocator.Get(),                // Associated command allocator
+			_dx_command_list_allocator.Get(),                // Associated command allocator
 			nullptr,                                        // Initial PipelineStateObject
 			IID_PPV_ARGS(_dx_command_list.GetAddressOf())
 		),
@@ -623,11 +623,13 @@ void DirectXRenderer::_createShadersAndInputLayout()
 
 	//HRESULT hr = S_OK;
 
+/*
 	OutputDebugStringW(
 		std::wstring(
 			L"Current Path: " + fs::current_path().wstring() + L'\n' +
 			fs::current_path().parent_path().root_path().wstring() + L'\n'
 		).c_str());
+*/
 
 	// TODO: this is garbage, make this better.
 	fs::path p;
@@ -641,7 +643,9 @@ void DirectXRenderer::_createShadersAndInputLayout()
 		}
 	}
 
+/*
 	OutputDebugStringW((L"P = " + p.wstring()).c_str());
+*/
 
 	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
 	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
