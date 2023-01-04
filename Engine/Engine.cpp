@@ -143,7 +143,7 @@ Status Engine::run(Game& game)
 					DispatchMessage(&msg);
 					if (msg.message == WM_QUIT)
 					{
-						engine.shutdown();
+						if (!engine.isShuttingDown()) engine.shutdown();
 						break;
 					}
 				}
@@ -162,13 +162,20 @@ Status Engine::run(Game& game)
 
 void Engine::shutdown()
 {
-	_is_shutting_down = true;
+	if (_is_shutting_down == false)
+	{
+		_is_shutting_down = true;
 
-	getTimeManager()->pause();
+		getTimeManager()->pause();
 
-	OutputDebugStringW(L"Engine Shutdown Initiated\n");
+		OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
-	destroy();
+		destroy();
+	}
+	else
+	{
+		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
+	}
 }
 
 void Engine::destroy() 
@@ -179,9 +186,11 @@ void Engine::destroy()
 		DestroyWindow(getWindowManager()->getMainWindowHandle());
 
 		_instance = nullptr;
-	}
 
-	OutputDebugStringW(L"Engine Destroyed\n");
+		OutputDebugStringW(L"Engine Destroyed\n");
+	}
+	else
+		OutputDebugStringW(L"Engine Already Destroyed\n");
 }
 
 void Engine::_tick(
@@ -208,7 +217,7 @@ void Engine::_tick(
 
 	render_time->startTask();
 	// Render whenever you can, but don't wait.
-	if (getTimeManager()->getShouldRender() && getRenderer()->isCurrentFenceComplete())
+	if (getTimeManager()->getShouldRender())
 	{
 		input_time->startTask();
 		getInputManager()->processInput(); 

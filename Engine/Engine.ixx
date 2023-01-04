@@ -76,7 +76,7 @@ export namespace mt
 		time::TimeManager * const				getTimeManager()			{ return _time_manager.get(); };
 
 		bool isDestroyed() const { return _instance == nullptr; };
-
+		bool isShuttingDown() const { return _is_shutting_down; }
 		// MUTATOR
 
 		Status run(Game& game);

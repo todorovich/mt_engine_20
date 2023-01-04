@@ -13,11 +13,14 @@ module;
 
 #include "d3dx12.h"
 
+#include <dxgidebug.h>
+
 // Link necessary d3d12 libraries.
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
+
 
 export module DirectXRenderer;
 
@@ -38,11 +41,44 @@ using mt::Engine;
 
 export namespace mt::renderer
 {
+
+	inline void ReportLiveObjects()
+	{
+		OutputDebugStringW(L"Attempting to report Live Objects\n");
+
+		auto mod_handle = GetModuleHandle(L"Dxgidebug.dll");
+
+		using function_t = HRESULT WINAPI (REFIID, void**);
+		auto DXGIGetDebugInterface =
+			reinterpret_cast<HRESULT (WINAPI*) (REFIID, void**)>(GetProcAddress(mod_handle, "DXGIGetDebugInterface"));
+
+		Microsoft::WRL::ComPtr<IDXGIDebug> dxgi_debug;
+		auto hr = DXGIGetDebugInterface(	IID_PPV_ARGS(&dxgi_debug));
+//		auto hr = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgi_debug));
+		if (SUCCEEDED(hr))
+		{
+			OutputDebugStringW(L"Reporting Live Objects\n");
+			dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+		}
+		else
+		{
+			OutputDebugStringW(L"Failed to report.\n");
+		}
+/*
+		ComPtr<ID3D12DebugDevice> debug_device;
+
+		throwIfFailed(
+			D3D12GetDebugInterface(IID_PPV_ARGS(&debug_device)), __FUNCTION__, __FILE__, __LINE__
+		);
+
+		debug_device->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);*/
+	}
+
     class DirectXRenderer 
     {
     protected:
         // Data
-		static const std::size_t _number_of_frame_resources = 3;
+		static const std::size_t _number_of_frame_resources = 2;
         static const int _swap_chain_buffer_count = 2;
 
         Engine& _engine;
@@ -51,10 +87,6 @@ export namespace mt::renderer
 
         // 32 byte type
         vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout; // 32 bytes according to sizeof
-		vector<ComPtr<ID3D12PipelineState>> _pipeline_state_objects{std::size_t{2}};
-
-		vector<unique_ptr<FrameResource>> _frame_resources =
-			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
 
         // 24 byte type
         D3D12_VIEWPORT _screen_viewport;
@@ -65,13 +97,11 @@ export namespace mt::renderer
         // Pointers - 8 byte each
         HWND _main_window_handle;
 
-        unique_ptr<MeshGeometry> _box_mesh_geometry = nullptr;
-
-        ComPtr<IDXGIFactory4> _dx_dxgi_factory;
-        ComPtr<IDXGISwapChain> _dx_swap_chain;
+		ComPtr<IDXGIFactory4> _dx_dxgi_factory;
+		ComPtr<IDXGISwapChain> _dx_swap_chain;
         ComPtr<ID3D12Device> _dx_device;
 
-        ComPtr<ID3D12Fence> _fence;
+		ComPtr<ID3D12Fence> _fence;
 
         ComPtr<ID3D12CommandQueue> _dx_command_queue;
         ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
@@ -82,11 +112,18 @@ export namespace mt::renderer
         ComPtr<ID3D12DescriptorHeap> _dx_rtv_heap;
         ComPtr<ID3D12DescriptorHeap> _dx_dsv_heap;
 
+		vector<unique_ptr<FrameResource>> _frame_resources =
+			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
+
         ComPtr<ID3D12RootSignature> _dx_root_signature;
         ComPtr<ID3D12DescriptorHeap> _dx_cbv_heap;
 
-        ComPtr<ID3DBlob> _mvs_byte_code;
-        ComPtr<ID3DBlob> _mps_byte_code;
+		unique_ptr<MeshGeometry> _box_mesh_geometry = nullptr;
+
+		ComPtr<ID3DBlob> _mvs_byte_code;
+		ComPtr<ID3DBlob> _mps_byte_code;
+
+		vector<ComPtr<ID3D12PipelineState>> _pipeline_state_objects{std::size_t{2}};
 
         // 8 byte types
         UINT64 _fence_index = 0;
@@ -149,11 +186,26 @@ export namespace mt::renderer
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
-        {}
+        {
+#if defined(DEBUG) || defined(_DEBUG)
+			std::atexit(ReportLiveObjects);
+#endif
+		}
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)
+			{
 				_flushCommandQueue();
+
+				/*_fence()->release();
+				_depth_stencil_buffer()->release();
+				_swap_chain_buffer-release();
+				_dx_swap_chain.release();
+				_dx_dxgi_factory->release();
+				_dx_command_queue->release();
+				_dx_command_list->release();
+				_dx_device->release();*/
+			}
         }
         
         DirectXRenderer(const DirectXRenderer&) = delete;
@@ -193,5 +245,7 @@ export namespace mt::renderer
         bool initializeDirect3d(HWND main_window_handle);
 
         bool isCurrentFenceComplete() { return _fence->GetCompletedValue() >= _fence_index; }
+
+
     };
 }

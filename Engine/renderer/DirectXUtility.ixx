@@ -5,7 +5,6 @@ module;
 #include <comdef.h>
 #include <d3d12.h>
 #include <d3dcompiler.h>
-#include <dxgi.h>
 #include <DirectXMath.h>
 #include "d3dx12.h"
 
@@ -54,13 +53,7 @@ export namespace mt::renderer
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 	);
 
-	DirectX::XMVECTOR SphericalToCartesian(float radius, float theta, float phi);
 
-	DirectX::XMMATRIX IverseTranspose(DirectX::CXMMATRIX M);
-
-	DirectX::XMVECTOR RandomUnitVector3();
-
-	DirectX::XMVECTOR RandomHemisphereUnitVector3(DirectX::XMVECTOR n);
 }
 
 namespace mt::renderer 
@@ -202,7 +195,7 @@ namespace mt::renderer
 		);
 		// Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
 		// will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
-		// the intermediate upload heap data will be copied to mBuffer.
+		// the intermediate upload heap data will be copied to default_buffer.
 		command_lists->ResourceBarrier(1, &resourceBarrier);
 		UpdateSubresources<1>(command_lists, default_buffer.Get(), upload_buffer.Get(), 0, 0, 1, &sub_resource_data);
 
