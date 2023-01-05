@@ -157,7 +157,7 @@ Status Engine::run(Game& game)
 
 	run_time->finishTask();
 
-	return Status::success;
+	return Status::SUCCESS;
 }
 
 void Engine::shutdown() noexcept

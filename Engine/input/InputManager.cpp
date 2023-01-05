@@ -220,22 +220,22 @@ void mt::input::InputManager::registerInputHandler(InputHandler input_handler, I
 
 		case InputDataType::ONE_DIMENSIONAL:
 		{
-			auto one_dimenaional_handling_function = std::get<one_dimensional_function*>(input_handler);
-			one_dimensional_input_handler.insert({input_type, one_dimenaional_handling_function});
+			auto one_dimensional_handling_function = std::get<one_dimensional_function*>(input_handler);
+			one_dimensional_input_handler.insert({input_type, one_dimensional_handling_function});
 		}
 		break;
 
 		case InputDataType::TWO_DIMENSIONAL:
 		{
-			auto two_dimenaional_handling_function = std::get<two_dimensional_function*>(input_handler);
-			two_dimensional_input_handler.insert({input_type, two_dimenaional_handling_function});
+			auto two_dimensional_handling_function = std::get<two_dimensional_function*>(input_handler);
+			two_dimensional_input_handler.insert({input_type, two_dimensional_handling_function});
 		}
 		break;
 
 		case InputDataType::THREE_DIMENSIONAL:
 		{
-			auto three_dimenaional_handling_function = std::get<three_dimensional_function*>(input_handler);
-			three_dimensional_input_handler.insert({input_type, three_dimenaional_handling_function});
+			auto three_dimensional_handling_function = std::get<three_dimensional_function*>(input_handler);
+			three_dimensional_input_handler.insert({input_type, three_dimensional_handling_function});
 		}
 		break;
 
