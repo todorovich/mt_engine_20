@@ -799,7 +799,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getCurrentBackBufferView() const n
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart(),
-		_current_back_buffer,
+		static_cast<INT>(_current_back_buffer),
 		static_cast<INT>(_rtv_descriptor_size)
 	);
 }
