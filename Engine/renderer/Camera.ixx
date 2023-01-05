@@ -42,7 +42,6 @@ export namespace mt::renderer
 		Camera& operator=(const Camera& other) noexcept = delete;
 		Camera& operator=(Camera&& other) noexcept = default;
 
-
         // Get/Set world camera position.
         DirectX::XMVECTOR getPosition() const noexcept;
 

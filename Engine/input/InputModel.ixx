@@ -24,10 +24,10 @@ using namespace mt::input;
 
 export namespace mt::input
 {
-	using button_function = void(mt::Engine&);
-	using one_dimensional_function = void(mt::Engine&, int);
-	using two_dimensional_function = void(mt::Engine&, int, int);
-	using three_dimensional_function = void(mt::Engine&, int, int, int);
+	using button_function = void(mt::Engine&) noexcept;
+	using one_dimensional_function = void(mt::Engine&, int) noexcept;
+	using two_dimensional_function = void(mt::Engine&, int, int) noexcept;
+	using three_dimensional_function = void(mt::Engine&, int, int, int) noexcept;
 
 	struct InputData1D
 	{

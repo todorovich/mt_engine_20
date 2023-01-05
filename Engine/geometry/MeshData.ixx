@@ -19,7 +19,7 @@ export namespace mt::geometry
 		DirectX::XMFLOAT3 right;
 		DirectX::XMFLOAT2 texture_coordinate;
 
-		Vertex() {}
+		Vertex() noexcept {}
 
 		Vertex(
 			const DirectX::XMFLOAT3& position,

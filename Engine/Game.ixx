@@ -12,13 +12,13 @@ export namespace mt
 
 	public:
 
-		Game() = default;
-		virtual ~Game() = default;
+		Game() noexcept = default;
+		virtual ~Game() noexcept  = default;
 
-		Game(const Game& other) = delete;
-		Game(Game&& other) = delete;
-		Game& operator=(const Game& other) = delete;
-		Game& operator=(Game&& other) = delete;
+		Game(const Game& other) noexcept = delete;
+		Game(Game&& other) noexcept = delete;
+		Game& operator=(const Game& other) noexcept = delete;
+		Game& operator=(Game&& other) noexcept = delete;
 
 		friend class Engine;
 	};

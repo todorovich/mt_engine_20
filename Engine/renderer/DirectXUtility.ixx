@@ -22,7 +22,7 @@ export namespace mt::renderer
 
 	std::wstring AnsiToWString(const std::string& str) noexcept;
 
-	constexpr UINT CalcConstantBufferByteSize(UINT byteSize)
+	constexpr UINT CalcConstantBufferByteSize(UINT byteSize) noexcept
 	{
 		// Constant buffers must be a multiple of the minimum hardware
 		// allocation size (usually 256 bytes).  So round up to nearest
@@ -52,8 +52,6 @@ export namespace mt::renderer
 		UINT64 byteSize,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 	);
-
-
 }
 
 namespace mt::renderer 
@@ -67,15 +65,15 @@ namespace mt::renderer
 		int line_number = -1;
 
 		DxException() = default;
-		DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber)
-			:error_code(hr),
-			function_name(functionName),
-			filename(filename),
-			line_number(lineNumber)
+		DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber) noexcept
+			: error_code(hr)
+			, function_name(functionName)
+			, filename(filename)
+			, line_number(lineNumber)
 		{
 		}
 
-		std::wstring ToString() const
+		std::wstring ToString() const noexcept
 		{
 			// Get the string description of the error code.
 			_com_error err(error_code);
@@ -133,6 +131,7 @@ namespace mt::renderer
 		return byteCode;
 	}
 
+	// TODO: This looks unsafe. buffer is 512 bytes, str is whatever.
 	std::wstring AnsiToWString(const std::string& str) noexcept
 	{
 		WCHAR buffer[512];

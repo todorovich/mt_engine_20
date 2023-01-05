@@ -26,7 +26,7 @@ using namespace std::literals;
 void mt::EngineDemo::map_input_controls() noexcept
 {
 	// TODO: make this something I can call on the engine proper.
-	auto quit = [](mt::Engine& engine) { 
+	auto quit = [](mt::Engine& engine) noexcept {
 		PostMessage(engine.getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
 	};
 	_engine.getInputManager()->registerInputHandler(
@@ -34,7 +34,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::ESCAPE)
 	);
 
-	auto toggle_relative_mouse = [](mt::Engine& engine) {
+	auto toggle_relative_mouse = [](mt::Engine& engine) noexcept {
 		engine.getInputManager()->toggleRelativeMouse();
 	};
 	_engine.getInputManager()->registerInputHandler(
@@ -46,7 +46,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 	constexpr float walk_speed =1.0f;
 	//constexpr float walk_speed = 1.0f * 1s / getRenderer()->getTargetRenderInterval();
 
-	auto walk_forward = [](mt::Engine& engine) {
+	auto walk_forward = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
 	};
@@ -56,7 +56,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::W)
 	);
 
-	auto walk_backward = [](mt::Engine& engine) {
+	auto walk_backward = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
 	};
@@ -66,7 +66,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::S)
 	);
 
-	auto strafe_left = [](mt::Engine& engine) {
+	auto strafe_left = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
 	};
@@ -76,7 +76,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::A)
 	);
 
-	auto strafe_right = [](mt::Engine& engine) {
+	auto strafe_right = [](mt::Engine& engine)noexcept {
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
 	};
@@ -86,7 +86,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::D)
 	);
 
-	auto fly_up = [](mt::Engine& engine) {
+	auto fly_up = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
 	};
@@ -96,7 +96,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::SPACE)
 	);
 
-	auto fly_down = [](mt::Engine& engine) {
+	auto fly_down = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getTargetRenderInterval());
 		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
 	};
@@ -106,7 +106,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(InputDevice::KEYBOARD, InputDataType::BUTTON_HELD, InputContext::NO_CONTEXT, VirtualKeyCode::CONTROL)
 	);
 
-	auto mouse_look = [](mt::Engine& engine, int x, int y) {
+	auto mouse_look = [](mt::Engine& engine, int x, int y) noexcept {
 		auto& camera = engine.getRenderer()->getCurrentCamera();
 
 		// TODO: This should be fov dependant.

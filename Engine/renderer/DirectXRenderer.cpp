@@ -24,6 +24,7 @@ import <filesystem>;
 import <numbers>;
 
 import Engine;
+import Debug;
 import FrameResource;
 import DirectXUtility;
 import WindowManager;
@@ -311,16 +312,17 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 {
 	_main_window_handle = main_window_handle;
 
-#if defined(DEBUG) || defined(_DEBUG)
-	// Enable the D3D12 debug layer.
-	ComPtr<ID3D12Debug> debugController;
+	if constexpr (mt::DEBUG)
+	{
+		// Enable the D3D12 debug layer.
+		ComPtr<ID3D12Debug> debugController;
 
-	throwIfFailed(
-		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), __FUNCTION__, __FILE__, __LINE__
-	);
+		throwIfFailed(
+			D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), __FUNCTION__, __FILE__, __LINE__
+		);
 
-	debugController->EnableDebugLayer();
-#endif
+		debugController->EnableDebugLayer();
+	}
 
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
 	throwIfFailed(
