@@ -6,9 +6,9 @@ export namespace mt
 	{
 	protected:
 		// Probably pre and post?
-		virtual void physicsUpdate() {};
-		virtual void inputUpdate() {};
-		virtual void renderUpdate() {};
+		virtual void physicsUpdate() noexcept {};
+		virtual void inputUpdate() noexcept {};
+		virtual void renderUpdate() noexcept {};
 
 	public:
 

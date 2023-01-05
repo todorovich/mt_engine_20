@@ -14,124 +14,118 @@ using namespace DirectX;
 using namespace mt;
 using namespace std::numbers;
 
-Camera::Camera()
+Camera::Camera() noexcept
 	: _view_matrix_requires_update(false)
 {
 	setLens(0.25f * pi_v<float>, 1.0f, 1.0f, 1000.0f);
 	lookAt(_position, XMFLOAT3(0.0f, 0.0f, 0.0f), _up);
 }
 
-Camera::~Camera()
+Camera::~Camera() noexcept
 {
 }
 
-XMVECTOR Camera::getPosition() const
+XMVECTOR Camera::getPosition() const noexcept
 {
 	return XMLoadFloat3(&_position);
 }
 
-XMFLOAT3 Camera::getPosition3f() const
+XMFLOAT3 Camera::getPosition3f() const noexcept
 {
 	return _position;
 }
 
-Status Camera::setPosition(float x, float y, float z)
+void Camera::setPosition(float x, float y, float z) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	_position = XMFLOAT3(x, y, z);
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::setPosition(const XMFLOAT3& v)
+void Camera::setPosition(const XMFLOAT3& v) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	_position = v;
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-XMVECTOR Camera::getRightVector() const
+XMVECTOR Camera::getRightVector() const noexcept
 {
-
 	return XMLoadFloat3(&_right);
 }
 
-XMFLOAT3 Camera::getRightFloats() const
+XMFLOAT3 Camera::getRightFloats() const noexcept
 {
-
 	return _right;
 }
 
-XMVECTOR Camera::getUpVector() const
+XMVECTOR Camera::getUpVector() const noexcept
 {
 	return XMLoadFloat3(&_up);
 }
 
-XMFLOAT3 Camera::getUpFloats() const
+XMFLOAT3 Camera::getUpFloats() const noexcept
 {
 	return _up;
 }
 
-XMVECTOR Camera::getLookVector() const
+XMVECTOR Camera::getLookVector() const noexcept
 {
 	return XMLoadFloat3(&_look);
 }
 
-XMFLOAT3 Camera::getLookFloats() const
+XMFLOAT3 Camera::getLookFloats() const noexcept
 {
 	return _look;
 }
 
-float Camera::getNearZ() const
+float Camera::getNearZ() const noexcept
 {
 	return _frustum_near_z;
 }
 
-float Camera::getFarZ() const
+float Camera::getFarZ() const noexcept
 {
 	return _frustum_far_z;
 }
 
-float Camera::getAspectRatio() const
+float Camera::getAspectRatio() const noexcept
 {
 	return _frustum_aspect_ratio;
 }
 
-float Camera::getFovY() const
+float Camera::getFovY() const noexcept
 {
 	return _frustum_fov_y;
 }
 
-float Camera::getFovX() const
+float Camera::getFovX() const noexcept
 {
 	float halfWidth = 0.5f * getNearWindowWidth();
 	return 2.0f * atanf(halfWidth / _frustum_near_z);
 }
 
-float Camera::getNearWindowWidth() const
+float Camera::getNearWindowWidth() const noexcept
 {
 	return _frustum_aspect_ratio * _frustum_near_window_height;
 }
 
-float Camera::getNearWindowHeight() const
+float Camera::getNearWindowHeight() const noexcept
 {
 	return _frustum_near_window_height;
 }
 
-float Camera::getFarWindowWidth() const
+float Camera::getFarWindowWidth() const noexcept
 {
 	return _frustum_aspect_ratio * _frustum_far_window_height;
 }
 
-float Camera::getFarWindowHeight() const
+float Camera::getFarWindowHeight() const noexcept
 {
 	return _frustum_far_window_height;
 }
 
-Status Camera::setLens(float fovY, float aspect, float zn, float zf)
+void Camera::setLens(float fovY, float aspect, float zn, float zf) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	// cache properties
@@ -147,11 +141,14 @@ Status Camera::setLens(float fovY, float aspect, float zn, float zf)
 	XMStoreFloat4x4(&_projection, P);
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::lookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp)
+void Camera::lookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up) noexcept
+{
+	lookAt(XMLoadFloat3(&pos), XMLoadFloat3(&target), XMLoadFloat3(&up));
+}
+
+void Camera::lookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	XMVECTOR L = XMVector3Normalize(XMVectorSubtract(target, pos));
@@ -164,42 +161,31 @@ Status Camera::lookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp)
 	XMStoreFloat3(&_up, U);
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::lookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up)
-{
-	XMVECTOR P = XMLoadFloat3(&pos);
-	XMVECTOR T = XMLoadFloat3(&target);
-	XMVECTOR U = XMLoadFloat3(&up);
-
-	return lookAt(P, T, U);;
-}
-
-XMMATRIX Camera::getViewMatrix() const
+XMMATRIX Camera::getViewMatrix() const noexcept
 {
 	assert(!_view_matrix_requires_update);
 	return XMLoadFloat4x4(&_view);
 }
 
-XMMATRIX Camera::getProjectionMatrix() const
+XMMATRIX Camera::getProjectionMatrix() const noexcept
 {
 	return XMLoadFloat4x4(&_projection);
 }
 
-XMFLOAT4X4 Camera::getViewFloats() const
+XMFLOAT4X4 Camera::getViewFloats() const noexcept
 {
 	assert(!_view_matrix_requires_update);
 	return _view;
 }
 
-XMFLOAT4X4 Camera::getProjectionFloats() const
+XMFLOAT4X4 Camera::getProjectionFloats() const noexcept
 {
 	return _projection;
 }
 
-Status Camera::strafe(float d)
+void Camera::strafe(float d) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 
@@ -210,12 +196,9 @@ Status Camera::strafe(float d)
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, right, position));
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-
-Status Camera::walk(float d)
+void Camera::walk(float d) noexcept
 {
 	static int i = 0;
 	
@@ -230,11 +213,9 @@ Status Camera::walk(float d)
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, look, position));
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::fly(float d)
+void Camera::fly(float d) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	
@@ -245,11 +226,9 @@ Status Camera::fly(float d)
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, up, position));
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::pitch(float angle)
+void Camera::pitch(float angle) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	// Rotate up and look vector about the right vector.
@@ -260,11 +239,9 @@ Status Camera::pitch(float angle)
 	XMStoreFloat3(&_look, XMVector3TransformNormal(XMLoadFloat3(&_look), new_right_vector));
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-Status Camera::rotateY(float angle)
+void Camera::rotateY(float angle) noexcept
 {
 	std::scoped_lock lock(_camera_mutex);
 	// Rotate the basis vectors about the world y-axis.
@@ -276,11 +253,9 @@ Status Camera::rotateY(float angle)
 	XMStoreFloat3(&_look, XMVector3TransformNormal(XMLoadFloat3(&_look), R));
 
 	_view_matrix_requires_update = true;
-
-	return Status::success;
 }
 
-void Camera::updateViewMatrix()
+void Camera::updateViewMatrix() noexcept
 {
 	if (_view_matrix_requires_update)
 	{

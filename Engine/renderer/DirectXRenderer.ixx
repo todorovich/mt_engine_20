@@ -120,13 +120,19 @@ export namespace mt::renderer
         bool _is_initialized = false;
         bool _is_rendering = false;
 
-		FrameResource* _getCurrentFrameResource() const;
+		FrameResource* _getCurrentFrameResource() const noexcept
+		{
+			return _frame_resources[_frame_resource_index].get();
+		};
         // Accessors
-        ID3D12Resource* _getCurrentBackBuffer() const;
+        ID3D12Resource* _getCurrentBackBuffer() const noexcept
+		{
+			return _swap_chain_buffer[_current_back_buffer].Get();
+		};
 
-        D3D12_CPU_DESCRIPTOR_HANDLE _getCurrentBackBufferView() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE _getCurrentBackBufferView() const noexcept;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE _getDepthStencilView() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE _getDepthStencilView() const noexcept;
 
         // Mutators
 
@@ -155,11 +161,7 @@ export namespace mt::renderer
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
-        {
-#if defined(DEBUG) || defined(_DEBUG)
-			std::atexit(ReportLiveObjects);
-#endif
-		}
+        {}
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)

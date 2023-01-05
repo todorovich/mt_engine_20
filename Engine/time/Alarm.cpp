@@ -20,13 +20,13 @@ void mt::time::Alarm::tick(std::chrono::steady_clock::time_point current_tick_ti
 	}
 }
 
-void mt::time::Alarm::pause(std::chrono::steady_clock::time_point time_paused)
+void mt::time::Alarm::pause(std::chrono::steady_clock::time_point time_paused) noexcept
 {
 	_time_paused = time_paused;
 	_is_paused = true;
 }
 
-void mt::time::Alarm::resume(std::chrono::steady_clock::time_point time_continued)
+void mt::time::Alarm::resume(std::chrono::steady_clock::time_point time_continued) noexcept
 {
 	// Offset time time by the amount of time spent paused;
 	_alarm_time += time_continued - _time_paused;

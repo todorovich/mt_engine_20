@@ -13,7 +13,7 @@ void mt::time::AlarmManager::addAlarm(
 	Task* callback, 
 	bool repeats, 
 	std::chrono::steady_clock::duration repeat_interval
-)
+) noexcept
 {
 	Alarm* alarm = _alarm_pool.allocate(_engine, time_point, callback, repeats, repeat_interval);
 

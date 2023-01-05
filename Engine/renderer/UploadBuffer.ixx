@@ -68,7 +68,7 @@ public:
         _mapped_data = nullptr;
     }
 
-    ID3D12Resource* Resource()const
+    ID3D12Resource* Resource() const
     {
         return _upload_buffer.Get();
     }

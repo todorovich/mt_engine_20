@@ -23,7 +23,7 @@ using namespace mt::input;
 
 using namespace std::literals;
 
-void mt::EngineDemo::map_input_controls()
+void mt::EngineDemo::map_input_controls() noexcept
 {
 	// TODO: make this something I can call on the engine proper.
 	auto quit = [](mt::Engine& engine) { 

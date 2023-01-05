@@ -17,7 +17,7 @@ export namespace mt
 
 	public:
 
-		ObjectPool()
+		ObjectPool() noexcept
 		{
 			for (auto i = 0; i < number_of_objects; i++)
 			{
@@ -25,7 +25,7 @@ export namespace mt
 			}
 		}
 
-		~ObjectPool() 
+		~ObjectPool() noexcept
 		{
 			for (auto index = _unused_indicies.top(); !_unused_indicies.empty(); _unused_indicies.pop())
 			{
@@ -33,13 +33,13 @@ export namespace mt
 			}
 		};
 
-		ObjectPool(const ObjectPool& other) = delete;
+		ObjectPool(const ObjectPool& other) noexcept = delete;
 
-		ObjectPool(ObjectPool&& other) = delete;
+		ObjectPool(ObjectPool&& other) noexcept = delete;
 
-		ObjectPool operator=(const ObjectPool& other) = delete;
+		ObjectPool operator=(const ObjectPool& other) noexcept = delete;
 		
-		ObjectPool operator=(ObjectPool&& other) = delete;
+		ObjectPool operator=(ObjectPool&& other) noexcept = delete;
 
 		template<class... Types>
 		T* allocate(Types&&... args)
@@ -47,7 +47,7 @@ export namespace mt
 			if (_unused_indicies.size() == 0)
 			{
 			    // To Do: This was previously throw, not sure what that changes.
-				return nullptr;
+				throw std::bad_alloc();
 			}
 
 			auto index = _unused_indicies.top();
@@ -65,7 +65,7 @@ export namespace mt
 			int index = static_cast<int>(returned_memory - _data);
 			if (index < 0 || index >= number_of_objects)
 			{
-				return;
+				throw std::bad_alloc();
 			}
 			else {
 				returned_memory->~T();

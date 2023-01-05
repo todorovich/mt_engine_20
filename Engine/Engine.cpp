@@ -83,7 +83,7 @@ Engine::Engine(HINSTANCE instance_handle)
 	getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
 }
 
-Engine::~Engine()
+Engine::~Engine() noexcept
 {
 	if (!isDestroyed())
 	{
@@ -133,7 +133,7 @@ Status Engine::run(Game& game)
 		}
 
 		windows_message_time->doTask(
-			[](mt::Engine& engine) {
+			[](mt::Engine& engine) noexcept {
 				MSG msg = {0};
 				// If there are Window messages then process them.
 				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -160,7 +160,7 @@ Status Engine::run(Game& game)
 	return Status::success;
 }
 
-void Engine::shutdown()
+void Engine::shutdown() noexcept
 {
 	if (_is_shutting_down == false)
 	{
@@ -178,7 +178,7 @@ void Engine::shutdown()
 	}
 }
 
-void Engine::destroy() 
+void Engine::destroy() noexcept
 {
 	if (_instance != nullptr) 
 	{

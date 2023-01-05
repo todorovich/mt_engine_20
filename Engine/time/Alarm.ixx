@@ -40,10 +40,10 @@ export namespace mt::time
 		Alarm(
 			mt::Engine& engine, 
 			std::chrono::steady_clock::time_point time_point, 
-			Task* callback = [](mt::Engine&) {}, 
+			Task* callback = [](mt::Engine&) noexcept {},
 			bool alarm_repeats = false, 
 			std::chrono::steady_clock::duration reset_interval = std::chrono::steady_clock::duration::min()
-		)
+		) noexcept
 			: _engine(engine)
 			, _alarm_time(time_point)
 			, _time_paused(std::chrono::steady_clock::time_point::min())
@@ -55,11 +55,11 @@ export namespace mt::time
 			
 		}
 
-		Alarm(mt::Engine& engine)
+		Alarm(mt::Engine& engine) noexcept
 			: _engine(engine)
 			, _alarm_time(std::chrono::steady_clock::time_point::min())
 			, _time_paused(std::chrono::steady_clock::time_point::min())
-			, _callback([](mt::Engine&){})
+			, _callback([](mt::Engine&) noexcept {})
 			, _reset_interval(std::chrono::steady_clock::duration::min())
 			, _alarm_repeats(false)
 			, _is_paused(true) 
@@ -67,11 +67,11 @@ export namespace mt::time
 
 		}
 			
-		~Alarm() = default;
+		~Alarm() noexcept = default;
 
-		Alarm(const Alarm& other) = delete;
+		Alarm(const Alarm& other) noexcept = delete;
 		
-		Alarm(Alarm&& other)
+		Alarm(Alarm&& other) noexcept
 			: _engine(other._engine)
 			, _alarm_time(std::move(other._alarm_time))
 			, _time_paused(std::move(other._time_paused))
@@ -81,9 +81,9 @@ export namespace mt::time
 			, _is_paused(std::move(other._is_paused))
 		{};
 
-		Alarm& operator=(const Alarm& other) = delete;
+		Alarm& operator=(const Alarm& other) noexcept = delete;
 
-		Alarm& operator=(Alarm&& other)	
+		Alarm& operator=(Alarm&& other)	noexcept
 		{
 			_alarm_time = std::move(other._alarm_time);
 			_callback = other._callback;
@@ -91,25 +91,25 @@ export namespace mt::time
 			return *this;
 		};
 
-		bool operator<(const Alarm& other) const
+		bool operator<(const Alarm& other) const noexcept
 		{
 			return _alarm_time < other._alarm_time;
 		}
 
-		bool HasTriggered() 
+		bool HasTriggered() noexcept
 		{ 
 			return _has_triggered; 
 		}
 
-		void pause(std::chrono::steady_clock::time_point time_paused = std::chrono::steady_clock::now());
+		void pause(std::chrono::steady_clock::time_point time_paused = std::chrono::steady_clock::now()) noexcept;
 
-		void resume(std::chrono::steady_clock::time_point time_continued = std::chrono::steady_clock::now());
+		void resume(std::chrono::steady_clock::time_point time_continued = std::chrono::steady_clock::now()) noexcept;
 	};
 
 	struct AlarmCompare
 	{
 	public:
-		bool operator()(Alarm* alarm_1, Alarm* alarm_2) const
+		bool operator()(Alarm* alarm_1, Alarm* alarm_2) const noexcept
 		{
 			return *alarm_2 < *alarm_1;
 		}

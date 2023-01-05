@@ -46,8 +46,12 @@ export namespace mt::time
 
     public:
 
-        StopWatch(TimeManager& _time_manager, std::string_view name, std::chrono::steady_clock::time_point created = std::chrono::steady_clock::now())
-            : _time_manager(_time_manager)
+        StopWatch(
+			TimeManager& _time_manager,
+			std::string_view name,
+			std::chrono::steady_clock::time_point created = std::chrono::steady_clock::now()
+		) noexcept
+			: _time_manager(_time_manager)
             , _name(name)
             , _created(created)
             , _task_finished(created)
@@ -60,10 +64,8 @@ export namespace mt::time
             , _total_idle(0ns)
         {}
 
-        void reset() {}
-
-        void startTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now())
-        {
+        void startTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now()) noexcept
+		{
             if (!_isActive)
             {
                 _isActive = true;
@@ -73,7 +75,7 @@ export namespace mt::time
             }
         }
 
-        void pauseTask(std::chrono::steady_clock::time_point pause_time = std::chrono::steady_clock::now())
+        void pauseTask(std::chrono::steady_clock::time_point pause_time = std::chrono::steady_clock::now()) noexcept
         {  
             if (_task_paused == std::chrono::steady_clock::time_point::min())
             {
@@ -82,7 +84,7 @@ export namespace mt::time
             }
         }
 
-        void continueTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now())
+        void continueTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now()) noexcept
         { 
             if (!(_task_paused == std::chrono::steady_clock::time_point::min()))
             {
@@ -92,7 +94,7 @@ export namespace mt::time
             }
         }
 
-        void finishTask(std::chrono::steady_clock::time_point finish_time = std::chrono::steady_clock::now())
+        void finishTask(std::chrono::steady_clock::time_point finish_time = std::chrono::steady_clock::now()) noexcept
         {
             if (_isActive)
             {
@@ -118,7 +120,7 @@ export namespace mt::time
             }
         }
 
-        void doTask(mt::Task* doTask);
+        void doTask(mt::Task* doTask) noexcept;
 
         std::chrono::steady_clock::duration getActive() const { return _total_active; }
         std::chrono::steady_clock::duration getPaused() const { return _total_idle; }

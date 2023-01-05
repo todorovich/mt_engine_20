@@ -20,7 +20,7 @@ export namespace mt::renderer
 
 	class DxException;
 
-	std::wstring AnsiToWString(const std::string& str);
+	std::wstring AnsiToWString(const std::string& str) noexcept;
 
 	constexpr UINT CalcConstantBufferByteSize(UINT byteSize)
 	{
@@ -133,11 +133,11 @@ namespace mt::renderer
 		return byteCode;
 	}
 
-	std::wstring AnsiToWString(const std::string& str)
+	std::wstring AnsiToWString(const std::string& str) noexcept
 	{
 		WCHAR buffer[512];
 		MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
-		return std::wstring(buffer);
+		return { buffer };
 	}
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(

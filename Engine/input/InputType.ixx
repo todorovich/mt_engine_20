@@ -25,7 +25,7 @@ export namespace mt::input
 			const InputDataType input_data_type_in = InputDataType::NO_DATA_TYPE,
 			const InputContext input_context_in = InputContext::NO_CONTEXT,
 			const VirtualKeyCode virtual_key_code_in = VirtualKeyCode::NO_KEY
-		)
+		) noexcept
 			: input_device(input_device_in)
 			, input_data_type(input_data_type_in)
 			, input_context(input_context_in)
@@ -36,13 +36,15 @@ export namespace mt::input
 			const InputDataType input_data_type_in,
 			const InputContext input_context_in,
 			const MicrosoftVirtualKeyCode virtual_key_code_in
-		)
+		) noexcept
 			: InputType(std::move(getInputType(input_data_type_in, input_context_in, virtual_key_code_in)))
 		{}
 
 		constexpr InputType getInputType(
-			const InputDataType input_data_type_in, const InputContext input_context_in, const MicrosoftVirtualKeyCode virtual_key_code_in
-		)
+			const InputDataType input_data_type_in,
+			const InputContext input_context_in,
+			const MicrosoftVirtualKeyCode virtual_key_code_in
+		) noexcept
 		{
 			switch (virtual_key_code_in)
 			{
@@ -454,10 +456,10 @@ export namespace mt::input
 			}
 		}
 
-		auto operator<=>(const InputType&) const = default;
+		auto operator<=>(const InputType&) const noexcept = default;
 	};
 
-	std::wstring to_wstring(InputType input_type)
+	std::wstring to_wstring(InputType input_type) noexcept
 	{
 		auto device = to_wstring(input_type.input_device);
 		auto data_type = to_wstring(input_type.input_data_type);

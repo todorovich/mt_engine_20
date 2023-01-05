@@ -27,7 +27,7 @@ export namespace mt::geometry
 			const DirectX::XMFLOAT3& right,
 			const DirectX::XMFLOAT4& color,
 			const DirectX::XMFLOAT2& texture_coordinate
-		)
+		) noexcept
 			: position(position)
 			, normal(normal)
 			, right(right)

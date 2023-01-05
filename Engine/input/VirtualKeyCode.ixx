@@ -123,7 +123,7 @@ export namespace mt::input
 		DEL = 0x7F,
 	};
 
-	constexpr std::wstring to_wstring(VirtualKeyCode virtual_key_code)
+	constexpr std::wstring to_wstring(VirtualKeyCode virtual_key_code) noexcept
 	{
 		switch (virtual_key_code)
 		{

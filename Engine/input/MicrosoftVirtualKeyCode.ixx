@@ -158,7 +158,7 @@ export namespace mt::input
 		APOSTROPHE = 0xDE,
 	};
 
-	constexpr std::wstring to_wstring(MicrosoftVirtualKeyCode key)
+	constexpr std::wstring to_wstring(MicrosoftVirtualKeyCode key) noexcept
 	{
 		switch (key)
 		{

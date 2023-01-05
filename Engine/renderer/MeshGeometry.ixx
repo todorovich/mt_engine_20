@@ -40,19 +40,19 @@ namespace mt::renderer
         // the Submeshes individually.
         std::unordered_map<std::string, SubmeshGeometry> draw_arguments;
 
-        D3D12_VERTEX_BUFFER_VIEW vertexBufferView() const
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferView() const noexcept
         {
             return D3D12_VERTEX_BUFFER_VIEW{ vertex_buffer_gpu->GetGPUVirtualAddress(), vertex_buffer_byte_size, vertex_byte_stride };
         }
 
-        D3D12_INDEX_BUFFER_VIEW indexBufferView() const
-        {
+        D3D12_INDEX_BUFFER_VIEW indexBufferView() const noexcept
+		{
             return D3D12_INDEX_BUFFER_VIEW{ index_buffer_gpu->GetGPUVirtualAddress(), index_buffer_byte_size, index_format };
         }
 
         // We can free this memory after we finish upload to the GPU.
-        void disposeUploaders()
-        {
+        void disposeUploaders() noexcept
+		{
             vertex_buffer_uploader = Microsoft::WRL::ComPtr<ID3D12Resource>{};
             index_buffer_uploader = Microsoft::WRL::ComPtr<ID3D12Resource>{};
         }

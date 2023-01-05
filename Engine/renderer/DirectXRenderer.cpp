@@ -51,7 +51,7 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_flushCommandQueue();
 
 			throwIfFailed(
-				_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), nullptr),
+				_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr),
 				__FUNCTION__, __FILE__, __LINE__
 			);
 
@@ -181,14 +181,14 @@ void DirectXRenderer::update()
 
 	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 
-	if (_frame_resources[_frame_resource_index]->fence != 0 && _fence->GetCompletedValue() < _frame_resources[_frame_resource_index]->fence)
+	if (_getCurrentFrameResource()->fence != 0 && _fence->GetCompletedValue() < _getCurrentFrameResource()->fence)
 	{
 		// second parameter was false, compiler claims its being converted to nullptr so i made it explicit.
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.
 		throwIfFailed(
-			_fence->SetEventOnCompletion(_frame_resources[_frame_resource_index]->fence, eventHandle),
+			_fence->SetEventOnCompletion(_getCurrentFrameResource()->fence, eventHandle),
 			__FUNCTION__, __FILE__, __LINE__
 		);
 
@@ -202,7 +202,7 @@ void DirectXRenderer::update()
 	ObjectConstants object_constants;
 	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
 	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
-	_frame_resources[_frame_resource_index]->object_constants_upload_buffer->CopyData(0, object_constants);
+	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);
 }
 
 void mt::renderer::DirectXRenderer::render()
@@ -222,9 +222,9 @@ void mt::renderer::DirectXRenderer::render()
 
 	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
 
-	_frame_resources[_frame_resource_index]->fence = ++_fence_index;
+	_getCurrentFrameResource()->fence = ++_fence_index;
 
-	_dx_command_queue->Signal(_fence.Get(), _frame_resources[_frame_resource_index]->fence);
+	_dx_command_queue->Signal(_fence.Get(), _getCurrentFrameResource()->fence);
 
 	_frame_resource_index = (_frame_resource_index + 1) % _number_of_frame_resources;
 
@@ -236,14 +236,14 @@ void mt::renderer::DirectXRenderer::render()
 void DirectXRenderer::_createCommandList()
 {
 	throwIfFailed(
-		_frame_resources[_frame_resource_index]->command_list_allocator->Reset(),
+		_getCurrentFrameResource()->command_list_allocator->Reset(),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	throwIfFailed(
-		_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
+		_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
 		__FUNCTION__, __FILE__, __LINE__
 	);
 
@@ -795,21 +795,16 @@ void DirectXRenderer::_createPipelineStateObject()
 
 // ACCESSORS
 
-ID3D12Resource* DirectXRenderer::_getCurrentBackBuffer() const
-{
-	return _swap_chain_buffer[_current_back_buffer].Get();
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getCurrentBackBufferView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getCurrentBackBufferView() const noexcept
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart(),
 		_current_back_buffer,
-		_rtv_descriptor_size
+		static_cast<INT>(_rtv_descriptor_size)
 	);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const noexcept
 {
 	return _dx_dsv_heap->GetCPUDescriptorHandleForHeapStart();
 }

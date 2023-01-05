@@ -9,7 +9,7 @@ import <cstdint>;
 
 namespace mt::geometry
 {
-	constexpr MeshData createBoxGeometry(float width, float height, float depth)
+	constexpr MeshData createBoxGeometry(float width, float height, float depth) noexcept
 	{
 		float half_width = width / 2.0f;
 		float half_height = height / 2.0f;
