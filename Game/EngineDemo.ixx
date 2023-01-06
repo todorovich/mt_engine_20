@@ -47,7 +47,10 @@ int WINAPI WinMain(
 
 		mt::EngineDemo engine_demo = mt::EngineDemo(engine);
 
-		return static_cast<int>(engine.run(engine_demo));
+		if (auto expected = engine.run(engine_demo); expected)
+			return 0;
+		else
+			return static_cast<int>(expected.error().error_code);
 	}
 	catch (mt::renderer::DxException& e)
 	{

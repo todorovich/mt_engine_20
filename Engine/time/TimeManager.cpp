@@ -82,19 +82,28 @@ void TimeManager::_addEngineAlarms() noexcept
 {
 	_alarm_manager.addAlarm(
 		std::chrono::steady_clock::now() + _tgt_update_interval_ns,
-		[](mt::Engine& engine) noexcept -> void { engine.getTimeManager()->_setShouldUpdate(); },
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setShouldUpdate();
+			return {};
+		},
 		true,
 		_tgt_update_interval_ns
 	);
 	_alarm_manager.addAlarm(
 		std::chrono::steady_clock::now() + _tgt_render_interval_ns,
-		[](mt::Engine& engine) noexcept -> void { engine.getTimeManager()->_setShouldRender(); },
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setShouldRender();
+			return {};
+		},
 		true,
 		_tgt_render_interval_ns
 	);
 	_alarm_manager.addAlarm(
 		std::chrono::steady_clock::now() + _frame_interval,
-		[](mt::Engine& engine) noexcept -> void { engine.getTimeManager()->_setEndOfFrame(); },
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setEndOfFrame();
+			return {};
+		},
 		true,
 		_frame_interval
 	);

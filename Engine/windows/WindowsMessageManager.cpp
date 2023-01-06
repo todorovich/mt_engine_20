@@ -53,7 +53,7 @@ WindowsMessageManager::WindowsMessageManager(mt::Engine& engine)
 	: _engine(engine)
 {}
 
-void WindowsMessageManager::initialize()
+void WindowsMessageManager::initialize() noexcept
 {
 	// Add all the message handlers to the message handler map
 	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, new WM_Activate(_engine.getTimeManager(), _engine.getInputManager())));

@@ -67,18 +67,22 @@ bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 }
 
 // TODO: window manager.
-void WindowManager::resize(int width, int height)
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, mt::Error> WindowManager::resize(int width, int height)
 {
-	// This flag should prevent futher rendering after the current frame finishes
+	// This flag should prevent further rendering after the current frame finishes
 	setIsWindowResizing(true);
 
 	// wait until rendering is finished.
 	while (_engine.getRenderer()->getIsRendering()) {};
 
-	_engine.getRenderer()->resize(width, height);
+	if (auto expected = _engine.getRenderer()->resize(width, height); !expected)
+		return std::unexpected(expected.error());
 	
 	// TODO: Callbacks?
 
 	// Continue rendering.
 	setIsWindowResizing(false);
 }
+#pragma warning (pop)

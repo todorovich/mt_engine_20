@@ -10,7 +10,6 @@ import <chrono>;
 import Camera;
 import DirectXRenderer;
 import InputManager;
-import Status;
 import StopWatch;
 import TimeManager;
 import WindowManager;
@@ -74,13 +73,17 @@ Engine::Engine(HINSTANCE instance_handle)
 	 
 	// Will Register Message Handler WNDPROC
 	if (!getWindowManager()->initializeMainWindow(instance_handle))
-		throw new std::runtime_error("Could not initalize main window");
+		throw new std::runtime_error("Could not initialize main window");
 
-	if (!getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()))
-		throw new std::runtime_error("Could not initalize direct3d");
+	if (auto expected = getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()); !expected)
+		throw new std::runtime_error("Could not initialize direct3d");
 
-	// Do the initial Resize code. 
-	getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
+	// Do the initial Resize code.
+	if (auto expected =
+			getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
+		!expected
+	)
+		throw new std::runtime_error("Could not resize the window");
 }
 
 Engine::~Engine() noexcept
@@ -91,7 +94,9 @@ Engine::~Engine() noexcept
 	}
 };
 
-Status Engine::run(Game& game)
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> Engine::run(Game& game) noexcept
 {
 	auto run_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME);
 	run_time->startTask();
@@ -133,7 +138,7 @@ Status Engine::run(Game& game)
 		}
 
 		windows_message_time->doTask(
-			[](mt::Engine& engine) noexcept {
+			[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
 				MSG msg = {0};
 				// If there are Window messages then process them.
 				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -147,18 +152,20 @@ Status Engine::run(Game& game)
 						break;
 					}
 				}
+
+				return {};
 			}
 		);
 
 		if (this->_is_shutting_down) break;
 
-		_tick(tick_time, update_time, render_time, frame_time, input_time, game);
+		if (auto expected = _tick(tick_time, update_time, render_time, frame_time, input_time, game); !expected)
+			return std::unexpected(expected.error());
 	};
 
 	run_time->finishTask();
-
-	return Status::SUCCESS;
 }
+#pragma warning ( pop )
 
 void Engine::shutdown() noexcept
 {
@@ -193,14 +200,16 @@ void Engine::destroy() noexcept
 		OutputDebugStringW(L"Engine Already Destroyed\n");
 }
 
-void Engine::_tick(
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> Engine::_tick(
 	mt::time::StopWatch* tick_time, 
 	mt::time::StopWatch* update_time, 
 	mt::time::StopWatch* render_time, 
 	mt::time::StopWatch* frame_time,
 	mt::time::StopWatch* input_time,
 	mt::Game& game
-)
+) noexcept
 {
 	tick_time->startTask();
 
@@ -226,7 +235,7 @@ void Engine::_tick(
 
 		game.renderUpdate();
 		getRenderer()->update();
-		getRenderer()->render();
+		if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
 		getTimeManager()->renderComplete();
 
 		frame_time->finishTask();
@@ -236,3 +245,4 @@ void Engine::_tick(
 
 	tick_time->finishTask();
 }
+#pragma warning ( pop )

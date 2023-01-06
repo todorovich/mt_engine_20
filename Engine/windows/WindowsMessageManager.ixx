@@ -25,7 +25,7 @@ export namespace mt::windows
 	
 		~WindowsMessageManager();
 	
-		void initialize();
+		void initialize() noexcept;
 
 		LRESULT handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam);
 	

@@ -10,6 +10,11 @@ module;
 
 export module DirectXUtility;
 
+export import <expected>;
+
+export import Debug;
+export import Error;
+
 export namespace mt::renderer
 {
 	// TODO: Find me a better home.
@@ -38,23 +43,25 @@ export namespace mt::renderer
 		return (byteSize + 255) & ~255;
 	}
 
-	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::Error> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
 		const std::string& target
-	);
+	) noexcept;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::Error> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const void* initData,
 		UINT64 byteSize,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
-	);
+	) noexcept;
 }
 
-namespace mt::renderer 
+using namespace std::literals;
+
+namespace mt::renderer
 {
 	class DxException
 	{
@@ -77,7 +84,7 @@ namespace mt::renderer
 		{
 			// Get the string description of the error code.
 			_com_error err(error_code);
-			
+
 			//std::wstring msg = std::wstring(err.ErrorMessage());
 
 			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: ";// +msg;
@@ -94,39 +101,41 @@ module : private;
 
 namespace mt::renderer
 {
-	Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::Error> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
 		const std::string& target
-	)
+	) noexcept
 	{
 		UINT compileFlags = 0;
-#if defined(DEBUG) || defined(_DEBUG)  
-		compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
 
-		HRESULT hr = S_OK;
+		if constexpr (mt::DEBUG) compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 
 		Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> errors;
 
-		hr = D3DCompileFromFile(
+		if (FAILED(D3DCompileFromFile(
 			filename.c_str(),
-			defines, 
+			defines,
 			D3D_COMPILE_STANDARD_FILE_INCLUDE,
 			entrypoint.c_str(),
-			target.c_str(), 
-			compileFlags, 
-			0, 
-			&byteCode, 
+			target.c_str(),
+			compileFlags,
+			0,
+			&byteCode,
 			&errors
-		);
+		)))
+		{
+			if (errors != nullptr)
+				OutputDebugStringA((char*)errors->GetBufferPointer());
 
-		if (errors != nullptr)
-			OutputDebugStringA((char*)errors->GetBufferPointer());
-
-		throwIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
+			return std::unexpected(mt::Error{
+				L"Unable to compile shader."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
 		return byteCode;
 	}
@@ -139,47 +148,56 @@ namespace mt::renderer
 		return { buffer };
 	}
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::Error> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* command_lists,
 		const void* initialization_data,
 		UINT64 byte_size,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& upload_buffer
-	)
+	) noexcept
 	{
 		Microsoft::WRL::ComPtr<ID3D12Resource> default_buffer;
 
 		auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 		auto buffer = CD3DX12_RESOURCE_DESC::Buffer(byte_size);
+
 		// Create the actual default buffer resource.
-		throwIfFailed(
-			device->CreateCommittedResource(
-				&heap_properties,
-				D3D12_HEAP_FLAG_NONE,
-				&buffer,
-				D3D12_RESOURCE_STATE_COMMON,
-				nullptr,
-				IID_PPV_ARGS(default_buffer.GetAddressOf())
-			),
-			__FUNCTION__, __FILE__, __LINE__
-		);
+		if (FAILED(device->CreateCommittedResource(
+			&heap_properties,
+			D3D12_HEAP_FLAG_NONE,
+			&buffer,
+			D3D12_RESOURCE_STATE_COMMON,
+			nullptr,
+			IID_PPV_ARGS(default_buffer.GetAddressOf())
+		)))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to create a committed default buffer resource."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
 		auto heap_properties_2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto buffer_2 = CD3DX12_RESOURCE_DESC::Buffer(byte_size);
 
 		// In order to copy CPU memory data into our default buffer, we need to create
 		// an intermediate upload heap. 
-		throwIfFailed(
-			device->CreateCommittedResource(
-				&heap_properties_2,
-				D3D12_HEAP_FLAG_NONE,
-				&buffer_2,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr,
-				IID_PPV_ARGS(upload_buffer.GetAddressOf())
-			),
-			__FUNCTION__, __FILE__, __LINE__
-		);
+		if (FAILED(device->CreateCommittedResource(
+			&heap_properties_2,
+			D3D12_HEAP_FLAG_NONE,
+			&buffer_2,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(upload_buffer.GetAddressOf())
+		)))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to create a committed upload buffer resource."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
 		// Describe the data we want to copy into the default buffer.
 		D3D12_SUBRESOURCE_DATA sub_resource_data = {};

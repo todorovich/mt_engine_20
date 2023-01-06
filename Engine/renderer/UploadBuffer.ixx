@@ -8,6 +8,8 @@ export module UploadBuffer;
 
 export import DirectXUtility;
 
+import <stdexcept>;
+
 export template<typename T> class UploadBuffer
 {
     Microsoft::WRL::ComPtr<ID3D12Resource> _upload_buffer;
@@ -33,26 +35,19 @@ public:
 
         auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(element_byte_size * element_count);
-        mt::renderer::throwIfFailed(
-            device->CreateCommittedResource(
-                &heap_properties,
-                D3D12_HEAP_FLAG_NONE,
-                &resource_desc,
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&_upload_buffer)
-            ),
-            "",
-            __FILE__,
-            __LINE__
-        );
 
-        mt::renderer::throwIfFailed(
-            _upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&_mapped_data)),
-            "",
-            __FILE__,
-            __LINE__
-        );
+		if (FAILED(device->CreateCommittedResource(
+			&heap_properties,
+			D3D12_HEAP_FLAG_NONE,
+			&resource_desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&_upload_buffer)
+		)))
+			throw new std::runtime_error("unable to create committed resource for upload buffer.");
+
+		if (FAILED(_upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&_mapped_data))))
+			throw new std::runtime_error("unable to map the upload buffer.");
 
         // We do not need to unmap until we are done with the resource.  However, we must not write to
         // the resource while it is in use by the GPU (so we must use synchronization techniques).

@@ -10,15 +10,15 @@ target_compile_options(
 	"$<$<CONFIG:Debug>:/ZI>"
 )
 
-target_sources(Engine
-	PRIVATE
-		Engine.cpp
-		Debug.ixx
-		Engine.ixx
-		FontManager.ixx
-		ObjectPool.ixx
-		Status.ixx
-		Game.ixx
+target_sources(
+	Engine PRIVATE
+	Engine.cpp
+	Error.ixx
+	Debug.ixx
+	Engine.ixx
+	FontManager.ixx
+	ObjectPool.ixx
+	Game.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

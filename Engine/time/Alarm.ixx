@@ -40,7 +40,7 @@ export namespace mt::time
 		Alarm(
 			mt::Engine& engine, 
 			std::chrono::steady_clock::time_point time_point, 
-			Task* callback = [](mt::Engine&) noexcept {},
+			Task* callback = [](mt::Engine&) noexcept -> std::expected<void, mt::Error> {},
 			bool alarm_repeats = false, 
 			std::chrono::steady_clock::duration reset_interval = std::chrono::steady_clock::duration::min()
 		) noexcept
@@ -59,7 +59,7 @@ export namespace mt::time
 			: _engine(engine)
 			, _alarm_time(std::chrono::steady_clock::time_point::min())
 			, _time_paused(std::chrono::steady_clock::time_point::min())
-			, _callback([](mt::Engine&) noexcept {})
+			, _callback([](mt::Engine&) noexcept -> std::expected<void, mt::Error> {})
 			, _reset_interval(std::chrono::steady_clock::duration::min())
 			, _alarm_repeats(false)
 			, _is_paused(true) 
@@ -96,7 +96,7 @@ export namespace mt::time
 			return _alarm_time < other._alarm_time;
 		}
 
-		bool HasTriggered() noexcept
+		bool HasTriggered() const noexcept
 		{ 
 			return _has_triggered; 
 		}

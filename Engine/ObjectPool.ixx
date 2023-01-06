@@ -66,7 +66,7 @@ export namespace mt
 			else {
 				returned_memory->~T();
 
-				// zero out the retruned memory
+				// zero out the returned memory
 				//std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
 
 				_used_indices.erase(index);
