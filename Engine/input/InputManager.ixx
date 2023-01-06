@@ -37,44 +37,45 @@ export namespace mt::input
         POINT _mouse_return_position;
 
     public:
-        InputManager(mt::Engine& engine)
+        InputManager(mt::Engine& engine) noexcept
             : _engine(engine)
         {}
 
-        ~InputManager() = default;
+        ~InputManager() noexcept = default;
 
-        InputManager(const InputManager &other) = delete;
+        InputManager(const InputManager &other) noexcept = delete;
         
-        InputManager(InputManager&& other) = default;
+        InputManager(InputManager&& other) noexcept = default;
 
-        InputManager& operator=(const InputManager &other) = delete;
+        InputManager& operator=(const InputManager &other) noexcept = delete;
 
-        InputManager& operator=(InputManager&& other) = default;
+        InputManager& operator=(InputManager&& other) noexcept = default;
 
-        void processInput(); // friend engine, make protected?
+        void processInput() noexcept; // friend engine, make protected?
 
         void acceptInput(
-            InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
-        );
+            InputType input_type,
+			std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
+        ) noexcept;
 
         using InputHandler = 
             std::variant<button_function*, one_dimensional_function*, two_dimensional_function*, three_dimensional_function*>;
         
-        void registerInputHandler(InputHandler input_handler, InputType input_types);
+        void registerInputHandler(InputHandler input_handler, InputType input_types) noexcept;
 
         template <typename First>
-        void registerInputHandler(InputHandler input_handler, const First& first)
+        void registerInputHandler(InputHandler input_handler, const First& first) noexcept
         {
             registerInputHandler(input_handler, first);
         }
 
         template <typename First, typename... Rest> 
-        void registerInputHandler(InputHandler input_handler, const First& first, const Rest&... rest)
+        void registerInputHandler(InputHandler input_handler, const First& first, const Rest&... rest) noexcept
         {
             registerInputHandler(input_handler, first);
             registerInputHandler(input_handler, rest...); // recursive call using pack expansion syntax
         }
 
-        void toggleRelativeMouse();
+        void toggleRelativeMouse() noexcept;
     };
 }

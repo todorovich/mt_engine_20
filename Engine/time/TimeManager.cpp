@@ -6,7 +6,7 @@ import Engine;
 
 using namespace mt::time;
 
-void TimeManager::tick()
+void TimeManager::tick() noexcept
 {
 	//auto now = std::chrono::steady_clock::now();
 
@@ -21,22 +21,22 @@ void TimeManager::tick()
 	//now = std::chrono::steady_clock::now();
 }
 
-void TimeManager::updateComplete()
+void TimeManager::updateComplete() noexcept
 {
 	_should_update = false;
 }
 
-void TimeManager::renderComplete()
+void TimeManager::renderComplete() noexcept
 {
 	_should_render = false;
 }
 
-void TimeManager::frameComplete()
+void TimeManager::frameComplete() noexcept
 {
 	_end_of_frame = false;
 }
 
-void TimeManager::resume()
+void TimeManager::resume() noexcept
 {
 	// If the game is paused, unpause it.
 	if (_is_paused)
@@ -57,7 +57,7 @@ void TimeManager::resume()
 	// else do nothing
 }
 
-void TimeManager::pause()
+void TimeManager::pause() noexcept
 {
 	// If the game is not paused, pause it.
 	if (_is_paused == false)
@@ -78,24 +78,48 @@ void TimeManager::pause()
 	// else do nothing
 }
 
-void TimeManager::_addEngineAlarms()
+void TimeManager::_addEngineAlarms() noexcept
 {
-	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _tgt_update_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldUpdate(); }, true, _tgt_update_interval_ns);
-	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _tgt_render_interval_ns, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setShouldRender(); }, true, _tgt_render_interval_ns);
-	_alarm_manager.addAlarm(std::chrono::steady_clock::now() + _frame_interval, [](mt::Engine& engine) -> void { engine.getTimeManager()->_setEndOfFrame(); }, true, _frame_interval);
+	_alarm_manager.addAlarm(
+		std::chrono::steady_clock::now() + _tgt_update_interval_ns,
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setShouldUpdate();
+			return {};
+		},
+		true,
+		_tgt_update_interval_ns
+	);
+	_alarm_manager.addAlarm(
+		std::chrono::steady_clock::now() + _tgt_render_interval_ns,
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setShouldRender();
+			return {};
+		},
+		true,
+		_tgt_render_interval_ns
+	);
+	_alarm_manager.addAlarm(
+		std::chrono::steady_clock::now() + _frame_interval,
+		[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
+			engine.getTimeManager()->_setEndOfFrame();
+			return {};
+		},
+		true,
+		_frame_interval
+	);
 }
 
-void TimeManager::_setShouldUpdate()
+void TimeManager::_setShouldUpdate() noexcept
 {
 	_should_update = true;
 }
 
-void TimeManager::_setShouldRender()
+void TimeManager::_setShouldRender() noexcept
 {
 	_should_render = true;
 }
 
-void TimeManager::_setEndOfFrame()
+void TimeManager::_setEndOfFrame() noexcept
 {
 	_end_of_frame = true;
 }

@@ -13,28 +13,33 @@ import DirectXUtility;
 
 export namespace mt
 {
-	export class EngineDemo : public Game
+	class EngineDemo : public Game
 	{
 		Engine& _engine;
 
 	public:
-		virtual void physicsUpdate() override {};
-		virtual void inputUpdate() override {};
-		virtual void renderUpdate() override {};
+		virtual void physicsUpdate() noexcept override {};
+		virtual void inputUpdate() noexcept override {};
+		virtual void renderUpdate() noexcept override {};
 
-		void map_input_controls();
+		void map_input_controls() noexcept;
 
-		EngineDemo(Engine& engine)
+		EngineDemo(Engine& engine) noexcept
 			: _engine(engine)
 		{
 			map_input_controls();
 		}
 
-		virtual ~EngineDemo() {}
+		virtual ~EngineDemo() noexcept {}
 	};
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE prevInstance, [[maybe_unused]] PSTR cmdLine, [[maybe_unused]] int showCmd)
+int WINAPI WinMain(
+	HINSTANCE hInstance,
+	[[maybe_unused]] HINSTANCE prevInstance,
+	[[maybe_unused]] PSTR cmdLine,
+	[[maybe_unused]] int showCmd
+)
 {
 	try
 	{
@@ -42,7 +47,10 @@ int WINAPI WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE prevInstance,
 
 		mt::EngineDemo engine_demo = mt::EngineDemo(engine);
 
-		return static_cast<int>(engine.run(engine_demo));
+		if (auto expected = engine.run(engine_demo); expected)
+			return 0;
+		else
+			return static_cast<int>(expected.error().error_code);
 	}
 	catch (mt::renderer::DxException& e)
 	{

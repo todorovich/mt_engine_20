@@ -18,7 +18,7 @@ export namespace mt::input
 		THREE_DIMENSIONAL			= 0x07
 	};
 
-	constexpr std::wstring_view to_wstring(InputDataType key)
+	constexpr std::wstring_view to_wstring(InputDataType key) noexcept
 	{
 		switch (key)
 		{

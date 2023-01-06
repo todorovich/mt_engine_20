@@ -16,7 +16,7 @@ import InputModel;
 
 using namespace mt::input;
 
-void InputManager::processInput()
+void InputManager::processInput() noexcept
 {
 	auto size = _input_queue.size();
 
@@ -172,12 +172,14 @@ void InputManager::processInput()
 	_held_buttons.merge(pressed_buttons);
 }
 
-void mt::input::InputManager::acceptInput(InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data)
+void mt::input::InputManager::acceptInput(
+	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
+) noexcept
 {
 	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
 }
 
-void mt::input::InputManager::toggleRelativeMouse()
+void mt::input::InputManager::toggleRelativeMouse() noexcept
 {
 	if (isMouseRelative)
 	{
@@ -202,7 +204,7 @@ void mt::input::InputManager::toggleRelativeMouse()
 	}
 }
 
-void mt::input::InputManager::registerInputHandler(InputHandler input_handler, InputType input_type)
+void mt::input::InputManager::registerInputHandler(InputHandler input_handler, InputType input_type) noexcept
 {
 	switch (input_type.input_data_type)
 	{
@@ -218,22 +220,22 @@ void mt::input::InputManager::registerInputHandler(InputHandler input_handler, I
 
 		case InputDataType::ONE_DIMENSIONAL:
 		{
-			auto one_dimenaional_handling_function = std::get<one_dimensional_function*>(input_handler);
-			one_dimensional_input_handler.insert({input_type, one_dimenaional_handling_function});
+			auto one_dimensional_handling_function = std::get<one_dimensional_function*>(input_handler);
+			one_dimensional_input_handler.insert({input_type, one_dimensional_handling_function});
 		}
 		break;
 
 		case InputDataType::TWO_DIMENSIONAL:
 		{
-			auto two_dimenaional_handling_function = std::get<two_dimensional_function*>(input_handler);
-			two_dimensional_input_handler.insert({input_type, two_dimenaional_handling_function});
+			auto two_dimensional_handling_function = std::get<two_dimensional_function*>(input_handler);
+			two_dimensional_input_handler.insert({input_type, two_dimensional_handling_function});
 		}
 		break;
 
 		case InputDataType::THREE_DIMENSIONAL:
 		{
-			auto three_dimenaional_handling_function = std::get<three_dimensional_function*>(input_handler);
-			three_dimensional_input_handler.insert({input_type, three_dimenaional_handling_function});
+			auto three_dimensional_handling_function = std::get<three_dimensional_function*>(input_handler);
+			three_dimensional_input_handler.insert({input_type, three_dimensional_handling_function});
 		}
 		break;
 

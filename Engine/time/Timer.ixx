@@ -10,21 +10,21 @@ export namespace mt::time
 	{		
 	public:
 
-		Timer(mt::Engine& engine, std::chrono::steady_clock::duration offset, Task* callback)
+		Timer(mt::Engine& engine, std::chrono::steady_clock::duration offset, Task* callback) noexcept
 			: Alarm(engine, std::chrono::steady_clock::now() + offset, callback)
 		{}
 
-		~Timer() = default;
+		~Timer() noexcept = default;
 
-		Timer(const Timer& other) = delete;
+		Timer(const Timer& other) noexcept = delete;
 
-		Timer(Timer&& other)
+		Timer(Timer&& other) noexcept
 			: Alarm(std::move(other))
 		{}
 
-		Timer& operator=(const Timer& other) = delete;
+		Timer& operator=(const Timer& other) noexcept = delete;
 
-		Timer& operator=(Timer&& other)
+		Timer& operator=(Timer&& other) noexcept
 		{
 			Alarm::operator=(std::move(other));
 

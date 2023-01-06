@@ -8,6 +8,8 @@ export namespace mt { class Engine; }
 
 export import <string>;
 
+export import Error;
+
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 export namespace mt::windows 
@@ -49,7 +51,7 @@ export namespace mt::windows
 
 		bool initializeMainWindow(HINSTANCE instance_handle);
 
-		void resize(int width, int height);
+		[[nodiscard]] std::expected<void, mt::Error> resize(int width, int height);
 
 		void getIsWindowResizing(bool is_resizing) { _is_window_resizing = is_resizing; }
 

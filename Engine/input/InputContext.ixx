@@ -25,17 +25,17 @@ export namespace mt::input
 		RELATIVE		= 0x10,
 	};
 
-	constexpr InputContext operator|(InputContext a, InputContext b)
+	constexpr InputContext operator|(InputContext a, InputContext b) noexcept
 	{
 		return static_cast<InputContext>(static_cast<unsigned short>(a) | static_cast<unsigned short>(b));
 	}
 
-	constexpr InputContext operator&(InputContext a, InputContext b)
+	constexpr InputContext operator&(InputContext a, InputContext b) noexcept
 	{
 		return static_cast<InputContext>(static_cast<unsigned short>(a) & static_cast<unsigned short>(b));
 	}
 
-	constexpr std::wstring_view to_wstring(InputContext key)
+	constexpr std::wstring_view to_wstring(InputContext key) noexcept
 	{
 		if (key == InputContext::NO_CONTEXT) 
 		{

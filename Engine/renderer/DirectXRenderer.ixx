@@ -21,7 +21,6 @@ module;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
 
-
 export module DirectXRenderer;
 
 import <ctime>;
@@ -31,13 +30,14 @@ export import MathUtility;
 export import UploadBuffer;
 export import Geometry;
 export import FrameResource;
+export import Error;
 
 import Engine;
 
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
-using mt::Engine;
+using mt::Error;
 
 export namespace mt::renderer
 {
@@ -120,51 +120,53 @@ export namespace mt::renderer
         bool _is_initialized = false;
         bool _is_rendering = false;
 
-		FrameResource* _getCurrentFrameResource() const;
+		FrameResource* _getCurrentFrameResource() const noexcept
+		{
+			return _frame_resources[_frame_resource_index].get();
+		};
         // Accessors
-        ID3D12Resource* _getCurrentBackBuffer() const;
+        ID3D12Resource* _getCurrentBackBuffer() const noexcept
+		{
+			return _swap_chain_buffer[_current_back_buffer].Get();
+		};
 
-        D3D12_CPU_DESCRIPTOR_HANDLE _getCurrentBackBufferView() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE _getCurrentBackBufferView() const noexcept;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE _getDepthStencilView() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE _getDepthStencilView() const noexcept;
 
         // Mutators
 
-		void _flushCommandQueue();
+		[[nodiscard]] std::expected<void, Error> _flushCommandQueue() noexcept;
 
-        void _createCommandList();
+		[[nodiscard]] std::expected<void, Error> _createCommandList() noexcept;
 
-        void _createDxCommandObjects();
+		[[nodiscard]] std::expected<void, Error> _createDxCommandObjects() noexcept;
 
-        void _createSwapChain();
+		[[nodiscard]] std::expected<void, Error> _createSwapChain() noexcept;
 
-        void _createDescriptorHeaps();
+		[[nodiscard]] std::expected<void, Error> _createDescriptorHeaps() noexcept;
 
-        void _createConstantBufferViews();
+		[[nodiscard]] std::expected<void, Error> _createRootSignature() noexcept;
 
-        void _createRootSignature();
+		[[nodiscard]] std::expected<void, Error> _createShadersAndInputLayout() noexcept;
 
-        void _createShadersAndInputLayout();
+		[[nodiscard]] std::expected<void, Error> _createGeometry() noexcept;
 
-        void _createPipelineStateObject();
+		void _createFrameResources() noexcept;
 
-		void _createGeometry();
+        void _createConstantBufferViews() noexcept;
 
-		void _createFrameResources();
+		[[nodiscard]] std::expected<void, Error> _createPipelineStateObject() noexcept;
 
     public:
         DirectXRenderer(Engine& engine)
             : _engine(engine)
-        {
-#if defined(DEBUG) || defined(_DEBUG)
-			std::atexit(ReportLiveObjects);
-#endif
-		}
+        {}
 
         ~DirectXRenderer() {
             if (_dx_device != nullptr)
 			{
-				_flushCommandQueue();
+				auto expected = _flushCommandQueue();
 
 				/*_fence()->release();
 				_depth_stencil_buffer()->release();
@@ -183,38 +185,36 @@ export namespace mt::renderer
         DirectXRenderer& operator=(DirectXRenderer&&) = default;
 
         // Accessors
-        Camera& getCurrentCamera() { return _camera; } // NOT CONST!!!!
+        Camera& getCurrentCamera() noexcept { return _camera; } // NOT CONST!!!!
 
-        bool get4xMsaaState() const { return _4x_msaa_state; };
+        bool get4xMsaaState() const noexcept { return _4x_msaa_state; };
 
-        bool getIsInitialized() const { return _is_initialized; };
+        bool getIsInitialized() const noexcept { return _is_initialized; };
 
-        int getSwapChainBufferCount() const { return _swap_chain_buffer_count; };
+        int getSwapChainBufferCount() const noexcept { return _swap_chain_buffer_count; };
               
-        bool getIsRendering() const { return _is_rendering; }
+        bool getIsRendering() const noexcept { return _is_rendering; }
 
-        float getWindowAspectRatio() const { return _window_aspect_ratio; }
+        float getWindowAspectRatio() const noexcept { return _window_aspect_ratio; }
 
         // TODO: doesn't this belong in the window manager?
-        int getWindowWidth() const { return _window_width; }
+        int getWindowWidth() const noexcept { return _window_width; }
 
-        int getWindowHeight() const { return _window_height; }
+        int getWindowHeight() const noexcept { return _window_height; }
 
-        long long getFramesRendered() const { return _frames_rendered; }
+        long long getFramesRendered() const noexcept { return _frames_rendered; }
 
         // Mutators
-        void set4xMsaaState(bool value);
+		[[nodiscard]] std::expected<void, Error> set4xMsaaState(bool value) noexcept;
 
-        void resize(int client_width, int client_height);
+		[[nodiscard]] std::expected<void, Error> resize(int client_width, int client_height) noexcept;
 
-        void render();
+		[[nodiscard]] std::expected<void, Error> render() noexcept;
 
         void update();
 
-        bool initializeDirect3d(HWND main_window_handle);
+		[[nodiscard]] std::expected<void, Error> initializeDirect3d(HWND main_window_handle) noexcept;
 
-        bool isCurrentFenceComplete() { return _fence->GetCompletedValue() >= _fence_index; }
-
-
+        bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
     };
 }

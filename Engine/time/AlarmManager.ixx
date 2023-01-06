@@ -16,31 +16,31 @@ export namespace mt::time
 	class AlarmManager
 	{
 	private:
-		mt::ObjectPool<Alarm, 1024>				_alarm_pool;
+		mt::ObjectPool<Alarm, 1024> _alarm_pool;
 
-		std::priority_queue <Alarm*, std::vector <Alarm*>, AlarmCompare>	_alarm_queue;
+		std::priority_queue <Alarm*, std::vector <Alarm*>, AlarmCompare> _alarm_queue;
 
-		std::set <Alarm*>													_alarms_and_timers;
+		std::set <Alarm*> _alarms_and_timers;
 
 		mt::Engine& _engine;
 
 	public:
 
-		AlarmManager(mt::Engine& engine)
+		AlarmManager(mt::Engine& engine) noexcept
 			: _engine(engine)
 		{}
 
-		~AlarmManager() = default;
+		~AlarmManager() noexcept = default;
 
-		AlarmManager(const AlarmManager& other) = delete;
+		AlarmManager(const AlarmManager& other) noexcept = delete;
 
-		AlarmManager(AlarmManager&& other) = delete;
+		AlarmManager(AlarmManager&& other) noexcept  = delete;
 
-		AlarmManager& operator=(const AlarmManager& other) = delete;
+		AlarmManager& operator=(const AlarmManager& other) noexcept = delete;
 
-		AlarmManager& operator=(AlarmManager&& other) = delete;
+		AlarmManager& operator=(AlarmManager&& other) noexcept = delete;
 
-		void tick(std::chrono::steady_clock::time_point current_tick_time)
+		void tick(std::chrono::steady_clock::time_point current_tick_time) noexcept
 		{
 			if (!_alarm_queue.empty())
 			{
@@ -70,7 +70,7 @@ export namespace mt::time
 			}
 		}
 
-		void pause(std::chrono::steady_clock::time_point  time_paused = std::chrono::steady_clock::now())
+		void pause(std::chrono::steady_clock::time_point  time_paused = std::chrono::steady_clock::now()) noexcept
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
@@ -78,7 +78,7 @@ export namespace mt::time
 			}
 		}
 
-		void resume(std::chrono::steady_clock::time_point  time_continued = std::chrono::steady_clock::now())
+		void resume(std::chrono::steady_clock::time_point  time_continued = std::chrono::steady_clock::now()) noexcept
 		{
 			for (auto& alarm : _alarms_and_timers)
 			{
@@ -91,6 +91,6 @@ export namespace mt::time
 			Task* callback, 
 			bool repeats = false, 
 			std::chrono::steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
-		);
+		) noexcept ;
 	};
 }

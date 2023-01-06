@@ -18,11 +18,11 @@ export namespace mt::time
 {
 	class TimeManager
 	{
-		void _addEngineAlarms();
+		void _addEngineAlarms() noexcept;
 
-		void _setShouldUpdate();
-		void _setShouldRender();
-		void _setEndOfFrame();
+		void _setShouldUpdate() noexcept;
+		void _setShouldRender() noexcept;
+		void _setEndOfFrame() noexcept;
 
 		AlarmManager											_alarm_manager;
 		std::map<std::string_view, std::unique_ptr<StopWatch>>	_stop_watches;
@@ -59,7 +59,7 @@ export namespace mt::time
 			static const std::string_view FRAME_TIME;
 		};
 
-		TimeManager(mt::Engine& engine)
+		TimeManager(mt::Engine& engine) noexcept
 			: _engine(engine)
 			, _alarm_manager(engine)
 			, _tgt_update_interval_ns(1'000'000'000ns/60)
@@ -87,33 +87,33 @@ export namespace mt::time
 			_is_paused = false;
 		}
 
-		~TimeManager() = default;
+		~TimeManager() noexcept = default;
 	
-		std::chrono::steady_clock::time_point getCurrentTickTime() const { return curr_tick_time; };
+		std::chrono::steady_clock::time_point getCurrentTickTime() const noexcept { return curr_tick_time; };
 
-		std::chrono::steady_clock::time_point getPreviousTickTime() const { return prev_tick_time; };
+		std::chrono::steady_clock::time_point getPreviousTickTime() const noexcept { return prev_tick_time; };
 
-		std::chrono::steady_clock::duration getTickDeltaTime() const { return tick_delta_time_ns; };
+		std::chrono::steady_clock::duration getTickDeltaTime() const noexcept { return tick_delta_time_ns; };
 
-		std::chrono::steady_clock::duration getTargetUpdateInterval() const { return _tgt_update_interval_ns; }
+		std::chrono::steady_clock::duration getTargetUpdateInterval() const noexcept { return _tgt_update_interval_ns; }
 
 		// need to be able to detect if we are dropping frames and adjust this
 		// accordingly
-		std::chrono::steady_clock::duration getTargetRenderInterval() const { return _tgt_render_interval_ns; }
+		std::chrono::steady_clock::duration getTargetRenderInterval() const noexcept { return _tgt_render_interval_ns; }
 
 		bool getShouldUpdate() const { return _should_update; }
 		bool getShouldRender() const { return _should_render; }
 		bool getEndOfFrame() const { return _end_of_frame; }
 
-		void resume();		// Call to unpaused.
-		void pause();			// Call to pause.
-		void tick();			// Call every frame.
+		void resume() noexcept;		// Call to unpaused.
+		void pause() noexcept;			// Call to pause.
+		void tick() noexcept;			// Call every frame.
 	
-		void updateComplete();
-		void renderComplete();
-		void frameComplete();
+		void updateComplete() noexcept;
+		void renderComplete() noexcept;
+		void frameComplete() noexcept;
 
-		StopWatch* findStopWatch(std::string_view name) 
+		StopWatch* findStopWatch(std::string_view name)
 		{ 
 			auto find = _stop_watches.find(name);
 			if (find == _stop_watches.end())
@@ -126,10 +126,10 @@ export namespace mt::time
 			}
 		}
 
-		bool IsUpdatePaused() const { return _is_paused; }
-		//bool IsRenderPaused() const { return _is_render_paused; }
+		bool IsUpdatePaused() const noexcept { return _is_paused; }
+		//bool IsRenderPaused() const noexcept { return _is_render_paused; }
 
-		Engine& getEngine()
+		Engine& getEngine() noexcept
 		{
 			return _engine;
 		}

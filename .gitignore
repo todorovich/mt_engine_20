@@ -6,3 +6,7 @@ out/*
 **/*.idb
 /.vs/
 /out/
+/cmake-build-debug-visual-studio/
+/cmake-build-release-visual-studio/
+/cmake-build-relwithdebinfo-visual-studio/
+/.idea/**

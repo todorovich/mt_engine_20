@@ -9,9 +9,13 @@ export module FrameResource;
 import <cstdint>;
 import <ctime>;
 import <memory>;
+import <stdexcept>;
 
 import MathUtility;
 import UploadBuffer;
+import Error;
+
+using namespace std::literals;
 
 export namespace mt::renderer 
 {
@@ -74,13 +78,13 @@ mt::renderer::FrameResource::FrameResource(
     ID3D12Device* dx_device, std::uint32_t pass_count, std::uint32_t object_count
 )
 {
-    throwIfFailed(
-        dx_device->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(command_list_allocator.GetAddressOf())
-        ),
-        __FUNCTION__, __FILE__, __LINE__
-    );
+	if (FAILED(dx_device->CreateCommandAllocator(
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		IID_PPV_ARGS(command_list_allocator.GetAddressOf())
+	)))
+	{
+		throw new std::runtime_error("Unable to present the swap chain (swap front/back buffers).");
+	}
 
     pass_constants_upload_buffer = std::make_unique<UploadBuffer<PassConstants>>(dx_device, pass_count, true);
     object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(dx_device, object_count, true);

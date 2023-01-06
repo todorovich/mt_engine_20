@@ -24,16 +24,22 @@ import <filesystem>;
 import <numbers>;
 
 import Engine;
+import Debug;
 import FrameResource;
 import DirectXUtility;
 import WindowManager;
 import MeshGeometry;
+import Error;
 
 using namespace mt::renderer;
 using namespace std::numbers;
+using namespace std::literals;
 using Microsoft::WRL::ComPtr;
+using mt::Error;
 
-void DirectXRenderer::resize(int client_width, int client_height)
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_height) noexcept
 {
 	if (client_width != _window_width || client_height != _window_height)
 	{
@@ -48,12 +54,16 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			assert(_dx_command_list_allocator.Get());
 
 			// Flush before changing any resources.
-			_flushCommandQueue();
+			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
-			throwIfFailed(
-				_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), nullptr),
-				__FUNCTION__, __FILE__, __LINE__
-			);
+			if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
+			{
+				return std::unexpected(mt::Error{
+					L"Unable to reset the command list allocator."sv,
+					mt::ErrorCode::GRAPHICS_FAILURE,
+					__func__, __FILE__, __LINE__
+				});
+			}
 
 			// Release the previous resources we will be recreating.
 			for (int i = 0; i < _swap_chain_buffer_count; ++i)
@@ -63,25 +73,33 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_depth_stencil_buffer.Reset();
 
 			// Resize the swap chain.
-			throwIfFailed(
-				_dx_swap_chain->ResizeBuffers(
-					_swap_chain_buffer_count,
-					_window_width, _window_height,
-					_back_buffer_format,
-					DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
-				),
-				__FUNCTION__, __FILE__, __LINE__
-			);
+			if (FAILED(_dx_swap_chain->ResizeBuffers(
+				_swap_chain_buffer_count,
+				_window_width, _window_height,
+				_back_buffer_format,
+				DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+			)))
+			{
+				return std::unexpected(mt::Error{
+					L"Unable to reset the swap chain."sv,
+					mt::ErrorCode::GRAPHICS_FAILURE,
+					__func__, __FILE__, __LINE__
+				});
+			}
 
 			_current_back_buffer = 0;
 
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
 			for (UINT i = 0; i < _swap_chain_buffer_count; i++)
 			{
-				throwIfFailed(
-					_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i])),
-					__FUNCTION__, __FILE__, __LINE__
-				);
+				if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
+				{
+					return std::unexpected(mt::Error{
+						L"Unable to retrieve the swap chain buffer."sv,
+						mt::ErrorCode::GRAPHICS_FAILURE,
+						__func__, __FILE__, __LINE__
+					});
+				}
 
 				_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
 				rtvHeapHandle.Offset(1, _rtv_descriptor_size);
@@ -108,17 +126,21 @@ void DirectXRenderer::resize(int client_width, int client_height)
 
 			auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-			throwIfFailed(
-				_dx_device->CreateCommittedResource(
-					&heap_properties,
-					D3D12_HEAP_FLAG_NONE,
-					&depthStencilDesc,
-					D3D12_RESOURCE_STATE_COMMON,
-					&optClear,
-					IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
-				),
-				__FUNCTION__, __FILE__, __LINE__
-			);
+			if (FAILED(_dx_device->CreateCommittedResource(
+				&heap_properties,
+				D3D12_HEAP_FLAG_NONE,
+				&depthStencilDesc,
+				D3D12_RESOURCE_STATE_COMMON,
+				&optClear,
+				IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
+			)))
+			{
+				return std::unexpected(mt::Error{
+					L"Unable to create committed depth stencil buffer resource."sv,
+					mt::ErrorCode::GRAPHICS_FAILURE,
+					__func__, __FILE__, __LINE__
+				});
+			}
 
 			// Create descriptor to mip level 0 of entire resource using the format of the resource.
 			_dx_device->CreateDepthStencilView(_depth_stencil_buffer.Get(), nullptr, _getDepthStencilView());
@@ -134,16 +156,20 @@ void DirectXRenderer::resize(int client_width, int client_height)
 			_dx_command_list->ResourceBarrier(1, &resource_barrier);
 
 			// Execute the Resize commands.
-			throwIfFailed(
-				_dx_command_list->Close(),
-				__FUNCTION__, __FILE__, __LINE__
-			);
+			if (FAILED(_dx_command_list->Close()))
+			{
+				return std::unexpected(mt::Error{
+					L"Unable to close the command list."sv,
+					mt::ErrorCode::GRAPHICS_FAILURE,
+					__func__, __FILE__, __LINE__
+				});
+			}
 
 			ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
 			_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 			// Wait until Resize is complete.
-			_flushCommandQueue();
+			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 			// Update the viewport transform to cover the client area.
 			_screen_viewport.TopLeftX = 0;
@@ -162,18 +188,23 @@ void DirectXRenderer::resize(int client_width, int client_height)
 		}
 	}
 }
+#pragma warning (pop)
 
-void DirectXRenderer::set4xMsaaState(bool value)
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 {
 	if (_4x_msaa_state != value)
 	{
 		_4x_msaa_state = value;
 
 		// Recreate the swapchain and buffers with new multisample settings.
-		_createSwapChain();
-		resize(_window_width, _window_height);
+		if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
+
+		if (auto expected = resize(_window_width, _window_height); !expected) return std::unexpected(expected.error());
 	}
 }
+#pragma warning (pop)
 
 void DirectXRenderer::update()
 {
@@ -181,14 +212,14 @@ void DirectXRenderer::update()
 
 	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 
-	if (_frame_resources[_frame_resource_index]->fence != 0 && _fence->GetCompletedValue() < _frame_resources[_frame_resource_index]->fence)
+	if (_getCurrentFrameResource()->fence != 0 && _fence->GetCompletedValue() < _getCurrentFrameResource()->fence)
 	{
 		// second parameter was false, compiler claims its being converted to nullptr so i made it explicit.
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.
 		throwIfFailed(
-			_fence->SetEventOnCompletion(_frame_resources[_frame_resource_index]->fence, eventHandle),
+			_fence->SetEventOnCompletion(_getCurrentFrameResource()->fence, eventHandle),
 			__FUNCTION__, __FILE__, __LINE__
 		);
 
@@ -202,29 +233,36 @@ void DirectXRenderer::update()
 	ObjectConstants object_constants;
 	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
 	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
-	_frame_resources[_frame_resource_index]->object_constants_upload_buffer->CopyData(0, object_constants);
+	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);
 }
 
-void mt::renderer::DirectXRenderer::render()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 {
 	_is_rendering = true;
 
-	_createCommandList();
+	if (auto expected = _createCommandList(); !expected) return std::unexpected(expected.error());
 
 	// Add the command list to the queue for execution.
 	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
 	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 	// swap the back and front buffers_
-	throwIfFailed(
-		_dx_swap_chain->Present(0, 0), __FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_swap_chain->Present(0, 0)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to present the swap chain (swap front/back buffers)."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
 
-	_frame_resources[_frame_resource_index]->fence = ++_fence_index;
+	_getCurrentFrameResource()->fence = ++_fence_index;
 
-	_dx_command_queue->Signal(_fence.Get(), _frame_resources[_frame_resource_index]->fence);
+	_dx_command_queue->Signal(_fence.Get(), _getCurrentFrameResource()->fence);
 
 	_frame_resource_index = (_frame_resource_index + 1) % _number_of_frame_resources;
 
@@ -232,20 +270,36 @@ void mt::renderer::DirectXRenderer::render()
 
 	_frames_rendered++;
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createCommandList()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 {
-	throwIfFailed(
-		_frame_resources[_frame_resource_index]->command_list_allocator->Reset(),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_getCurrentFrameResource()->command_list_allocator->Reset()))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to reset the command list allocator."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
-	throwIfFailed(
-		_dx_command_list->Reset(_frame_resources[_frame_resource_index]->command_list_allocator.Get(), _pipeline_state_objects[0].Get()),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(
+		_dx_command_list->Reset(
+			_getCurrentFrameResource()->command_list_allocator.Get(),
+			_pipeline_state_objects[0].Get()
+		)
+	))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to reset the command list."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	_dx_command_list->RSSetViewports(1, &_screen_viewport);
 	_dx_command_list->RSSetScissorRects(1, &_scissor_rectangle);
@@ -299,57 +353,89 @@ void DirectXRenderer::_createCommandList()
 	_dx_command_list->ResourceBarrier(1, &resource_barrier);
 
 	// Done recording commands.
-	throwIfFailed(
-		_dx_command_list->Close(),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_command_list->Close()))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to close the command list."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
+#pragma warning (pop)
 
 // INITIALIZATION CODE
 
-bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_handle) noexcept
 {
 	_main_window_handle = main_window_handle;
 
-#if defined(DEBUG) || defined(_DEBUG)
-	// Enable the D3D12 debug layer.
-	ComPtr<ID3D12Debug> debugController;
+	if constexpr (mt::DEBUG)
+	{
+		// Enable the D3D12 debug layer.
+		ComPtr<ID3D12Debug> debugController;
 
-	throwIfFailed(
-		D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), __FUNCTION__, __FILE__, __LINE__
-	);
+		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to retrieve the dx12 debug interface."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		};
 
-	debugController->EnableDebugLayer();
-#endif
+		debugController->EnableDebugLayer();
+	}
 
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
-	throwIfFailed(
-		CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG , IID_PPV_ARGS(&_dx_dxgi_factory)), __FUNCTION__, __FILE__, __LINE__
-	);
-
-	// Try to create hardware device.
-	// param 1 is the adapter to use, nullptr for default
-	HRESULT hardwareResult = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device));
+	if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG , IID_PPV_ARGS(&_dx_dxgi_factory))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the dxgi factory 2."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// If we failed to create the D3D12 Device then try to fall back to Windows Advanced Rasterization Platform (WARP)(software) device
-	if (FAILED(hardwareResult))
+	if (
+		// Try to create hardware device.
+		// param 1 is the adapter to use, nullptr for default
+		HRESULT hardwareResult = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device));
+		FAILED(hardwareResult)
+	)
 	{
 		ComPtr<IDXGIAdapter> pWarpAdapter;
+		if (FAILED(_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter))))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to retrieve the warp adapter."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
-		throwIfFailed(
-			_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)), __FUNCTION__, __FILE__, __LINE__
-		);
-
-		throwIfFailed(
-			D3D12CreateDevice(pWarpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device)),
-			__FUNCTION__, __FILE__, __LINE__
-		);
+		if (FAILED(D3D12CreateDevice(pWarpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device))))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to create a directx device from the warp adapter."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 	}
 
 	// create a fence
-	throwIfFailed(
-		_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)), __FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the fence."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	_rtv_descriptor_size = _dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	_dsv_descriptor_size = _dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -366,14 +452,18 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 	msQualityLevels.NumQualityLevels = 0;
 
-	throwIfFailed(
-		_dx_device->CheckFeatureSupport(
-			D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-			&msQualityLevels,
-			sizeof(msQualityLevels)
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CheckFeatureSupport(
+		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+		&msQualityLevels,
+		sizeof(msQualityLevels)
+	)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to confirm feature support for multi-sampling quality levels."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	_4x_msaa_quality = msQualityLevels.NumQualityLevels;
 
@@ -381,22 +471,27 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	_createFrameResources();
 
-	_createDxCommandObjects();
+	if (auto expected = _createDxCommandObjects(); !expected) return std::unexpected(expected.error());
 
-	_createSwapChain();
+	if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
 
-	_createDescriptorHeaps();
+	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
 	// Reset the command list to prep for initialization commands.
-	throwIfFailed(
-		_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr), __FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to reset the command list."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
-	_createRootSignature();
+	if (auto expected = _createRootSignature(); !expected) return std::unexpected(expected.error());
 
-	_createShadersAndInputLayout();
+	if (auto expected = _createShadersAndInputLayout(); !expected) return std::unexpected(expected.error());
 
-	_createGeometry();
+	if (auto expected = _createGeometry(); !expected) return std::unexpected(expected.error());
 
 	// RENDER ITEMS
 
@@ -404,25 +499,31 @@ bool DirectXRenderer::initializeDirect3d(HWND main_window_handle)
 
 	_createConstantBufferViews();
 
-	_createPipelineStateObject();
+	if (auto expected = _createPipelineStateObject(); !expected) return std::unexpected(expected.error());
 
 	// Execute the initialization commands.
-	throwIfFailed(
-		_dx_command_list->Close(), 	__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_command_list->Close()))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to close the command list."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
 	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 	// Wait until initialization is complete.
-	_flushCommandQueue();
+	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 	_is_initialized = true;
-
-	return true;
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_flushCommandQueue()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 {
 	// Advance the fence value to mark commands up to this fence point.
 	_fence_index++;
@@ -430,10 +531,14 @@ void DirectXRenderer::_flushCommandQueue()
 	// Add an instruction to the command queue to set a new fence point.  Because we
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-	throwIfFailed(
-		_dx_command_queue->Signal(_fence.Get(), _fence_index),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_command_queue->Signal(_fence.Get(), _fence_index)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to single the command queue to set a new fence"sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// Wait until the GPU has completed commands up to this fence point.
 	if (_fence->GetCompletedValue() < _fence_index)
@@ -442,10 +547,14 @@ void DirectXRenderer::_flushCommandQueue()
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.
-		throwIfFailed(
-			_fence->SetEventOnCompletion(_fence_index, eventHandle),
-			__FUNCTION__, __FILE__, __LINE__
-		);
+		if (FAILED(_fence->SetEventOnCompletion(_fence_index, eventHandle)))
+		{
+			return std::unexpected(mt::Error{
+				L"Unable to set the event to wait on the fence the."sv,
+				mt::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
 		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
@@ -453,47 +562,72 @@ void DirectXRenderer::_flushCommandQueue()
 		CloseHandle(eventHandle);
 	}
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createDxCommandObjects()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 {
 	D3D12_COMMAND_QUEUE_DESC command_queue_description = {};
 	command_queue_description.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	command_queue_description.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 	// Create a command queue
-	throwIfFailed(
-		_dx_device->CreateCommandQueue(&command_queue_description, IID_PPV_ARGS(&_dx_command_queue)),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateCommandQueue(&command_queue_description, IID_PPV_ARGS(&_dx_command_queue))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the command queue."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
 
 	// Create a command allocator
-	throwIfFailed(
+	if (FAILED(
 		_dx_device->CreateCommandAllocator(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			IID_PPV_ARGS(_dx_command_list_allocator.GetAddressOf())
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+		)
+	))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the command allocator."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// Create a command list
-	throwIfFailed(
+	if (FAILED(
 		_dx_device->CreateCommandList(
 			0,
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			_dx_command_list_allocator.Get(),                // Associated command allocator
 			nullptr,                                        // Initial PipelineStateObject
 			IID_PPV_ARGS(_dx_command_list.GetAddressOf())
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+		)
+	))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the command list."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+
 
 	// Start off in a closed state.  This is because the first time_manager_ we refer
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
 	_dx_command_list->Close();
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createSwapChain()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 {
 	// Releases all references for the pointer to the interface that is associated with this ComPtr.
 	// Release the previous swapchain we will be recreating.
@@ -517,17 +651,24 @@ void DirectXRenderer::_createSwapChain()
 	swap_chain_description.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	// Note: Swap chain uses queue to perform flush.
-	throwIfFailed(
-		_dx_dxgi_factory->CreateSwapChain(
-			_dx_command_queue.Get(),
-			&swap_chain_description,
-			_dx_swap_chain.GetAddressOf()
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_dxgi_factory->CreateSwapChain(
+		_dx_command_queue.Get(),
+		&swap_chain_description,
+		_dx_swap_chain.GetAddressOf()
+	)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the swap chain."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createDescriptorHeaps()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 {
 	// Create the Render-Target-View (RTV) Descriptor-Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
@@ -537,10 +678,14 @@ void DirectXRenderer::_createDescriptorHeaps()
 	rtv_heap_description.NodeMask = 0;
 
 	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
-	throwIfFailed(
-		_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf())),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the render target view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC dsv_heap_description;
@@ -550,10 +695,14 @@ void DirectXRenderer::_createDescriptorHeaps()
 	dsv_heap_description.NodeMask = 0;
 
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
-	throwIfFailed(
-		_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf())),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the depth stencil view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 
 	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_description;
@@ -563,14 +712,20 @@ void DirectXRenderer::_createDescriptorHeaps()
 	cbv_heap_description.NodeMask = 0;
 
 	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
-	throwIfFailed(
-		_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap)),
-		__FUNCTION__, __FILE__, __LINE__
-	);
-
+	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the constant buffer view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createRootSignature()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 {
 	// Shader programs typically require resources as input (constant buffers,
 	// textures, samplers).  The root signature defines the resources the shader
@@ -595,33 +750,47 @@ void DirectXRenderer::_createRootSignature()
 	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
 	ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(
-		&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
-	if (errorBlob != nullptr)
+	if (FAILED(D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(),
+		errorBlob.GetAddressOf()
+	)))
 	{
-		::OutputDebugStringA((char*) errorBlob->GetBufferPointer());
+		if (errorBlob != nullptr)
+		{
+			::OutputDebugStringA((char*) errorBlob->GetBufferPointer());
+		}
+
+		return std::unexpected(mt::Error{
+			L"Unable to serialize root signature."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
 	}
 
-	throwIfFailed(hr, __FUNCTION__, __FILE__, __LINE__);
-
-	throwIfFailed(
-		_dx_device->CreateRootSignature(
-			0,
-			serializedRootSig->GetBufferPointer(),
-			serializedRootSig->GetBufferSize(),
-			IID_PPV_ARGS(&_dx_root_signature)
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&_dx_root_signature)
+	)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create root signature."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createShadersAndInputLayout()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexcept
 {
 	namespace fs = std::filesystem;
-
-	//HRESULT hr = S_OK;
 
 /*
 	OutputDebugStringW(
@@ -647,21 +816,36 @@ void DirectXRenderer::_createShadersAndInputLayout()
 	OutputDebugStringW((L"P = " + p.wstring()).c_str());
 */
 
-	_mvs_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	_mps_byte_code = mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	auto expected_mvs_byte_code =
+		mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+
+	if (expected_mvs_byte_code)
+		_mvs_byte_code = std::move(expected_mvs_byte_code.value());
+	else
+		return std::unexpected(expected_mvs_byte_code.error());
+
+	auto expected_mps_byte_code =
+		mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+
+	if (expected_mps_byte_code)
+		_mps_byte_code = std::move(expected_mps_byte_code.value());
+	else
+		return std::unexpected(expected_mps_byte_code.error());
 
 	// D3D_INPUT_ELEMENT_DESC
-	mInputLayout =
-		{
-			// Semantic Name,									Input Slot,											Instanced Data Step Rate
-			//              Semantic Index,							Aligned Byte Offset,
-			//					Format,									Input Slot Class,
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
+	mInputLayout = {
+		//  Semantic Name,							     Input Slot,							Instanced Data Step Rate
+		//  ^         Semantic Index,				     ^  Aligned Byte Offset,							^
+		//	|		  ^	 Format,						 |	^	Input Slot Class,                           |
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createGeometry()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
 
@@ -678,19 +862,27 @@ void DirectXRenderer::_createGeometry()
 	_box_mesh_geometry = std::make_unique<MeshGeometry>();
 	_box_mesh_geometry->name = "box";
 
-	throwIfFailed(
-		D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create blob for geometry's vertex buffer."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 	memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
-	throwIfFailed(
-		D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create blob for geometry's index buffer."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box.indices.data(), ibByteSize);
 
-	_box_mesh_geometry->vertex_buffer_gpu = createDefaultBuffer(
+	auto expected_vertex_buffer = createDefaultBuffer(
 		_dx_device.Get(),
 		_dx_command_list.Get(),
 		vertices.data(),
@@ -698,13 +890,23 @@ void DirectXRenderer::_createGeometry()
 		_box_mesh_geometry->vertex_buffer_uploader
 	);
 
-	_box_mesh_geometry->index_buffer_gpu = createDefaultBuffer(
+	if (expected_vertex_buffer)
+		_box_mesh_geometry->vertex_buffer_gpu = std::move(expected_vertex_buffer.value());
+	else
+		return std::unexpected(expected_vertex_buffer.error());
+
+	auto expected_index_buffer = createDefaultBuffer(
 		_dx_device.Get(),
 		_dx_command_list.Get(),
 		box.indices.data(),
 		ibByteSize,
 		_box_mesh_geometry->index_buffer_uploader
 	);
+
+	if (expected_vertex_buffer)
+		_box_mesh_geometry->index_buffer_gpu  = std::move(expected_index_buffer.value());
+	else
+		return std::unexpected(expected_vertex_buffer.error());
 
 	_box_mesh_geometry->vertex_byte_stride = sizeof(Vertex);
 	_box_mesh_geometry->vertex_buffer_byte_size = vbByteSize;
@@ -718,8 +920,9 @@ void DirectXRenderer::_createGeometry()
 		)
 	);
 }
+#pragma warning (pop)
 
-void DirectXRenderer::_createFrameResources()
+void DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
@@ -727,10 +930,11 @@ void DirectXRenderer::_createFrameResources()
 	}
 }
 
-void DirectXRenderer::_createConstantBufferViews()
+void DirectXRenderer::_createConstantBufferViews() noexcept
 {
 	auto& _object_constants_upload_buffer = _frame_resources[_frame_resource_index]->object_constants_upload_buffer;
-	(_dx_device.Get(), 1, true);
+
+	//(_dx_device.Get(), 1, true);
 
 	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
@@ -750,7 +954,9 @@ void DirectXRenderer::_createConstantBufferViews()
 	);
 }
 
-void DirectXRenderer::_createPipelineStateObject()
+#pragma warning (push)
+#pragma warning (disable: 4715)
+std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcept
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC standard_pipeline_state_object;
 	ZeroMemory(&standard_pipeline_state_object, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -775,41 +981,46 @@ void DirectXRenderer::_createPipelineStateObject()
 	standard_pipeline_state_object.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 	standard_pipeline_state_object.DSVFormat = _depth_stencil_format;
 
-	throwIfFailed(
-		_dx_device->CreateGraphicsPipelineState(
-			&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[0])
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateGraphicsPipelineState(
+		&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[0])
+	)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to standard pipeline state object."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC wireframe_pipeline_state_object = standard_pipeline_state_object;
 	wireframe_pipeline_state_object.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 
-	throwIfFailed(
-		_dx_device->CreateGraphicsPipelineState(
-			&wireframe_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[1])
-		),
-		__FUNCTION__, __FILE__, __LINE__
-	);
+	if (FAILED(_dx_device->CreateGraphicsPipelineState(
+		&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[1])
+	)))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to wireframe pipeline state object."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
+#pragma warning (pop)
 
 // ACCESSORS
 
-ID3D12Resource* DirectXRenderer::_getCurrentBackBuffer() const
-{
-	return _swap_chain_buffer[_current_back_buffer].Get();
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getCurrentBackBufferView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getCurrentBackBufferView() const noexcept
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart(),
-		_current_back_buffer,
-		_rtv_descriptor_size
+		static_cast<INT>(_current_back_buffer),
+		static_cast<INT>(_rtv_descriptor_size)
 	);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXRenderer::_getDepthStencilView() const noexcept
 {
 	return _dx_dsv_heap->GetCPUDescriptorHandleForHeapStart();
 }

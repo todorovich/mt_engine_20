@@ -7,7 +7,6 @@ export module Camera;
 import <mutex>;
 
 export import MathUtility;
-export import Status;
 
 export namespace mt::renderer
 {
@@ -36,88 +35,87 @@ export namespace mt::renderer
 
     public:
 
-        Camera();
-        ~Camera();
-		Camera(const Camera& other) = delete;
-		Camera(Camera&& other) = default;
-		Camera& operator=(const Camera& other) = delete;
-		Camera& operator=(Camera&& other) = default;
-
+        Camera() noexcept;
+        ~Camera() noexcept;
+		Camera(const Camera& other) noexcept = delete;
+		Camera(Camera&& other) noexcept = default;
+		Camera& operator=(const Camera& other) noexcept = delete;
+		Camera& operator=(Camera&& other) noexcept = default;
 
         // Get/Set world camera position.
-        DirectX::XMVECTOR getPosition() const;
+        DirectX::XMVECTOR getPosition() const noexcept;
 
-        DirectX::XMFLOAT3 getPosition3f() const;
+        DirectX::XMFLOAT3 getPosition3f() const noexcept;
 
-        mt::Status setPosition(float x, float y, float z);
+        void setPosition(float x, float y, float z) noexcept;
 
-        mt::Status setPosition(const DirectX::XMFLOAT3 &v);
+        void setPosition(const DirectX::XMFLOAT3 &v) noexcept;
 
         // Get camera basis vectors.
-        DirectX::XMVECTOR getRightVector() const;
+        DirectX::XMVECTOR getRightVector() const noexcept;
 
-        DirectX::XMFLOAT3 getRightFloats() const;
+        DirectX::XMFLOAT3 getRightFloats() const noexcept;
 
-        DirectX::XMVECTOR getUpVector() const;
+        DirectX::XMVECTOR getUpVector() const noexcept;
 
-        DirectX::XMFLOAT3 getUpFloats() const;
+        DirectX::XMFLOAT3 getUpFloats() const noexcept;
 
-        DirectX::XMVECTOR getLookVector() const;
+        DirectX::XMVECTOR getLookVector() const noexcept;
 
-        DirectX::XMFLOAT3 getLookFloats() const;
+        DirectX::XMFLOAT3 getLookFloats() const noexcept;
 
         // Get frustum properties.
-        float getNearZ() const;
+        float getNearZ() const noexcept;
 
-        float getFarZ() const;
+        float getFarZ() const noexcept;
 
-        float getAspectRatio() const;
+        float getAspectRatio() const noexcept;
 
-        float getFovY() const;
+        float getFovY() const noexcept;
 
-        float getFovX() const;
+        float getFovX() const noexcept;
 
         // Get near and far plane dimensions in view space coordinates.
-        float getNearWindowWidth() const;
+        float getNearWindowWidth() const noexcept;
 
-        float getNearWindowHeight() const;
+        float getNearWindowHeight() const noexcept;
 
-        float getFarWindowWidth() const;
+        float getFarWindowWidth() const noexcept;
 
-        float getFarWindowHeight() const;
+        float getFarWindowHeight() const noexcept;
 
         // Set frustum.
-        mt::Status setLens(float fovY, float aspect, float zn, float zf);
+        void setLens(float fovY, float aspect, float zn, float zf) noexcept;
 
         // Define camera space via lookAt parameters.
-        mt::Status lookAt(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR target, DirectX::FXMVECTOR worldUp);
+        void lookAt(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR target, DirectX::FXMVECTOR worldUp) noexcept;
 
-        mt::Status lookAt(const DirectX::XMFLOAT3 &pos, const DirectX::XMFLOAT3 &target, const DirectX::XMFLOAT3 &up);
+        void lookAt(const DirectX::XMFLOAT3 &pos, const DirectX::XMFLOAT3 &target, const DirectX::XMFLOAT3 &up) noexcept;
 
         // Get View/Proj matrices.
-        DirectX::XMMATRIX getViewMatrix() const;
+        DirectX::XMMATRIX getViewMatrix() const noexcept;
 
-        DirectX::XMMATRIX getProjectionMatrix() const;
+        DirectX::XMMATRIX getProjectionMatrix() const noexcept;
 
-        DirectX::XMFLOAT4X4 getViewFloats() const;
+        DirectX::XMFLOAT4X4 getViewFloats() const noexcept;
 
-        DirectX::XMFLOAT4X4 getProjectionFloats() const;
+        DirectX::XMFLOAT4X4 getProjectionFloats() const noexcept;
 
         // strafe/walk the camera a distance d.
-        mt::Status strafe(float d);
+        void strafe(float d) noexcept;
 
-        mt::Status walk(float d);
+        void walk(float d) noexcept;
 
-        Status fly(float d);
+        void fly(float d) noexcept;
 
         // Rotate the camera.
-        mt::Status pitch(float angle);
+        void pitch(float angle) noexcept;
 
-        mt::Status rotateY(float angle);
+        void rotateY(float angle) noexcept;
 
         // After modifying camera position/orientation, call to rebuild the view matrix.
-        void updateViewMatrix();
+        void updateViewMatrix() noexcept;
 
-        void viewMatrixRequiresUpdate() { _view_matrix_requires_update = true; }
+        void viewMatrixRequiresUpdate() noexcept { _view_matrix_requires_update = true; }
     };
 }

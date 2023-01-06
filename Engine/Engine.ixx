@@ -7,14 +7,12 @@ module;
 
 export module Engine;
 
-export import Status;
-
-export import Debug;
-
-export import Game;
-
 import <memory>;
 import <chrono>;
+
+export import Debug;
+export import Error;
+export import Game;
 
 export using namespace std::literals::chrono_literals;
 
@@ -49,17 +47,16 @@ export namespace mt
 
 		std::thread _engine_tick_thread;
 
-		void _tick(
+		[[nodiscard]] std::expected<void, Error> _tick(
 			mt::time::StopWatch* tick_time,
 			mt::time::StopWatch* update_time, 
 			mt::time::StopWatch* render_time, 
 			mt::time::StopWatch* frame_time,
 			mt::time::StopWatch* input_time,
 			mt::Game& game
-		);
+		) noexcept;
 
 	public:
-		
 		// Big 5
 		Engine(HINSTANCE hInstance);
 		~Engine();
@@ -69,24 +66,24 @@ export namespace mt
 		Engine& operator=(Engine&& other) = delete;
 		 
 		// ACCESSOR
-		input::InputManager * const				getInputManager()			{ return _input_manager.get(); }
-		renderer::DirectXRenderer * const		getRenderer()				{ return _direct_x_renderer.get(); };
-		windows::WindowManager * const			getWindowManager()			{ return _window_manager.get(); };
-		windows::WindowsMessageManager * const	getWindowsMessageManager()	{ return _windows_message_manager.get(); };
-		time::TimeManager * const				getTimeManager()			{ return _time_manager.get(); };
+		input::InputManager * const				getInputManager() noexcept			{ return _input_manager.get(); }
+		renderer::DirectXRenderer * const		getRenderer() noexcept				{ return _direct_x_renderer.get(); };
+		windows::WindowManager * const			getWindowManager() noexcept			{ return _window_manager.get(); };
+		windows::WindowsMessageManager * const	getWindowsMessageManager() noexcept	{ return _windows_message_manager.get(); };
+		time::TimeManager * const				getTimeManager() noexcept			{ return _time_manager.get(); };
 
-		bool isDestroyed() const { return _instance == nullptr; };
-		bool isShuttingDown() const { return _is_shutting_down; }
+		bool isDestroyed() const noexcept { return _instance == nullptr; };
+		bool isShuttingDown() const noexcept { return _is_shutting_down; }
 		// MUTATOR
 
-		Status run(Game& game);
+		[[nodiscard]] std::expected<void, Error> run(Game& game) noexcept;
 
 		// Called to begin orderly shutdown.
-		void shutdown();
+		void shutdown() noexcept;
 
-		void destroy();
+		void destroy() noexcept;
 	};
 
-	using Task = void(mt::Engine&);
+	using Task = std::expected<void, mt::Error> (mt::Engine&) noexcept;
 }
 
