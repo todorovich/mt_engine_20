@@ -77,7 +77,6 @@ export namespace mt::input
 		return L"{ " + std::to_wstring(input_data_3d.x) + L", " + std::to_wstring(input_data_3d.y) + L", " + std::to_wstring(input_data_3d.z) + L" }";
 	}
 
-	// TODO: add 1-3d input as appropriate
 	struct InputMessage
 	{
 		const std::chrono::steady_clock::time_point	time_point;
