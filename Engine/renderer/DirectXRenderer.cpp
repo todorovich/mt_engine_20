@@ -37,8 +37,6 @@ using namespace std::literals;
 using Microsoft::WRL::ComPtr;
 using mt::Error;
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_height) noexcept
 {
 	if (client_width != _window_width || client_height != _window_height)
@@ -187,11 +185,10 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			getCurrentCamera().setLens(0.25f * pi_v<float>, getWindowAspectRatio(), 1.0f, 1000.0f);
 		}
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 {
 	if (_4x_msaa_state != value)
@@ -203,8 +200,9 @@ std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 
 		if (auto expected = resize(_window_width, _window_height); !expected) return std::unexpected(expected.error());
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
 void DirectXRenderer::update()
 {
@@ -236,8 +234,6 @@ void DirectXRenderer::update()
 	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);
 }
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 {
 	_is_rendering = true;
@@ -269,11 +265,10 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 	_is_rendering = false;
 
 	_frames_rendered++;
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 {
 	if (FAILED(_getCurrentFrameResource()->command_list_allocator->Reset()))
@@ -361,13 +356,12 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
 // INITIALIZATION CODE
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_handle) noexcept
 {
 	_main_window_handle = main_window_handle;
@@ -518,11 +512,10 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 	_is_initialized = true;
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 {
 	// Advance the fence value to mark commands up to this fence point.
@@ -561,11 +554,10 @@ std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 
 		CloseHandle(eventHandle);
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 {
 	D3D12_COMMAND_QUEUE_DESC command_queue_description = {};
@@ -622,11 +614,10 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
 	_dx_command_list->Close();
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 {
 	// Releases all references for the pointer to the interface that is associated with this ComPtr.
@@ -663,11 +654,10 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 {
 	// Create the Render-Target-View (RTV) Descriptor-Heap Description
@@ -720,11 +710,10 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 {
 	// Shader programs typically require resources as input (constant buffers,
@@ -783,11 +772,10 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexcept
 {
 	namespace fs = std::filesystem;
@@ -840,11 +828,10 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
@@ -919,8 +906,9 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 			SubmeshGeometry{ static_cast<uint32_t>(box.indices.size()), 0, 0, DirectX::BoundingBox() }
 		)
 	);
+
+	return {};
 }
-#pragma warning (pop)
 
 void DirectXRenderer::_createFrameResources() noexcept
 {
@@ -954,8 +942,6 @@ void DirectXRenderer::_createConstantBufferViews() noexcept
 	);
 }
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcept
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC standard_pipeline_state_object;
@@ -1006,8 +992,9 @@ std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcep
 			__func__, __FILE__, __LINE__
 		});
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
 // ACCESSORS
 
