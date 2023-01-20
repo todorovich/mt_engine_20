@@ -280,8 +280,6 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 		});
 	}
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
 	if (FAILED(
 		_dx_command_list->Reset(
 			_getCurrentFrameResource()->command_list_allocator.Get(),
@@ -970,26 +968,52 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 
 void DirectXRenderer::_createConstantBufferViews() noexcept
 {
-	auto& _object_constants_upload_buffer = _frame_resources[_frame_resource_index]->object_constants_upload_buffer;
+	constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	const auto object_count = _render_items.size();
+	const auto number_of_frame_resource = _frame_resources.size();
 
-	//(_dx_device.Get(), 1, true);
+	for (std::size_t frame_index = 0; frame_index < number_of_frame_resource; ++frame_index)
+	{
+		auto _object_constants_upload_buffer =
+			_frame_resources[_frame_resource_index]->object_constants_upload_buffer->Resource();
 
-	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+		for (std::size_t object_index = 0; object_index < object_count; ++object_index)
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS constant_buffer_address = _object_constants_upload_buffer->GetGPUVirtualAddress();
+			// Offset to the ith object constant buffer in the buffer.
+			constant_buffer_address += object_index * object_constant_buffer_size_bytes;
 
-	D3D12_GPU_VIRTUAL_ADDRESS
-		constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
-	// Offset to the ith object constant buffer in the buffer.
-	// int boxCBufIndex = 0;
-	// cbAddress += boxCBufIndex*object_constant_buffer_size_bytes;
+			int heap_index = static_cast<int>((frame_index * object_count) + object_index);
+			auto descriptor_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart());
+			descriptor_handle.Offset(heap_index, _cbv_srv_uav_descriptor_size);
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
-	cbv_description.BufferLocation = constant_buffer_address;
-	cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
+			cbv_description.BufferLocation = constant_buffer_address;
+			cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
-	_dx_device->CreateConstantBufferView(
-		&cbv_description,
-		_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart()
-	);
+			_dx_device->CreateConstantBufferView(&cbv_description, descriptor_handle);
+		}
+	}
+
+	constexpr UINT pass_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(PassConstants));
+
+	for (std::size_t frame_index = 0; frame_index < number_of_frame_resource; ++frame_index)
+	{
+		auto _pass_constants_upload_buffer =
+			_frame_resources[_frame_resource_index]->pass_constants_upload_buffer->Resource();
+
+		D3D12_GPU_VIRTUAL_ADDRESS buffer_address = _pass_constants_upload_buffer->GetGPUVirtualAddress();
+
+		int heap_index = static_cast<int>(_pass_constant_buffer_offset + frame_index);
+		auto descriptor_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart());
+		descriptor_handle.Offset(heap_index, _cbv_srv_uav_descriptor_size);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
+		cbv_description.BufferLocation = buffer_address;
+		cbv_description.SizeInBytes = pass_constant_buffer_size_bytes;
+
+		_dx_device->CreateConstantBufferView(&cbv_description, descriptor_handle);
+	}
 }
 
 std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcept
