@@ -324,20 +324,7 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 
 	_dx_command_list->SetGraphicsRootSignature(_dx_root_signature.Get());
 
-
-	auto vertex_buffer_view = _box_mesh_geometry->vertexBufferView();
-	_dx_command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
-
-	auto index_buffer_view = _box_mesh_geometry->indexBufferView();
-	_dx_command_list->IASetIndexBuffer(&index_buffer_view);
-	_dx_command_list->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	_dx_command_list->SetGraphicsRootDescriptorTable(0, _dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
-
-	_dx_command_list->DrawIndexedInstanced(
-		_box_mesh_geometry->draw_arguments["box"].index_count,
-		1, 0, 0, 0
-	);
+	_drawRenderItems(_dx_command_list.Get(), _render_items);
 
 	resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		_getCurrentBackBuffer(),
@@ -358,6 +345,39 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 	}
 
 	return {};
+}
+
+void DirectXRenderer::_drawRenderItems(
+	ID3D12GraphicsCommandList* command_list, const std::vector<std::unique_ptr<RenderItem>>& render_items
+) noexcept
+{
+	for (auto& render_item : render_items)
+	{
+		auto vertex_buffer_view = render_item->geometry->vertexBufferView();
+		command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
+
+		auto index_buffer_view = render_item->geometry->indexBufferView();
+		command_list->IASetIndexBuffer(&index_buffer_view);
+
+		command_list->IASetPrimitiveTopology(render_item->primitive_topology);
+
+		UINT cbv_heap_index = static_cast<UINT>(
+			_frame_resource_index * (UINT)render_items.size() + render_item->object_constant_buffer_index
+		);
+
+		auto cbv_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+		cbv_handle.Offset(cbv_heap_index, _cbv_srv_uav_descriptor_size);
+
+		command_list->SetGraphicsRootDescriptorTable(0, _dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+
+		command_list->DrawIndexedInstanced(
+			render_item->index_count,
+			1,
+			render_item->start_index_location,
+			render_item->base_vertex_location,
+			0
+		);
+	}
 }
 
 // INITIALIZATION CODE
@@ -469,8 +489,6 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 
 	if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
 
-	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
-
 	// Reset the command list to prep for initialization commands.
 	if (FAILED(_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr)))
 	{
@@ -487,9 +505,9 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 
 	if (auto expected = _createGeometry(); !expected) return std::unexpected(expected.error());
 
-	// RENDER ITEMS
+	_createRenderItems();
 
-	// ANOTHER DESCRIPTOR HEAP
+	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
 	_createConstantBufferViews();
 
@@ -650,62 +668,6 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 	{
 		return std::unexpected(mt::Error{
 			L"Unable to create the swap chain."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	return {};
-}
-
-std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
-{
-	// Create the Render-Target-View (RTV) Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
-	rtv_heap_description.NumDescriptors = getSwapChainBufferCount();
-	rtv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtv_heap_description.NodeMask = 0;
-
-	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
-	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the render target view descriptor heap."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC dsv_heap_description;
-	dsv_heap_description.NumDescriptors = 1;
-	dsv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dsv_heap_description.NodeMask = 0;
-
-	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
-	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the depth stencil view descriptor heap."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_description;
-	cbv_heap_description.NumDescriptors = 1;
-	cbv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbv_heap_description.NodeMask = 0;
-
-	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
-	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the constant buffer view descriptor heap."sv,
 			mt::ErrorCode::GRAPHICS_FAILURE,
 			__func__, __FILE__, __LINE__
 		});
@@ -910,12 +872,100 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 	return {};
 }
 
+void DirectXRenderer::_createRenderItems() noexcept
+{
+	auto box_render_item = std::make_unique<RenderItem>();
+
+	// Set the world matrix
+	XMStoreFloat4x4(
+		&box_render_item->world_matrix,
+		DirectX::XMMatrixScaling(2.0f, 2.0f, 2.0f)*DirectX::XMMatrixTranslation(0.0f, 0.5f, 0.0f)
+	);
+
+	box_render_item->object_constant_buffer_index = 0;
+	box_render_item->geometry = _box_mesh_geometry.get();
+	box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	auto& submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+	box_render_item->index_count = submesh_geometry.index_count;
+	box_render_item->start_index_location = submesh_geometry.start_index_location;
+	box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+	_render_items.push_back(std::move(box_render_item));
+}
+
 void DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
 		_frame_resources[index] = std::make_unique<FrameResource>(_dx_device.Get(), 1, 1);
 	}
+}
+
+std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
+{
+	// Create the Render-Target-View (RTV) Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
+	rtv_heap_description.NumDescriptors = getSwapChainBufferCount();
+	rtv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	rtv_heap_description.NodeMask = 0;
+
+	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
+	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the render target view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC dsv_heap_description;
+	dsv_heap_description.NumDescriptors = 1;
+	dsv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	dsv_heap_description.NodeMask = 0;
+
+	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
+	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the depth stencil view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	const auto number_of_pass_constant_buffers = 1;
+	const auto object_count = _render_items.size();
+	const auto number_of_frame_resources = _frame_resources.size();
+	UINT number_of_descriptors = static_cast<UINT>(
+		(object_count + number_of_pass_constant_buffers) * number_of_frame_resources
+	);
+
+	_pass_constant_buffer_offset = static_cast<UINT>(object_count * number_of_frame_resources);
+
+	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_description;
+	cbv_heap_description.NumDescriptors = number_of_descriptors;
+	cbv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbv_heap_description.NodeMask = 0;
+
+	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
+	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the constant buffer view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	return {};
 }
 
 void DirectXRenderer::_createConstantBufferViews() noexcept

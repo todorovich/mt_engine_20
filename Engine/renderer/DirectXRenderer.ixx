@@ -31,6 +31,7 @@ export import UploadBuffer;
 export import Geometry;
 export import FrameResource;
 export import Error;
+export import RenderItem;
 
 import Engine;
 
@@ -84,6 +85,8 @@ export namespace mt::renderer
 		vector<unique_ptr<FrameResource>> _frame_resources =
 			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
 
+		vector<std::unique_ptr<RenderItem>> _render_items;
+
         ComPtr<ID3D12RootSignature> _dx_root_signature;
         ComPtr<ID3D12DescriptorHeap> _dx_cbv_heap;
 
@@ -104,6 +107,7 @@ export namespace mt::renderer
         UINT _dsv_descriptor_size = 0;
         UINT _cbv_srv_uav_descriptor_size = 0;
         UINT _4x_msaa_quality = 0;      // quality level of 4X MSAA
+		UINT _pass_constant_buffer_offset = 0;
 
         DXGI_FORMAT _back_buffer_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         DXGI_FORMAT _depth_stencil_format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -142,6 +146,10 @@ export namespace mt::renderer
 
 		[[nodiscard]] std::expected<void, Error> _createDxCommandObjects() noexcept;
 
+		void _drawRenderItems(
+			ID3D12GraphicsCommandList* command_list, const std::vector<std::unique_ptr<RenderItem>>& render_items
+		) noexcept;
+
 		[[nodiscard]] std::expected<void, Error> _createSwapChain() noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createDescriptorHeaps() noexcept;
@@ -151,6 +159,8 @@ export namespace mt::renderer
 		[[nodiscard]] std::expected<void, Error> _createShadersAndInputLayout() noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createGeometry() noexcept;
+
+		void _createRenderItems() noexcept;
 
 		void _createFrameResources() noexcept;
 
