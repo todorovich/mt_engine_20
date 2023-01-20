@@ -57,6 +57,19 @@ export namespace mt::renderer
 		UINT64 byteSize,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 	) noexcept;
+
+	/*
+	void getMessage()
+	{
+		// Get the size of the message
+		SIZE_T messageLength = 0;
+		HRESULT hr = pInfoQueue->GetMessage(0, NULL, &messageLength);
+
+		// Allocate space and get the message
+		D3D12_MESSAGE * pMessage = (D3D12_MESSAGE*)malloc(messageLength);
+		hr = pInfoQueue->GetMessage(0, pMessage, &messageLength);
+	}
+ 	*/
 }
 
 using namespace std::literals;

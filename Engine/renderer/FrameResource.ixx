@@ -22,8 +22,7 @@ export namespace mt::renderer
 	struct ObjectConstants
 	{
         // Used to go from Object space to World space
-		//DirectX::XMFLOAT4X4 world_matrix = mt::math::Identity4x4();
-		DirectX::XMFLOAT4X4 world_view_projection = mt::math::Identity4x4();
+		DirectX::XMFLOAT4X4 world_matrix = mt::math::Identity4x4();
 	};
 
     struct PassConstants
@@ -66,7 +65,7 @@ export namespace mt::renderer
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> command_list_allocator;
 
         std::unique_ptr<UploadBuffer<PassConstants>> pass_constants_upload_buffer = nullptr;
-        std::unique_ptr<UploadBuffer<ObjectConstants>> object_constants_upload_buffer= nullptr;
+        std::unique_ptr<UploadBuffer<ObjectConstants>> object_constants_upload_buffer = nullptr;
 
         std::size_t fence = std::size_t{ 0 };
     };

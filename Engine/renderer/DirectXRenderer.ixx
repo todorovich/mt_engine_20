@@ -114,7 +114,8 @@ export namespace mt::renderer
 
         long long _frames_rendered = 0;
 
-        int _window_width = 0;
+        int v = 0;
+		int _window_width= 0;
         int _window_height = 0;
 
         float _window_aspect_ratio = 0.0f;
@@ -167,6 +168,10 @@ export namespace mt::renderer
         void _createConstantBufferViews() noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createPipelineStateObject() noexcept;
+
+		void _updateObjectConstants();
+
+		void _updatePassConstants();
 
     public:
         DirectXRenderer(Engine& engine)

@@ -208,8 +208,6 @@ void DirectXRenderer::update()
 {
 	_camera.updateViewMatrix();
 
-	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
-
 	if (_getCurrentFrameResource()->fence != 0 && _fence->GetCompletedValue() < _getCurrentFrameResource()->fence)
 	{
 		// second parameter was false, compiler claims its being converted to nullptr so i made it explicit.
@@ -227,11 +225,69 @@ void DirectXRenderer::update()
 		CloseHandle(eventHandle);
 	}
 
+/*	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants object_constants;
 	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
-	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
-	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);
+	XMStoreFloat4x4(&object_constants.world_matrix, XMMatrixTranspose(world_view_projection));
+	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);*/
+
+	_updateObjectConstants();
+	_updatePassConstants();
+}
+
+void DirectXRenderer::_updateObjectConstants()
+{
+	auto current_upload_buffer = _getCurrentFrameResource()->object_constants_upload_buffer.get();
+
+	for (auto& render_item : _render_items)
+	{
+		if (render_item->requiresUpdate())
+		{
+			// Update the constant buffer with the latest worldViewProj matrix.
+			ObjectConstants object_constants;
+			// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
+			DirectX::XMMATRIX world_matrix = XMLoadFloat4x4(&render_item->world_matrix);
+			XMStoreFloat4x4(&object_constants.world_matrix, XMMatrixTranspose(world_matrix));
+			current_upload_buffer->CopyData(render_item->object_constant_buffer_index, object_constants);
+
+			render_item->objectConstantsUpdated();
+		}
+	}
+}
+
+void DirectXRenderer::_updatePassConstants()
+{
+	DirectX::XMMATRIX view_matrix = _camera.getViewMatrix();
+	DirectX::XMMATRIX inverse_view_matrix = XMMatrixInverse(nullptr, view_matrix); 
+	
+	DirectX::XMMATRIX projection_matrix = _camera.getProjectionMatrix();
+	DirectX::XMMATRIX inverse_projection_matrix = XMMatrixInverse(nullptr, projection_matrix);
+	
+	DirectX::XMMATRIX view_and_projection_matrix = _camera.getViewMatrix() * _camera.getProjectionMatrix();
+	DirectX::XMMATRIX inverse_view_and_projection_matrix = XMMatrixInverse(nullptr, view_and_projection_matrix);
+
+	PassConstants pass_constants;
+
+	XMStoreFloat4x4(&pass_constants.view_matrix, XMMatrixTranspose(view_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_view_matrix, XMMatrixTranspose(inverse_view_matrix));
+
+	XMStoreFloat4x4(&pass_constants.projection_matrix, XMMatrixTranspose(projection_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_projection_matrix, XMMatrixTranspose(inverse_projection_matrix));
+
+	XMStoreFloat4x4(&pass_constants.view_and_projection_matrix, XMMatrixTranspose(view_and_projection_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_view_and_projection_matrix, XMMatrixTranspose(inverse_view_and_projection_matrix));
+
+	pass_constants.eye_position_world_space = { 0.0f, 0.0f, 0.0f }; // todo: get from camera?
+	pass_constants.render_target_size = { static_cast<float>(_window_width), static_cast<float>(_window_height) };
+	pass_constants.inverse_render_target_size = { 1.0f / _window_width, 1.0f / _window_height };
+	pass_constants.near_z_clipping_distance = 0.0f;
+	pass_constants.far_z_clipping_distance = 1'000'000.0f;
+	pass_constants.total_time_ns = 0.0f;
+	pass_constants.delta_time_ns = 0.0f;
+
+	auto current_upload_buffer = _getCurrentFrameResource()->pass_constants_upload_buffer.get();
+	current_upload_buffer->CopyData(0, pass_constants);
 }
 
 std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
@@ -322,6 +378,11 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 
 	_dx_command_list->SetGraphicsRootSignature(_dx_root_signature.Get());
 
+	int pass_cbv_index = _pass_constant_buffer_offset + _frame_resource_index;
+	auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(pass_cbv_index, _cbv_srv_uav_descriptor_size);
+	_dx_command_list->SetGraphicsRootDescriptorTable(1, handle);
+
 	_drawRenderItems(_dx_command_list.Get(), _render_items);
 
 	resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -366,7 +427,7 @@ void DirectXRenderer::_drawRenderItems(
 		auto cbv_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
 		cbv_handle.Offset(cbv_heap_index, _cbv_srv_uav_descriptor_size);
 
-		command_list->SetGraphicsRootDescriptorTable(0, _dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+		command_list->SetGraphicsRootDescriptorTable(0, cbv_handle);
 
 		command_list->DrawIndexedInstanced(
 			render_item->index_count,
@@ -481,8 +542,6 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 
 	assert(_4x_msaa_quality > 0 && "Unexpected MSAA quality level.");
 
-	_createFrameResources();
-
 	if (auto expected = _createDxCommandObjects(); !expected) return std::unexpected(expected.error());
 
 	if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
@@ -504,6 +563,8 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 	if (auto expected = _createGeometry(); !expected) return std::unexpected(expected.error());
 
 	_createRenderItems();
+
+	_createFrameResources();
 
 	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
@@ -682,17 +743,29 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 	// the input resources as function parameters, then the root signature can be
 	// thought of as defining the function signature.
 
-	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1]{};
+	const int number_of_root_parameters = 2;
 
-	// Create a single descriptor table of CBVs.
-	CD3DX12_DESCRIPTOR_RANGE cbvTable;
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+	// Root parameter can be a table, root descriptor or root constants.
+	CD3DX12_ROOT_PARAMETER slotRootParameter[number_of_root_parameters]{};
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
+
+	const auto number_of_static_samplers = 0;
+	const auto static_samplers = nullptr;
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-		1, slotRootParameter, 0, nullptr,
+		number_of_root_parameters,
+		slotRootParameter,
+		number_of_static_samplers,
+		static_samplers,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 
@@ -872,32 +945,79 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 
 void DirectXRenderer::_createRenderItems() noexcept
 {
-	auto box_render_item = std::make_unique<RenderItem>();
+	auto object_constant_buffer_index = -1;
 
-	// Set the world matrix
-	XMStoreFloat4x4(
-		&box_render_item->world_matrix,
-		DirectX::XMMatrixScaling(2.0f, 2.0f, 2.0f)*DirectX::XMMatrixTranslation(0.0f, 0.5f, 0.0f)
-	);
+	for (auto index = -1; index < 2; index+=2)
+	{
+		auto box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
 
-	box_render_item->object_constant_buffer_index = 0;
-	box_render_item->geometry = _box_mesh_geometry.get();
-	box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f * index)
+		);
 
-	auto& submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	box_render_item->index_count = submesh_geometry.index_count;
-	box_render_item->start_index_location = submesh_geometry.start_index_location;
-	box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+		auto& submesh_geometry = box_render_item->geometry->draw_arguments["box"];
 
-	_render_items.push_back(std::move(box_render_item));
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+
+		box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
+
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(0.0f, 5.0f * index, 0.0f)
+		);
+
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+
+		box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
+
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(5.0f * index, 0.0f, 0.0f)
+		);
+
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+	}
 }
 
 void DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
-		_frame_resources[index] = std::make_unique<FrameResource>(_dx_device.Get(), 1, 1);
+		_frame_resources[index] = std::make_unique<FrameResource>(
+			_dx_device.Get(), 1, static_cast<std::uint32_t>(_render_items.size())
+		);
 	}
 }
 
@@ -969,6 +1089,7 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 void DirectXRenderer::_createConstantBufferViews() noexcept
 {
 	constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
 	const auto object_count = _render_items.size();
 	const auto number_of_frame_resource = _frame_resources.size();
 

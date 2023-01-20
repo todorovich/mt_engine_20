@@ -17,7 +17,7 @@ export namespace mt::input
 {
     class InputManager
     {
-        ObjectPool<InputMessage, 1024> _message_pool;
+        ObjectPool<InputMessage, 2048> _message_pool;
 
         std::queue<InputMessage*> _input_queue;
 

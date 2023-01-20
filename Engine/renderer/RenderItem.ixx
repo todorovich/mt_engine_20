@@ -22,7 +22,7 @@ export namespace mt::renderer
 		// Because we have an object cbuffer for each FrameResource, we have to apply the
 		// update to each FrameResource.  Thus, when we modify obect data we should set 
 		// NumFramesDirty = gNumFrameResources so that each frame resource gets the update.
-		int number_of_frames_dirty;
+		int number_of_frames_requiring_update;
 
 		// Index into GPU constant buffer corresponding to the ObjectCB for this render item.
 		std::int32_t object_constant_buffer_index = -1;
@@ -37,12 +37,22 @@ export namespace mt::renderer
 		std::uint32_t base_vertex_location = 0;
 
 		RenderItem(int number_of_frame_resources = 1)
-			: number_of_frames_dirty(number_of_frame_resources)
+			: number_of_frames_requiring_update(number_of_frame_resources)
 		{}
 
 		RenderItem(const RenderItem&) = default;
 		RenderItem(RenderItem&&) = default;
 		RenderItem& operator=(const RenderItem&) = default;
 		RenderItem& operator=(RenderItem&&) = default;
+
+		bool requiresUpdate() const noexcept
+		{
+			return number_of_frames_requiring_update > 0;
+		}
+
+		void objectConstantsUpdated() noexcept
+		{
+			--number_of_frames_requiring_update;
+		}
 	};
 }
