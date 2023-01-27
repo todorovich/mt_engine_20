@@ -37,15 +37,12 @@ using namespace std::literals;
 using Microsoft::WRL::ComPtr;
 using mt::Error;
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_height) noexcept
 {
-	if (client_width != _window_width || client_height != _window_height)
+	if (client_width != getWindowWidth() || client_height != getWindowHeight())
 	{
-		_window_width = client_width;
-		_window_height = client_height;
-		_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+		if (auto expected = Renderer::resize(client_width, client_height); !expected)
+			return std::unexpected(expected.error());
 
 		if (_dx_device)
 		{
@@ -66,7 +63,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			}
 
 			// Release the previous resources we will be recreating.
-			for (int i = 0; i < _swap_chain_buffer_count; ++i)
+			for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
 			{
 				_swap_chain_buffer[i].Reset();
 			}
@@ -74,8 +71,8 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 
 			// Resize the swap chain.
 			if (FAILED(_dx_swap_chain->ResizeBuffers(
-				_swap_chain_buffer_count,
-				_window_width, _window_height,
+				getSwapChainBufferCount(),
+				getWindowWidth(), getWindowHeight(),
 				_back_buffer_format,
 				DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 			)))
@@ -90,7 +87,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			_current_back_buffer = 0;
 
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-			for (UINT i = 0; i < _swap_chain_buffer_count; i++)
+			for (UINT i = 0; i < getSwapChainBufferCount(); i++)
 			{
 				if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
 				{
@@ -109,13 +106,13 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			D3D12_RESOURCE_DESC depthStencilDesc;
 			depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 			depthStencilDesc.Alignment = 0;
-			depthStencilDesc.Width = _window_width;
-			depthStencilDesc.Height = _window_height;
+			depthStencilDesc.Width = getWindowWidth();
+			depthStencilDesc.Height = getWindowHeight();
 			depthStencilDesc.DepthOrArraySize = 1;
 			depthStencilDesc.MipLevels = 1;
 			depthStencilDesc.Format = _depth_stencil_format;
-			depthStencilDesc.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
-			depthStencilDesc.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
+			depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+			depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 			depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 			depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -174,43 +171,40 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			// Update the viewport transform to cover the client area.
 			_screen_viewport.TopLeftX = 0;
 			_screen_viewport.TopLeftY = 0;
-			_screen_viewport.Width = static_cast<float>(_window_width);
-			_screen_viewport.Height = static_cast<float>(_window_height);
+			_screen_viewport.Width = static_cast<float>(getWindowWidth());
+			_screen_viewport.Height = static_cast<float>(getWindowHeight());
 			_screen_viewport.MinDepth = 0.0f;
 			_screen_viewport.MaxDepth = 1.0f;
 
-			_scissor_rectangle = { 0, 0, _window_width, _window_height };
-
-			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+			_scissor_rectangle = { 0, 0, getWindowWidth(), getWindowHeight() };
 
 			// The window resized, so update the aspect ratio and recompute the projection matrix.
 			getCurrentCamera().setLens(0.25f * pi_v<float>, getWindowAspectRatio(), 1.0f, 1000.0f);
 		}
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 {
-	if (_4x_msaa_state != value)
+	if (get4xMsaaState() != value)
 	{
-		_4x_msaa_state = value;
+		_set4xMsaaState(value);
 
 		// Recreate the swapchain and buffers with new multisample settings.
 		if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
 
-		if (auto expected = resize(_window_width, _window_height); !expected) return std::unexpected(expected.error());
+		if (auto expected = resize(getWindowWidth(), getWindowHeight()); !expected)
+			return std::unexpected(expected.error());
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
 void DirectXRenderer::update()
 {
-	_camera.updateViewMatrix();
-
-	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
+	getCurrentCamera().updateViewMatrix();
 
 	if (_getCurrentFrameResource()->fence != 0 && _fence->GetCompletedValue() < _getCurrentFrameResource()->fence)
 	{
@@ -229,18 +223,75 @@ void DirectXRenderer::update()
 		CloseHandle(eventHandle);
 	}
 
+/*	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants object_constants;
 	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
-	XMStoreFloat4x4(&object_constants.world_view_projection, XMMatrixTranspose(world_view_projection));
-	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);
+	XMStoreFloat4x4(&object_constants.world_matrix, XMMatrixTranspose(world_view_projection));
+	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);*/
+
+	_updateObjectConstants();
+	_updatePassConstants();
 }
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+void DirectXRenderer::_updateObjectConstants()
+{
+	auto current_upload_buffer = _getCurrentFrameResource()->object_constants_upload_buffer.get();
+
+	for (auto& render_item : _render_items)
+	{
+		if (render_item->requiresUpdate())
+		{
+			// Update the constant buffer with the latest worldViewProj matrix.
+			ObjectConstants object_constants;
+			// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
+			DirectX::XMMATRIX world_matrix = XMLoadFloat4x4(&render_item->world_matrix);
+			XMStoreFloat4x4(&object_constants.world_matrix, XMMatrixTranspose(world_matrix));
+			current_upload_buffer->CopyData(render_item->object_constant_buffer_index, object_constants);
+
+			render_item->objectConstantsUpdated();
+		}
+	}
+}
+
+void DirectXRenderer::_updatePassConstants()
+{
+	DirectX::XMMATRIX view_matrix = getCurrentCamera().getViewMatrix();
+	DirectX::XMMATRIX inverse_view_matrix = XMMatrixInverse(nullptr, view_matrix); 
+	
+	DirectX::XMMATRIX projection_matrix = getCurrentCamera().getProjectionMatrix();
+	DirectX::XMMATRIX inverse_projection_matrix = XMMatrixInverse(nullptr, projection_matrix);
+	
+	DirectX::XMMATRIX view_and_projection_matrix =
+		getCurrentCamera().getViewMatrix() * getCurrentCamera().getProjectionMatrix();
+	DirectX::XMMATRIX inverse_view_and_projection_matrix = XMMatrixInverse(nullptr, view_and_projection_matrix);
+
+	PassConstants pass_constants;
+
+	XMStoreFloat4x4(&pass_constants.view_matrix, XMMatrixTranspose(view_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_view_matrix, XMMatrixTranspose(inverse_view_matrix));
+
+	XMStoreFloat4x4(&pass_constants.projection_matrix, XMMatrixTranspose(projection_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_projection_matrix, XMMatrixTranspose(inverse_projection_matrix));
+
+	XMStoreFloat4x4(&pass_constants.view_and_projection_matrix, XMMatrixTranspose(view_and_projection_matrix));
+	XMStoreFloat4x4(&pass_constants.inverse_view_and_projection_matrix, XMMatrixTranspose(inverse_view_and_projection_matrix));
+
+	pass_constants.eye_position_world_space = { 0.0f, 0.0f, 0.0f }; // todo: get from camera?
+	pass_constants.render_target_size = { static_cast<float>(getWindowWidth()), static_cast<float>(getWindowHeight()) };
+	pass_constants.inverse_render_target_size = { 1.0f / getWindowWidth(), 1.0f / getWindowHeight() };
+	pass_constants.near_z_clipping_distance = 0.0f;
+	pass_constants.far_z_clipping_distance = 1'000'000.0f;
+	pass_constants.total_time_ns = 0.0f;
+	pass_constants.delta_time_ns = 0.0f;
+
+	auto current_upload_buffer = _getCurrentFrameResource()->pass_constants_upload_buffer.get();
+	current_upload_buffer->CopyData(0, pass_constants);
+}
+
 std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 {
-	_is_rendering = true;
+	_setIsRendering();
 
 	if (auto expected = _createCommandList(); !expected) return std::unexpected(expected.error());
 
@@ -258,7 +309,7 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 		});
 	}
 
-	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
+	_current_back_buffer = (_current_back_buffer + 1) % getSwapChainBufferCount();
 
 	_getCurrentFrameResource()->fence = ++_fence_index;
 
@@ -266,14 +317,13 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 
 	_frame_resource_index = (_frame_resource_index + 1) % _number_of_frame_resources;
 
-	_is_rendering = false;
+	_setIsRendering(false);
 
-	_frames_rendered++;
+	_incrementFramesRendered();
+
+	return {};
 }
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 {
 	if (FAILED(_getCurrentFrameResource()->command_list_allocator->Reset()))
@@ -285,8 +335,6 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 		});
 	}
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
 	if (FAILED(
 		_dx_command_list->Reset(
 			_getCurrentFrameResource()->command_list_allocator.Get(),
@@ -329,20 +377,12 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 
 	_dx_command_list->SetGraphicsRootSignature(_dx_root_signature.Get());
 
+	int pass_cbv_index = static_cast<int>(_pass_constant_buffer_offset + _frame_resource_index);
+	auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(pass_cbv_index, _cbv_srv_uav_descriptor_size);
+	_dx_command_list->SetGraphicsRootDescriptorTable(1, handle);
 
-	auto vertex_buffer_view = _box_mesh_geometry->vertexBufferView();
-	_dx_command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
-
-	auto index_buffer_view = _box_mesh_geometry->indexBufferView();
-	_dx_command_list->IASetIndexBuffer(&index_buffer_view);
-	_dx_command_list->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	_dx_command_list->SetGraphicsRootDescriptorTable(0, _dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
-
-	_dx_command_list->DrawIndexedInstanced(
-		_box_mesh_geometry->draw_arguments["box"].index_count,
-		1, 0, 0, 0
-	);
+	_drawRenderItems(_dx_command_list.Get(), _render_items);
 
 	resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		_getCurrentBackBuffer(),
@@ -361,16 +401,48 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
+
+	return {};
 }
-#pragma warning (pop)
+
+void DirectXRenderer::_drawRenderItems(
+	ID3D12GraphicsCommandList* command_list, const std::vector<std::unique_ptr<RenderItem>>& render_items
+) noexcept
+{
+	for (auto& render_item : render_items)
+	{
+		auto vertex_buffer_view = render_item->geometry->vertexBufferView();
+		command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
+
+		auto index_buffer_view = render_item->geometry->indexBufferView();
+		command_list->IASetIndexBuffer(&index_buffer_view);
+
+		command_list->IASetPrimitiveTopology(render_item->primitive_topology);
+
+		UINT cbv_heap_index = static_cast<UINT>(
+			_frame_resource_index * (UINT)render_items.size() + render_item->object_constant_buffer_index
+		);
+
+		auto cbv_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
+		cbv_handle.Offset(cbv_heap_index, _cbv_srv_uav_descriptor_size);
+
+		command_list->SetGraphicsRootDescriptorTable(0, cbv_handle);
+
+		command_list->DrawIndexedInstanced(
+			render_item->index_count,
+			1,
+			render_item->start_index_location,
+			render_item->base_vertex_location,
+			0
+		);
+	}
+}
 
 // INITIALIZATION CODE
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
-std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_handle) noexcept
+std::expected<void, Error> DirectXRenderer::initialize() noexcept
 {
-	_main_window_handle = main_window_handle;
+	_main_window_handle = _engine.getWindowManager()->getMainWindowHandle();
 
 	if constexpr (mt::DEBUG)
 	{
@@ -469,13 +541,9 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 
 	assert(_4x_msaa_quality > 0 && "Unexpected MSAA quality level.");
 
-	_createFrameResources();
-
 	if (auto expected = _createDxCommandObjects(); !expected) return std::unexpected(expected.error());
 
 	if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
-
-	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
 	// Reset the command list to prep for initialization commands.
 	if (FAILED(_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr)))
@@ -493,9 +561,11 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 
 	if (auto expected = _createGeometry(); !expected) return std::unexpected(expected.error());
 
-	// RENDER ITEMS
+	_createRenderItems();
 
-	// ANOTHER DESCRIPTOR HEAP
+	_createFrameResources();
+
+	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
 	_createConstantBufferViews();
 
@@ -517,12 +587,11 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 	// Wait until initialization is complete.
 	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
-	_is_initialized = true;
-}
-#pragma warning (pop)
+	_setIsInitialized();
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 {
 	// Advance the fence value to mark commands up to this fence point.
@@ -561,11 +630,10 @@ std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 
 		CloseHandle(eventHandle);
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 {
 	D3D12_COMMAND_QUEUE_DESC command_queue_description = {};
@@ -622,11 +690,10 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
 	_dx_command_list->Close();
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 {
 	// Releases all references for the pointer to the interface that is associated with this ComPtr.
@@ -634,17 +701,17 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 	_dx_swap_chain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC swap_chain_description;
-	swap_chain_description.BufferDesc.Width = _window_width;
-	swap_chain_description.BufferDesc.Height = _window_height;
+	swap_chain_description.BufferDesc.Width = getWindowWidth();
+	swap_chain_description.BufferDesc.Height = getWindowHeight();
 	swap_chain_description.BufferDesc.RefreshRate.Numerator = 60;
 	swap_chain_description.BufferDesc.RefreshRate.Denominator = 1;
 	swap_chain_description.BufferDesc.Format = _back_buffer_format;
 	swap_chain_description.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swap_chain_description.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	swap_chain_description.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
-	swap_chain_description.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
+	swap_chain_description.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+	swap_chain_description.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 	swap_chain_description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swap_chain_description.BufferCount = _swap_chain_buffer_count;
+	swap_chain_description.BufferCount = getSwapChainBufferCount();
 	swap_chain_description.OutputWindow = _main_window_handle;
 	swap_chain_description.Windowed = true;
 	swap_chain_description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -663,68 +730,10 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
-std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
-{
-	// Create the Render-Target-View (RTV) Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
-	rtv_heap_description.NumDescriptors = getSwapChainBufferCount();
-	rtv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtv_heap_description.NodeMask = 0;
-
-	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
-	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the render target view descriptor heap."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC dsv_heap_description;
-	dsv_heap_description.NumDescriptors = 1;
-	dsv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dsv_heap_description.NodeMask = 0;
-
-	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
-	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the depth stencil view descriptor heap."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
-	D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_description;
-	cbv_heap_description.NumDescriptors = 1;
-	cbv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbv_heap_description.NodeMask = 0;
-
-	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
-	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
-	{
-		return std::unexpected(mt::Error{
-			L"Unable to create the constant buffer view descriptor heap."sv,
-			mt::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-}
-#pragma warning (pop)
-
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 {
 	// Shader programs typically require resources as input (constant buffers,
@@ -733,17 +742,29 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 	// the input resources as function parameters, then the root signature can be
 	// thought of as defining the function signature.
 
-	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1]{};
+	const int number_of_root_parameters = 2;
 
-	// Create a single descriptor table of CBVs.
-	CD3DX12_DESCRIPTOR_RANGE cbvTable;
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+	// Root parameter can be a table, root descriptor or root constants.
+	CD3DX12_ROOT_PARAMETER slotRootParameter[number_of_root_parameters]{};
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
+
+	const auto number_of_static_samplers = 0;
+	const auto static_samplers = nullptr;
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-		1, slotRootParameter, 0, nullptr,
+		number_of_root_parameters,
+		slotRootParameter,
+		number_of_static_samplers,
+		static_samplers,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 
@@ -783,11 +804,10 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 			__func__, __FILE__, __LINE__
 		});
 	}
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexcept
 {
 	namespace fs = std::filesystem;
@@ -840,11 +860,10 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-}
-#pragma warning (pop)
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
+	return {};
+}
+
 std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
@@ -919,43 +938,204 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 			SubmeshGeometry{ static_cast<uint32_t>(box.indices.size()), 0, 0, DirectX::BoundingBox() }
 		)
 	);
+
+	return {};
 }
-#pragma warning (pop)
+
+void DirectXRenderer::_createRenderItems() noexcept
+{
+	auto object_constant_buffer_index = -1;
+
+	for (auto index = -1; index < 2; index+=2)
+	{
+		auto box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
+
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f * index)
+		);
+
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		auto& submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+
+		box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
+
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(0.0f, 5.0f * index, 0.0f)
+		);
+
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+
+		box_render_item = std::make_unique<RenderItem>(static_cast<int>(_frame_resources.size()));
+
+		// Set the world matrix
+		XMStoreFloat4x4(
+			&box_render_item->world_matrix,
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixTranslation(5.0f * index, 0.0f, 0.0f)
+		);
+
+		box_render_item->object_constant_buffer_index = ++object_constant_buffer_index;
+		box_render_item->geometry = _box_mesh_geometry.get();
+		box_render_item->primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		submesh_geometry = box_render_item->geometry->draw_arguments["box"];
+
+		box_render_item->index_count = submesh_geometry.index_count;
+		box_render_item->start_index_location = submesh_geometry.start_index_location;
+		box_render_item->base_vertex_location = submesh_geometry.base_vertex_location;
+
+		_render_items.push_back(std::move(box_render_item));
+	}
+}
 
 void DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
-		_frame_resources[index] = std::make_unique<FrameResource>(_dx_device.Get(), 1, 1);
+		_frame_resources[index] = std::make_unique<FrameResource>(
+			_dx_device.Get(), 1, static_cast<std::uint32_t>(_render_items.size())
+		);
 	}
+}
+
+std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
+{
+	// Create the Render-Target-View (RTV) Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
+	rtv_heap_description.NumDescriptors = getSwapChainBufferCount();
+	rtv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	rtv_heap_description.NodeMask = 0;
+
+	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
+	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the render target view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC dsv_heap_description;
+	dsv_heap_description.NumDescriptors = 1;
+	dsv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	dsv_heap_description.NodeMask = 0;
+
+	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
+	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the depth stencil view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	const auto number_of_pass_constant_buffers = 1;
+	const auto object_count = _render_items.size();
+	const auto number_of_frame_resources = _frame_resources.size();
+	UINT number_of_descriptors = static_cast<UINT>(
+		(object_count + number_of_pass_constant_buffers) * number_of_frame_resources
+	);
+
+	_pass_constant_buffer_offset = static_cast<UINT>(object_count * number_of_frame_resources);
+
+	// Create Constant-Buffer-View/Shader-Resource-View/Unordered-Access-View Descriptor-Heap Description
+	D3D12_DESCRIPTOR_HEAP_DESC cbv_heap_description;
+	cbv_heap_description.NumDescriptors = number_of_descriptors;
+	cbv_heap_description.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbv_heap_description.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbv_heap_description.NodeMask = 0;
+
+	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
+	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
+	{
+		return std::unexpected(mt::Error{
+			L"Unable to create the constant buffer view descriptor heap."sv,
+			mt::ErrorCode::GRAPHICS_FAILURE,
+			__func__, __FILE__, __LINE__
+		});
+	}
+
+	return {};
 }
 
 void DirectXRenderer::_createConstantBufferViews() noexcept
 {
-	auto& _object_constants_upload_buffer = _frame_resources[_frame_resource_index]->object_constants_upload_buffer;
+	constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
-	//(_dx_device.Get(), 1, true);
+	const auto object_count = _render_items.size();
+	const auto number_of_frame_resource = _frame_resources.size();
 
-	//constexpr UINT object_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	for (std::size_t frame_index = 0; frame_index < number_of_frame_resource; ++frame_index)
+	{
+		auto _object_constants_upload_buffer =
+			_frame_resources[_frame_resource_index]->object_constants_upload_buffer->Resource();
 
-	D3D12_GPU_VIRTUAL_ADDRESS
-		constant_buffer_address = _object_constants_upload_buffer->Resource()->GetGPUVirtualAddress();
-	// Offset to the ith object constant buffer in the buffer.
-	// int boxCBufIndex = 0;
-	// cbAddress += boxCBufIndex*object_constant_buffer_size_bytes;
+		for (std::size_t object_index = 0; object_index < object_count; ++object_index)
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS constant_buffer_address = _object_constants_upload_buffer->GetGPUVirtualAddress();
+			// Offset to the ith object constant buffer in the buffer.
+			constant_buffer_address += object_index * object_constant_buffer_size_bytes;
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
-	cbv_description.BufferLocation = constant_buffer_address;
-	cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+			int heap_index = static_cast<int>((frame_index * object_count) + object_index);
+			auto descriptor_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart());
+			descriptor_handle.Offset(heap_index, _cbv_srv_uav_descriptor_size);
 
-	_dx_device->CreateConstantBufferView(
-		&cbv_description,
-		_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart()
-	);
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
+			cbv_description.BufferLocation = constant_buffer_address;
+			cbv_description.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+			_dx_device->CreateConstantBufferView(&cbv_description, descriptor_handle);
+		}
+	}
+
+	constexpr UINT pass_constant_buffer_size_bytes = CalcConstantBufferByteSize(sizeof(PassConstants));
+
+	for (std::size_t frame_index = 0; frame_index < number_of_frame_resource; ++frame_index)
+	{
+		auto _pass_constants_upload_buffer =
+			_frame_resources[_frame_resource_index]->pass_constants_upload_buffer->Resource();
+
+		D3D12_GPU_VIRTUAL_ADDRESS buffer_address = _pass_constants_upload_buffer->GetGPUVirtualAddress();
+
+		int heap_index = static_cast<int>(_pass_constant_buffer_offset + frame_index);
+		auto descriptor_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetCPUDescriptorHandleForHeapStart());
+		descriptor_handle.Offset(heap_index, _cbv_srv_uav_descriptor_size);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_description;
+		cbv_description.BufferLocation = buffer_address;
+		cbv_description.SizeInBytes = pass_constant_buffer_size_bytes;
+
+		_dx_device->CreateConstantBufferView(&cbv_description, descriptor_handle);
+	}
 }
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcept
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC standard_pipeline_state_object;
@@ -1006,8 +1186,9 @@ std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcep
 			__func__, __FILE__, __LINE__
 		});
 	}
+
+	return {};
 }
-#pragma warning (pop)
 
 // ACCESSORS
 

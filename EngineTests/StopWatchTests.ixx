@@ -21,7 +21,7 @@ TEST_CASE("StopWatch Unit Tests", "[StopWatch]")
     mt::Game game = mt::Game();
 
     auto thread = new std::jthread([&]() {
-        engine.run(game);
+        auto result = engine.run(game);
     });
 
     std::this_thread::sleep_for(2s);

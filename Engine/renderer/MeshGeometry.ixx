@@ -40,12 +40,12 @@ namespace mt::renderer
         // the Submeshes individually.
         std::unordered_map<std::string, SubmeshGeometry> draw_arguments;
 
-        D3D12_VERTEX_BUFFER_VIEW vertexBufferView() const noexcept
+        inline D3D12_VERTEX_BUFFER_VIEW vertexBufferView() const noexcept
         {
             return D3D12_VERTEX_BUFFER_VIEW{ vertex_buffer_gpu->GetGPUVirtualAddress(), vertex_buffer_byte_size, vertex_byte_stride };
         }
 
-        D3D12_INDEX_BUFFER_VIEW indexBufferView() const noexcept
+		inline D3D12_INDEX_BUFFER_VIEW indexBufferView() const noexcept
 		{
             return D3D12_INDEX_BUFFER_VIEW{ index_buffer_gpu->GetGPUVirtualAddress(), index_buffer_byte_size, index_format };
         }

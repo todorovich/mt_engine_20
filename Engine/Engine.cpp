@@ -75,7 +75,7 @@ Engine::Engine(HINSTANCE instance_handle)
 	if (!getWindowManager()->initializeMainWindow(instance_handle))
 		throw new std::runtime_error("Could not initialize main window");
 
-	if (auto expected = getRenderer()->initializeDirect3d(getWindowManager()->getMainWindowHandle()); !expected)
+	if (auto expected = getRenderer()->initialize(); !expected)
 		throw new std::runtime_error("Could not initialize direct3d");
 
 	// Do the initial Resize code.

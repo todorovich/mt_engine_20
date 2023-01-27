@@ -9,6 +9,8 @@ target_sources(Engine
 	DirectXUtility.ixx
 	FrameResource.ixx
 	MeshGeometry.ixx
+	Renderer.ixx
+	RenderItem.ixx
 	SubmeshGeometry.ixx
 	UploadBuffer.ixx
 )

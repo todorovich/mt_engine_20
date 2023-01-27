@@ -27,7 +27,7 @@ export namespace mt
 		class WindowManager;
 		class WindowsMessageManager; 
 	};
-	
+
 	class Engine
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -39,8 +39,9 @@ export namespace mt
 		const std::unique_ptr<time::TimeManager>				_time_manager;
 
 		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
-		
-		volatile bool	_is_shutting_down = false;    // Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
+
+		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
+		volatile bool	_is_shutting_down = false;
 
 	protected:	
 		static Engine* _instance;
