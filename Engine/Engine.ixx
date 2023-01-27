@@ -14,6 +14,8 @@ export import Debug;
 export import Error;
 export import Game;
 
+export import Renderer;
+
 export using namespace std::literals::chrono_literals;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -21,7 +23,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 export namespace mt
 {
 	namespace input { class InputManager; };
-	namespace renderer { class DirectXRenderer; };
 	namespace time { class TimeManager; class StopWatch; };
 	namespace windows { 
 		class WindowManager;
@@ -33,7 +34,7 @@ export namespace mt
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 		const std::unique_ptr<input::InputManager>				_input_manager;
-		const std::unique_ptr<renderer::DirectXRenderer>		_direct_x_renderer;
+		const std::unique_ptr<renderer::Renderer>				_direct_x_renderer;
 		const std::unique_ptr<windows::WindowManager>			_window_manager;
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 		const std::unique_ptr<time::TimeManager>				_time_manager;
@@ -68,7 +69,7 @@ export namespace mt
 		 
 		// ACCESSOR
 		input::InputManager * const				getInputManager() noexcept			{ return _input_manager.get(); }
-		renderer::DirectXRenderer * const		getRenderer() noexcept				{ return _direct_x_renderer.get(); };
+		renderer::Renderer * const				getRenderer() noexcept				{ return _direct_x_renderer.get(); };
 		windows::WindowManager * const			getWindowManager() noexcept			{ return _window_manager.get(); };
 		windows::WindowsMessageManager * const	getWindowsMessageManager() noexcept	{ return _windows_message_manager.get(); };
 		time::TimeManager * const				getTimeManager() noexcept			{ return _time_manager.get(); };
