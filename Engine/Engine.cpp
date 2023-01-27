@@ -9,7 +9,7 @@ import <chrono>;
 
 import Camera;
 import DirectXRenderer;
-import InputManager;
+import BasicInputManager;
 import StopWatch;
 import TimeManager;
 import WindowManager;
@@ -58,8 +58,8 @@ using namespace mt;
 Engine* Engine::_instance = nullptr;
 
 Engine::Engine(HINSTANCE instance_handle)
-	: _direct_x_renderer(std::make_unique<renderer::DirectXRenderer>(*this))
-	, _input_manager(std::make_unique<input::InputManager>(*this))
+	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
+	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
 	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
 	, _window_manager(std::make_unique<windows::WindowManager>(*this))
 	, _time_manager(std::make_unique<time::TimeManager>(*this))

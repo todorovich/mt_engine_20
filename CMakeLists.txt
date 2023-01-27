@@ -22,7 +22,7 @@ add_library (STL STATIC "")
 target_compile_definitions(STL PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 add_subdirectory ("STL")
 
-add_library (Engine STATIC "")
+add_library (Engine STATIC "" Engine/input/BasicInputManager.cpp)
 target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 target_link_libraries(Engine PUBLIC STL)
 target_link_libraries(Engine PRIVATE freetype)

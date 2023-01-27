@@ -7,7 +7,6 @@ module WindowsMessages.Size;
 
 import Engine;
 import WindowManager;
-import DirectXRenderer;
 import Camera;
 import TimeManager;
 
@@ -19,13 +18,13 @@ LRESULT mt::windows::WM_Size::execute(
 	auto _window_width = LOWORD(lParam);
 	auto _window_height = HIWORD(lParam);
 
-	renderer::DirectXRenderer& renderer = *_engine.getRenderer();
-	time::TimeManager& time_manager = *_engine.getTimeManager();
+	mt::renderer::Renderer* renderer = _engine.getRenderer();
+	mt::time::TimeManager& time_manager = *_engine.getTimeManager();
 	WindowManager& window_manager = *_engine.getWindowManager();
 
 	window_manager.resize(_window_width, _window_height);
 
-	if (renderer.getIsInitialized())
+	if (renderer->getIsInitialized())
 	{
 		if (wParam == SIZE_MINIMIZED)
 		{
