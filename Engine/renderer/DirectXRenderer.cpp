@@ -39,11 +39,10 @@ using mt::Error;
 
 std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_height) noexcept
 {
-	if (client_width != _window_width || client_height != _window_height)
+	if (client_width != getWindowWidth() || client_height != getWindowHeight())
 	{
-		_window_width = client_width;
-		_window_height = client_height;
-		_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+		if (auto expected = Renderer::resize(client_width, client_height); !expected)
+			return std::unexpected(expected.error());
 
 		if (_dx_device)
 		{
@@ -64,7 +63,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			}
 
 			// Release the previous resources we will be recreating.
-			for (int i = 0; i < _swap_chain_buffer_count; ++i)
+			for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
 			{
 				_swap_chain_buffer[i].Reset();
 			}
@@ -72,8 +71,8 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 
 			// Resize the swap chain.
 			if (FAILED(_dx_swap_chain->ResizeBuffers(
-				_swap_chain_buffer_count,
-				_window_width, _window_height,
+				getSwapChainBufferCount(),
+				getWindowWidth(), getWindowHeight(),
 				_back_buffer_format,
 				DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 			)))
@@ -88,7 +87,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			_current_back_buffer = 0;
 
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-			for (UINT i = 0; i < _swap_chain_buffer_count; i++)
+			for (UINT i = 0; i < getSwapChainBufferCount(); i++)
 			{
 				if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
 				{
@@ -107,13 +106,13 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			D3D12_RESOURCE_DESC depthStencilDesc;
 			depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 			depthStencilDesc.Alignment = 0;
-			depthStencilDesc.Width = _window_width;
-			depthStencilDesc.Height = _window_height;
+			depthStencilDesc.Width = getWindowWidth();
+			depthStencilDesc.Height = getWindowHeight();
 			depthStencilDesc.DepthOrArraySize = 1;
 			depthStencilDesc.MipLevels = 1;
 			depthStencilDesc.Format = _depth_stencil_format;
-			depthStencilDesc.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
-			depthStencilDesc.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
+			depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+			depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 			depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 			depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -172,14 +171,12 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			// Update the viewport transform to cover the client area.
 			_screen_viewport.TopLeftX = 0;
 			_screen_viewport.TopLeftY = 0;
-			_screen_viewport.Width = static_cast<float>(_window_width);
-			_screen_viewport.Height = static_cast<float>(_window_height);
+			_screen_viewport.Width = static_cast<float>(getWindowWidth());
+			_screen_viewport.Height = static_cast<float>(getWindowHeight());
 			_screen_viewport.MinDepth = 0.0f;
 			_screen_viewport.MaxDepth = 1.0f;
 
-			_scissor_rectangle = { 0, 0, _window_width, _window_height };
-
-			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+			_scissor_rectangle = { 0, 0, getWindowWidth(), getWindowHeight() };
 
 			// The window resized, so update the aspect ratio and recompute the projection matrix.
 			getCurrentCamera().setLens(0.25f * pi_v<float>, getWindowAspectRatio(), 1.0f, 1000.0f);
@@ -191,14 +188,15 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 
 std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 {
-	if (_4x_msaa_state != value)
+	if (get4xMsaaState() != value)
 	{
-		_4x_msaa_state = value;
+		_set4xMsaaState(value);
 
 		// Recreate the swapchain and buffers with new multisample settings.
 		if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
 
-		if (auto expected = resize(_window_width, _window_height); !expected) return std::unexpected(expected.error());
+		if (auto expected = resize(getWindowWidth(), getWindowHeight()); !expected)
+			return std::unexpected(expected.error());
 	}
 
 	return {};
@@ -206,7 +204,7 @@ std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 
 void DirectXRenderer::update()
 {
-	_camera.updateViewMatrix();
+	getCurrentCamera().updateViewMatrix();
 
 	if (_getCurrentFrameResource()->fence != 0 && _fence->GetCompletedValue() < _getCurrentFrameResource()->fence)
 	{
@@ -258,13 +256,14 @@ void DirectXRenderer::_updateObjectConstants()
 
 void DirectXRenderer::_updatePassConstants()
 {
-	DirectX::XMMATRIX view_matrix = _camera.getViewMatrix();
+	DirectX::XMMATRIX view_matrix = getCurrentCamera().getViewMatrix();
 	DirectX::XMMATRIX inverse_view_matrix = XMMatrixInverse(nullptr, view_matrix); 
 	
-	DirectX::XMMATRIX projection_matrix = _camera.getProjectionMatrix();
+	DirectX::XMMATRIX projection_matrix = getCurrentCamera().getProjectionMatrix();
 	DirectX::XMMATRIX inverse_projection_matrix = XMMatrixInverse(nullptr, projection_matrix);
 	
-	DirectX::XMMATRIX view_and_projection_matrix = _camera.getViewMatrix() * _camera.getProjectionMatrix();
+	DirectX::XMMATRIX view_and_projection_matrix =
+		getCurrentCamera().getViewMatrix() * getCurrentCamera().getProjectionMatrix();
 	DirectX::XMMATRIX inverse_view_and_projection_matrix = XMMatrixInverse(nullptr, view_and_projection_matrix);
 
 	PassConstants pass_constants;
@@ -279,8 +278,8 @@ void DirectXRenderer::_updatePassConstants()
 	XMStoreFloat4x4(&pass_constants.inverse_view_and_projection_matrix, XMMatrixTranspose(inverse_view_and_projection_matrix));
 
 	pass_constants.eye_position_world_space = { 0.0f, 0.0f, 0.0f }; // todo: get from camera?
-	pass_constants.render_target_size = { static_cast<float>(_window_width), static_cast<float>(_window_height) };
-	pass_constants.inverse_render_target_size = { 1.0f / _window_width, 1.0f / _window_height };
+	pass_constants.render_target_size = { static_cast<float>(getWindowWidth()), static_cast<float>(getWindowHeight()) };
+	pass_constants.inverse_render_target_size = { 1.0f / getWindowWidth(), 1.0f / getWindowHeight() };
 	pass_constants.near_z_clipping_distance = 0.0f;
 	pass_constants.far_z_clipping_distance = 1'000'000.0f;
 	pass_constants.total_time_ns = 0.0f;
@@ -292,7 +291,7 @@ void DirectXRenderer::_updatePassConstants()
 
 std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 {
-	_is_rendering = true;
+	_setIsRendering();
 
 	if (auto expected = _createCommandList(); !expected) return std::unexpected(expected.error());
 
@@ -310,7 +309,7 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 		});
 	}
 
-	_current_back_buffer = (_current_back_buffer + 1) % _swap_chain_buffer_count;
+	_current_back_buffer = (_current_back_buffer + 1) % getSwapChainBufferCount();
 
 	_getCurrentFrameResource()->fence = ++_fence_index;
 
@@ -318,9 +317,9 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 
 	_frame_resource_index = (_frame_resource_index + 1) % _number_of_frame_resources;
 
-	_is_rendering = false;
+	_setIsRendering(false);
 
-	_frames_rendered++;
+	_incrementFramesRendered();
 
 	return {};
 }
@@ -378,7 +377,7 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 
 	_dx_command_list->SetGraphicsRootSignature(_dx_root_signature.Get());
 
-	int pass_cbv_index = _pass_constant_buffer_offset + _frame_resource_index;
+	int pass_cbv_index = static_cast<int>(_pass_constant_buffer_offset + _frame_resource_index);
 	auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(_dx_cbv_heap->GetGPUDescriptorHandleForHeapStart());
 	handle.Offset(pass_cbv_index, _cbv_srv_uav_descriptor_size);
 	_dx_command_list->SetGraphicsRootDescriptorTable(1, handle);
@@ -441,9 +440,9 @@ void DirectXRenderer::_drawRenderItems(
 
 // INITIALIZATION CODE
 
-std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_handle) noexcept
+std::expected<void, Error> DirectXRenderer::initialize() noexcept
 {
-	_main_window_handle = main_window_handle;
+	_main_window_handle = _engine.getWindowManager()->getMainWindowHandle();
 
 	if constexpr (mt::DEBUG)
 	{
@@ -588,7 +587,7 @@ std::expected<void, Error> DirectXRenderer::initializeDirect3d(HWND main_window_
 	// Wait until initialization is complete.
 	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
-	_is_initialized = true;
+	_setIsInitialized();
 
 	return {};
 }
@@ -702,17 +701,17 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 	_dx_swap_chain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC swap_chain_description;
-	swap_chain_description.BufferDesc.Width = _window_width;
-	swap_chain_description.BufferDesc.Height = _window_height;
+	swap_chain_description.BufferDesc.Width = getWindowWidth();
+	swap_chain_description.BufferDesc.Height = getWindowHeight();
 	swap_chain_description.BufferDesc.RefreshRate.Numerator = 60;
 	swap_chain_description.BufferDesc.RefreshRate.Denominator = 1;
 	swap_chain_description.BufferDesc.Format = _back_buffer_format;
 	swap_chain_description.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swap_chain_description.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	swap_chain_description.SampleDesc.Count = _4x_msaa_state ? 4 : 1;
-	swap_chain_description.SampleDesc.Quality = _4x_msaa_state ? (_4x_msaa_quality - 1) : 0;
+	swap_chain_description.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+	swap_chain_description.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
 	swap_chain_description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swap_chain_description.BufferCount = _swap_chain_buffer_count;
+	swap_chain_description.BufferCount = getSwapChainBufferCount();
 	swap_chain_description.OutputWindow = _main_window_handle;
 	swap_chain_description.Windowed = true;
 	swap_chain_description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;

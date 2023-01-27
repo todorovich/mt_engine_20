@@ -17,6 +17,8 @@ export namespace mt::input
 {
     class InputManager
     {
+		// TODO this can be overflowed. There should be a way to check how many windows messages there are, and to
+		// 	only fetch at most this many before running the frame (and processing the input)
         ObjectPool<InputMessage, 2048> _message_pool;
 
         std::queue<InputMessage*> _input_queue;

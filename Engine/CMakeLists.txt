@@ -12,13 +12,13 @@ target_compile_options(
 
 target_sources(
 	Engine PRIVATE
-	Engine.cpp
-	Error.ixx
 	Debug.ixx
+	Error.ixx
+	Engine.cpp
 	Engine.ixx
+	Game.ixx
 	FontManager.ixx
 	ObjectPool.ixx
-	Game.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

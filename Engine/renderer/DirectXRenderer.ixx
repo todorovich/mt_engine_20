@@ -25,13 +25,13 @@ export module DirectXRenderer;
 
 import <ctime>;
 
-export import Camera;
 export import MathUtility;
 export import UploadBuffer;
 export import Geometry;
 export import FrameResource;
 export import Error;
 export import RenderItem;
+export import Renderer;
 
 import Engine;
 
@@ -42,16 +42,13 @@ using mt::Error;
 
 export namespace mt::renderer
 {
-	class DirectXRenderer
-    {
+	class DirectXRenderer : public Renderer
+	{
     protected:
         // Data
 		static const std::size_t _number_of_frame_resources = 2;
-        static const int _swap_chain_buffer_count = 2;
 
         Engine& _engine;
-
-        Camera _camera; // 204 bytes (getting kind of bloated)
 
         // 32 byte type
         vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout; // 32 bytes according to sizeof
@@ -76,7 +73,7 @@ export namespace mt::renderer
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> _dx_command_list_allocator;
 		ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
 
-        ComPtr<ID3D12Resource> _swap_chain_buffer[_swap_chain_buffer_count];
+        ComPtr<ID3D12Resource> _swap_chain_buffer[getSwapChainBufferCount()];
         ComPtr<ID3D12Resource> _depth_stencil_buffer;
 
         ComPtr<ID3D12DescriptorHeap> _dx_rtv_heap;
@@ -112,18 +109,7 @@ export namespace mt::renderer
         DXGI_FORMAT _back_buffer_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         DXGI_FORMAT _depth_stencil_format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-        long long _frames_rendered = 0;
-
         int v = 0;
-		int _window_width= 0;
-        int _window_height = 0;
-
-        float _window_aspect_ratio = 0.0f;
-
-        // Single byte each
-        bool _4x_msaa_state = false;
-        bool _is_initialized = false;
-        bool _is_rendering = false;
 
 		FrameResource* _getCurrentFrameResource() const noexcept
 		{
@@ -178,7 +164,7 @@ export namespace mt::renderer
             : _engine(engine)
         {}
 
-        ~DirectXRenderer() {
+        virtual ~DirectXRenderer() {
             if (_dx_device != nullptr)
 			{
 				auto expected = _flushCommandQueue();
@@ -200,36 +186,19 @@ export namespace mt::renderer
         DirectXRenderer& operator=(DirectXRenderer&&) = default;
 
         // Accessors
-        Camera& getCurrentCamera() noexcept { return _camera; } // NOT CONST!!!!
 
-        bool get4xMsaaState() const noexcept { return _4x_msaa_state; };
+		bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
 
-        bool getIsInitialized() const noexcept { return _is_initialized; };
+		// Mutators
 
-        int getSwapChainBufferCount() const noexcept { return _swap_chain_buffer_count; };
-              
-        bool getIsRendering() const noexcept { return _is_rendering; }
+		[[nodiscard]] virtual std::expected<void, Error> set4xMsaaState(bool value) noexcept override;
 
-        float getWindowAspectRatio() const noexcept { return _window_aspect_ratio; }
+		[[nodiscard]] std::expected<void, Error> resize(int client_width, int client_height) noexcept override;
 
-        // TODO: doesn't this belong in the window manager?
-        int getWindowWidth() const noexcept { return _window_width; }
+		[[nodiscard]] std::expected<void, Error> render() noexcept override;
 
-        int getWindowHeight() const noexcept { return _window_height; }
+        void update() override;
 
-        long long getFramesRendered() const noexcept { return _frames_rendered; }
-
-        // Mutators
-		[[nodiscard]] std::expected<void, Error> set4xMsaaState(bool value) noexcept;
-
-		[[nodiscard]] std::expected<void, Error> resize(int client_width, int client_height) noexcept;
-
-		[[nodiscard]] std::expected<void, Error> render() noexcept;
-
-        void update();
-
-		[[nodiscard]] std::expected<void, Error> initializeDirect3d(HWND main_window_handle) noexcept;
-
-        bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
+		[[nodiscard]] std::expected<void, Error> initialize() noexcept override;
     };
 }
