@@ -1,4 +1,4 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -28,6 +28,8 @@ export namespace mt::input
 	using one_dimensional_function = void(mt::Engine&, int) noexcept;
 	using two_dimensional_function = void(mt::Engine&, int, int) noexcept;
 	using three_dimensional_function = void(mt::Engine&, int, int, int) noexcept;
+	using InputHandler =
+		std::variant<button_function*, one_dimensional_function*, two_dimensional_function*, three_dimensional_function*>;
 
 	struct InputData1D
 	{

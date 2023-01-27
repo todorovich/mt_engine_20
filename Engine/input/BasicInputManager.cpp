@@ -1,4 +1,4 @@
-// Copyright 2018 Micho Todorovich, all rights reserved.
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <DirectXMath.h>
@@ -6,17 +6,14 @@ module;
 
 #undef RELATIVE
 
-module InputManager;
+module BasicInputManager;
 
-import DirectXRenderer;
 import Engine;
-import WindowManager;
-import TimeManager;
 import InputModel;
 
 using namespace mt::input;
 
-void InputManager::processInput() noexcept
+void BasicInputManager::processInput() noexcept
 {
 	auto size = _input_queue.size();
 
@@ -35,8 +32,8 @@ void InputManager::processInput() noexcept
 			// check if button is in held buttons
 			// if so then trigger button released action and remove it
 			// if not trigger button idle action
-			case InputDataType::BUTTON_IDLE: [[fallthrough]]; 
-			case InputDataType::BUTTON_RELEASED: 
+			case InputDataType::BUTTON_IDLE: [[fallthrough]];
+			case InputDataType::BUTTON_RELEASED:
 			{
 				auto held_input_type =
 					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
@@ -68,13 +65,13 @@ void InputManager::processInput() noexcept
 					}
 				}
 			}
-			break;
+				break;
 
-			// check if button is in held buttons
-			// if so then noop (Wait for held buttons loop to trigger action)
-			// if not then trigger button pressed and put button in set to be added to held buttons after the action loop
-			case InputDataType::BUTTON_HELD: [[fallthrough]]; 
-			case InputDataType::BUTTON_PRESSED: 
+				// check if button is in held buttons
+				// if so then noop (Wait for held buttons loop to trigger action)
+				// if not then trigger button pressed and put button in set to be added to held buttons after the action loop
+			case InputDataType::BUTTON_HELD: [[fallthrough]];
+			case InputDataType::BUTTON_PRESSED:
 			{
 				auto held_input_type =
 					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
@@ -96,8 +93,8 @@ void InputManager::processInput() noexcept
 				}
 				// ELSE (HELD) no op, held buttons will be executed after all input has been processed. To allow for release to happen, and to override held.
 			}
-			break;
-			
+				break;
+
 			case InputDataType::ONE_DIMENSIONAL:
 			{
 				auto range = one_dimensional_input_handler.equal_range(input_type);
@@ -108,13 +105,13 @@ void InputManager::processInput() noexcept
 					it->second(_engine, input_data.x);
 				}
 			}
-			break;
+				break;
 
 			case InputDataType::TWO_DIMENSIONAL:
 			{
 				auto& data2d = std::get<mt::input::InputData2D>(input_message->data);
 
-				if (isMouseRelative && input_type.input_device == mt::input::InputDevice::MOUSE)
+				if (getIsMouseRelative() && input_type.input_device == mt::input::InputDevice::MOUSE)
 				{
 					auto relative_mouse_input_type = mt::input::InputType(
 						mt::input::InputDevice::MOUSE, mt::input::InputDataType::TWO_DIMENSIONAL, mt::input::InputContext::RELATIVE
@@ -142,7 +139,7 @@ void InputManager::processInput() noexcept
 					}
 				}
 			}
-			break;
+				break;
 
 			case InputDataType::THREE_DIMENSIONAL:
 			{
@@ -154,7 +151,7 @@ void InputManager::processInput() noexcept
 					it->second(_engine, data3d.x, data3d.y, data3d.z);
 				}
 			}
-			break;
+				break;
 		}
 
 		_input_queue.pop();
@@ -168,31 +165,31 @@ void InputManager::processInput() noexcept
 		if (auto it = button_input_handler.find(input_type); it != button_input_handler.end())
 			it->second(_engine);
 	}
-	
+
 	_held_buttons.merge(pressed_buttons);
 }
 
-void mt::input::InputManager::acceptInput(
+void mt::input::BasicInputManager::acceptInput(
 	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
 ) noexcept
 {
 	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
 }
 
-void mt::input::InputManager::toggleRelativeMouse() noexcept
+void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 {
-	if (isMouseRelative)
+	if (getIsMouseRelative())
 	{
-		isMouseRelative = false;
+		setIsMouseRelative(false);
 
 		ShowCursor(true);
-	
+
 		SetCursorPos(_mouse_return_position.x, _mouse_return_position.y);
 	}
 	else
 	{
-		isMouseRelative = true;
-		
+		setIsMouseRelative();
+
 		const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
 		const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
 
@@ -204,7 +201,7 @@ void mt::input::InputManager::toggleRelativeMouse() noexcept
 	}
 }
 
-void mt::input::InputManager::registerInputHandler(InputHandler input_handler, InputType input_type) noexcept
+void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handler, InputType input_type) noexcept
 {
 	switch (input_type.input_data_type)
 	{
@@ -216,42 +213,29 @@ void mt::input::InputManager::registerInputHandler(InputHandler input_handler, I
 			auto button_handling_function = std::get<button_function*>(input_handler);
 			button_input_handler.insert({input_type, button_handling_function});
 		}
-		break;
+			break;
 
 		case InputDataType::ONE_DIMENSIONAL:
 		{
 			auto one_dimensional_handling_function = std::get<one_dimensional_function*>(input_handler);
 			one_dimensional_input_handler.insert({input_type, one_dimensional_handling_function});
 		}
-		break;
+			break;
 
 		case InputDataType::TWO_DIMENSIONAL:
 		{
 			auto two_dimensional_handling_function = std::get<two_dimensional_function*>(input_handler);
 			two_dimensional_input_handler.insert({input_type, two_dimensional_handling_function});
 		}
-		break;
+			break;
 
 		case InputDataType::THREE_DIMENSIONAL:
 		{
 			auto three_dimensional_handling_function = std::get<three_dimensional_function*>(input_handler);
 			three_dimensional_input_handler.insert({input_type, three_dimensional_handling_function});
 		}
-		break;
+			break;
 
 		case InputDataType::NO_DATA_TYPE: break; // THROW HERE?
 	}
 }
-
-//	else if (keyboard_input_message.button_input.button == InputButton::PAUSE)
-//	{
-//		if (mt::time::TimeManager& time_manager = *_engine.getTimeManager(); time_manager.IsUpdatePaused())
-//		{
-//			time_manager.resume();
-//		}
-//		else
-//		{
-//			time_manager.pause();
-//		}
-//	}
-//}
