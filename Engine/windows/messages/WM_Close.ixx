@@ -7,20 +7,20 @@ export module WindowsMessages.Close;
 
 export import WindowsMessage;
 
-export namespace mt { class Engine; }
+export import Engine;
 
 export namespace mt::windows
 {
     // Orderly Shutdown
     class WM_Close : public WindowsMessage
     {
-        mt::Engine& _engine;
+        mt::Engine* _engine;
 
         LRESULT execute(const HWND &hwnd, const UINT &msg, const WPARAM &wParam, const LPARAM &lParam);
     
     public:
 
-        WM_Close(mt::Engine& engine)
+        WM_Close(mt::Engine* engine)
             : _engine(engine)
         {}
     };

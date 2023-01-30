@@ -7,19 +7,19 @@ export module WindowsMessages.XButtonUp;
 
 export import WindowsMessage;
 
-export namespace mt::input { class InputManager; }
+export import Engine;
 
 export namespace mt::windows
 {
     class WM_XButtonUp : public WindowsMessage
     {
-        input::InputManager* _input_manager;
+		mt::Engine* _engine;
 
         LRESULT execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam);
 
     public:
-        WM_XButtonUp(input::InputManager* input_manager)
-            : _input_manager(input_manager)
+        WM_XButtonUp(mt::Engine* engine)
+            : _engine(engine)
         {}
     };
 }

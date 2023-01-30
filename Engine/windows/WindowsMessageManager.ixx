@@ -5,11 +5,12 @@ module;
 
 export module WindowsMessageManager;
 
+import <map>;
+import <memory>;
+
 export import WindowsMessage;
 
 export namespace mt { class Engine; }
-
-import <map>;
 
 export namespace mt::windows
 {
@@ -17,18 +18,19 @@ export namespace mt::windows
 	{
 		friend Engine;
 		
-		Engine& _engine;
+		Engine* _engine;
 
+		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;
 	public:
 
-		WindowsMessageManager(Engine& engine);
-	
-		~WindowsMessageManager();
-	
-		void initialize() noexcept;
+		WindowsMessageManager(Engine* engine);
+		~WindowsMessageManager() = default;
+		WindowsMessageManager(const WindowsMessageManager&) noexcept = default;
+		WindowsMessageManager(WindowsMessageManager&&) noexcept = default;
+		WindowsMessageManager& operator=(const WindowsMessageManager&) noexcept = default;
+		WindowsMessageManager& operator=(WindowsMessageManager&&) noexcept = default;
+
 
 		LRESULT handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam);
-	
-		std::map<int, WindowsMessage*> _message_handler_map;
 	};
 }

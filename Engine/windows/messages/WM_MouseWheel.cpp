@@ -7,7 +7,6 @@ module;
 module WindowsMessages.MouseWheel;
 
 import Engine;
-import InputManager;
 import InputModel;
 
 import InputDevice;
@@ -21,7 +20,7 @@ LRESULT mt::windows::WM_MouseWheel::execute(
 {
 	// wParam is the WHEEL_DELTA
 
-	_input_manager->acceptInput(
+	_engine->getInputManager()->acceptInput(
 		mt::input::InputType(
 			mt::input::InputDevice::MOUSE, mt::input::InputDataType::ONE_DIMENSIONAL, mt::input::InputContext::NO_CONTEXT
 		),

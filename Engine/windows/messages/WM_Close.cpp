@@ -5,8 +5,6 @@ module;
 
 module WindowsMessages.Close;
 
-import Engine;
-
 LRESULT mt::windows::WM_Close::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
@@ -22,7 +20,7 @@ LRESULT mt::windows::WM_Close::execute(
 	if (user_wants_to_close)
 	{
 		// Shutdown the Game
-		_engine.shutdown();
+		_engine->shutdown();
 	}
 
 	return 0;
