@@ -9,15 +9,7 @@ module EngineDemo;
 import <chrono>;
 
 import Engine;
-import InputManager;
-import InputDevice;
-import InputDataType;
-import InputContext;
-import VirtualKeyCode;
-import InputType;
 import WindowManager;
-import DirectXRenderer;
-
 
 using namespace mt::input;
 

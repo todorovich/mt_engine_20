@@ -7,8 +7,8 @@ module;
 
 export module Engine;
 
-import <memory>;
-import <chrono>;
+export import <memory>;
+export import <chrono>;
 
 export import Debug;
 export import Error;
@@ -16,7 +16,7 @@ export import Game;
 
 export import RendererInterface;
 export import TimeManagerInterface;
-export import InputManager;
+export import InputManagerInterface;
 export import StopWatch;
 
 export import Task;
@@ -37,7 +37,7 @@ export namespace mt
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
-		const std::unique_ptr<input::InputManager>				_input_manager;
+		const std::unique_ptr<input::InputManagerInterface>		_input_manager;
 		const std::unique_ptr<renderer::RendererInterface>		_renderer;
 		const std::unique_ptr<windows::WindowManager>			_window_manager;
 		const std::unique_ptr<time::TimeManagerInterface>		_time_manager;
@@ -71,7 +71,7 @@ export namespace mt
 		Engine& operator=(Engine&& other) noexcept = delete;
 		 
 		// ACCESSOR
-		input::InputManager * const				getInputManager() noexcept			{ return _input_manager.get(); }
+		input::InputManagerInterface * const	getInputManager() noexcept			{ return _input_manager.get(); }
 		renderer::RendererInterface * const		getRenderer() noexcept				{ return _renderer.get(); };
 		windows::WindowManager * const			getWindowManager() noexcept			{ return _window_manager.get(); };
 		windows::WindowsMessageManager * const	getWindowsMessageManager() noexcept	{ return _windows_message_manager.get(); };

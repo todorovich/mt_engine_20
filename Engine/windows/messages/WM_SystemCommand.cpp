@@ -6,8 +6,6 @@ module;
 module WindowsMessages.SystemCommand;
 
 import Engine;
-import InputManager;
-import InputModel;
 
 LRESULT mt::windows::WM_SystemCommand::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
