@@ -14,7 +14,7 @@ export import Debug;
 export import Error;
 export import Game;
 
-export import Renderer;
+export import RendererInterface;
 export import TimeManagerInterface;
 export import InputManager;
 export import StopWatch;
@@ -38,9 +38,9 @@ export namespace mt
 
 		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 		const std::unique_ptr<input::InputManager>				_input_manager;
-		const std::unique_ptr<renderer::Renderer>				_renderer;
+		const std::unique_ptr<renderer::RendererInterface>		_renderer;
 		const std::unique_ptr<windows::WindowManager>			_window_manager;
-		const std::unique_ptr<time::TimeManagerInterface>				_time_manager;
+		const std::unique_ptr<time::TimeManagerInterface>		_time_manager;
 
 		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
 
@@ -72,7 +72,7 @@ export namespace mt
 		 
 		// ACCESSOR
 		input::InputManager * const				getInputManager() noexcept			{ return _input_manager.get(); }
-		renderer::Renderer * const				getRenderer() noexcept				{ return _renderer.get(); };
+		renderer::RendererInterface * const		getRenderer() noexcept				{ return _renderer.get(); };
 		windows::WindowManager * const			getWindowManager() noexcept			{ return _window_manager.get(); };
 		windows::WindowsMessageManager * const	getWindowsMessageManager() noexcept	{ return _windows_message_manager.get(); };
 		time::TimeManagerInterface * const		getTimeManager() noexcept			{ return _time_manager.get(); };

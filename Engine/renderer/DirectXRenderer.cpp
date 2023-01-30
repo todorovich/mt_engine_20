@@ -41,7 +41,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 {
 	if (client_width != getWindowWidth() || client_height != getWindowHeight())
 	{
-		if (auto expected = Renderer::resize(client_width, client_height); !expected)
+		if (auto expected = RendererInterface::resize(client_width, client_height); !expected)
 			return std::unexpected(expected.error());
 
 		if (_dx_device)

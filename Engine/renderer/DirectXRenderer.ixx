@@ -25,15 +25,13 @@ export module DirectXRenderer;
 
 import <ctime>;
 
+export import Engine;
+export import Error;
+export import FrameResource;
+export import Geometry;
 export import MathUtility;
 export import UploadBuffer;
-export import Geometry;
-export import FrameResource;
-export import Error;
 export import RenderItem;
-export import Renderer;
-
-import Engine;
 
 using Microsoft::WRL::ComPtr;
 using namespace std;
@@ -42,7 +40,7 @@ using mt::Error;
 
 export namespace mt::renderer
 {
-	class DirectXRenderer : public Renderer
+	class DirectXRenderer : public RendererInterface
 	{
     protected:
         // Data

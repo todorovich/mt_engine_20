@@ -17,7 +17,7 @@ LRESULT mt::windows::WM_Size::execute(
 	auto _window_width = LOWORD(lParam);
 	auto _window_height = HIWORD(lParam);
 
-	mt::renderer::Renderer* renderer = _engine->getRenderer();
+	mt::renderer::RendererInterface* renderer = _engine->getRenderer();
 	mt::time::TimeManagerInterface& time_manager = *_engine->getTimeManager();
 	WindowManager& window_manager = *_engine->getWindowManager();
 
