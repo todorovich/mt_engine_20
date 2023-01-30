@@ -2,7 +2,7 @@ export module Timer;
 
 export import Alarm;
 
-import Engine;
+export import Task;
 
 export namespace mt::time
 {
@@ -10,8 +10,8 @@ export namespace mt::time
 	{		
 	public:
 
-		Timer(mt::Engine& engine, std::chrono::steady_clock::duration offset, Task* callback) noexcept
-			: Alarm(engine, std::chrono::steady_clock::now() + offset, callback)
+		Timer(std::chrono::steady_clock::duration offset, mt::Task* callback) noexcept
+			: Alarm(std::chrono::steady_clock::now() + offset, callback)
 		{}
 
 		~Timer() noexcept = default;

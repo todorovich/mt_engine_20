@@ -5,9 +5,6 @@ module;
 
 module WindowsMessages.ExitSizeMove;
 
-import Engine;
-import TimeManager;
-import DirectXRenderer;
 import WindowManager;
 
 using namespace mt::windows;
@@ -17,13 +14,13 @@ LRESULT WM_ExitSizeMove::execute(
 )
 {
 	// TODO: what to do if this fails?
-	auto expected = _engine.getWindowManager()->resize(
-		_engine.getRenderer()->getWindowWidth(), _engine.getRenderer()->getWindowHeight()
+	auto expected = _engine->getWindowManager()->resize(
+		_engine->getRenderer()->getWindowWidth(), _engine->getRenderer()->getWindowHeight()
 	);
 
-	_engine.getTimeManager()->resume(); // why?
+	_engine->getTimeManager()->resume(); // why?
 	
-	_engine.getWindowManager()->setIsWindowResizing(false);
+	_engine->getWindowManager()->setIsWindowResizing(false);
 	
 	return 0;
 }

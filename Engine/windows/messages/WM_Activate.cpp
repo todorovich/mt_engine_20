@@ -5,10 +5,6 @@ module;
 
 module WindowsMessages.Activate;
 
-import TimeManager;
-import InputManager;
-import InputModel;
-
 LRESULT mt::windows::WM_Activate::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
@@ -16,13 +12,13 @@ LRESULT mt::windows::WM_Activate::execute(
 	if (LOWORD(wParam) == WA_INACTIVE)
 	{
 		// TODO: give specific method to notify input manager that we lost focus.
-		_input_manager->acceptInput(mt::input::InputType());
+		_engine->getInputManager()->acceptInput(mt::input::InputType());
 
-		_time_manager->pause();
+		_engine->getTimeManager()->pause();
 	}
 	else
 	{
-		_time_manager->resume();
+		_engine->getTimeManager()->resume();
 	}
 
 	return 0;

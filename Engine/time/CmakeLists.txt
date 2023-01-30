@@ -1,14 +1,14 @@
 target_sources(Engine
 	PRIVATE
-		Alarm.cpp
-		AlarmManager.cpp
-		StopWatch.cpp
-		TimeManager.cpp
 		Alarm.ixx
-		AlarmManager.ixx
+		AlarmManagerInterface.ixx
 		Stopwatch.ixx
-		
-		TimeManager.ixx
+		StandardAlarmManager.ixx
+		StandardTimeManager.cpp
+		StandardTimeManager.ixx
+		TimeManagerTasks.cpp
+		TimeManagerTasks.ixx
+    	TimeManagerInterface.ixx
 		TImer.ixx
 )
 
