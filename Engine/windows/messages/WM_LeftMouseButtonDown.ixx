@@ -7,19 +7,19 @@ export module WindowsMessages.LeftMouseButtonDown;
 
 export import WindowsMessage;
 
-export namespace mt::input { class InputManager; }
+export import Engine;
 
 export namespace mt::windows
 {
     class WM_LeftMouseButtonDown : public WindowsMessage
     {
-        mt::input::InputManager* _input_manager;
+		mt::Engine* _engine;
 
         LRESULT execute(const HWND &hwnd, const UINT &msg, const WPARAM &wParam, const LPARAM &lParam);
 
     public:
-        WM_LeftMouseButtonDown(mt::input::InputManager* input_manager)
-            : _input_manager(input_manager)
+        WM_LeftMouseButtonDown(mt::Engine* engine)
+            : _engine(engine)
         {}
 
     };

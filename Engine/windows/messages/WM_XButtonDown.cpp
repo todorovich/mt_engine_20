@@ -21,7 +21,7 @@ LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, 
 
 	if (button_1)
 	{
-		_input_manager->acceptInput(
+		_engine->getInputManager()->acceptInput(
 			mt::input::InputType(
 				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FOUR
 			)
@@ -31,7 +31,7 @@ LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, 
 	}
 	else if (button_2)
 	{
-		_input_manager->acceptInput(
+		_engine->getInputManager()->acceptInput(
 			mt::input::InputType(
 				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FIVE
 			)

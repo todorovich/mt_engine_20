@@ -6,7 +6,6 @@ module;
 module WindowsMessages.SystemKeyDown;
 
 import Engine;
-import InputManager;
 import InputModel;
 
 import InputContext;
@@ -20,7 +19,7 @@ LRESULT mt::windows::WM_SystemKeyDown::execute(
 
 	bool repeated = lParam & key_held_mask;
 
-	_input_manager->acceptInput(
+	_engine->getInputManager()->acceptInput(
 		mt::input::InputType(
 			(repeated ? mt::input::InputDataType::BUTTON_HELD : mt::input::InputDataType::BUTTON_RELEASED),
 			mt::input::InputContext::NO_CONTEXT,
