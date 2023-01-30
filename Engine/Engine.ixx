@@ -15,6 +15,11 @@ export import Error;
 export import Game;
 
 export import Renderer;
+export import TimeManagerInterface;
+export import InputManager;
+export import StopWatch;
+
+export import Task;
 
 export using namespace std::literals::chrono_literals;
 
@@ -22,9 +27,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 export namespace mt
 {
-	namespace input { class InputManager; };
-	namespace time { class TimeManager; class StopWatch; };
-	namespace windows { 
+	namespace windows {
 		class WindowManager;
 		class WindowsMessageManager; 
 	};
@@ -33,11 +36,11 @@ export namespace mt
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
 		const std::unique_ptr<input::InputManager>				_input_manager;
 		const std::unique_ptr<renderer::Renderer>				_renderer;
 		const std::unique_ptr<windows::WindowManager>			_window_manager;
-		const std::unique_ptr<windows::WindowsMessageManager>	_windows_message_manager;
-		const std::unique_ptr<time::TimeManager>				_time_manager;
+		const std::unique_ptr<time::TimeManagerInterface>				_time_manager;
 
 		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
 
@@ -61,18 +64,18 @@ export namespace mt
 	public:
 		// Big 5
 		Engine(HINSTANCE hInstance);
-		~Engine();
-		Engine(const Engine& other) = delete;
-		Engine(Engine&& other) = delete;
-		Engine& operator=(const Engine& other) = delete;
-		Engine& operator=(Engine&& other) = delete;
+		~Engine() noexcept;
+		Engine(const Engine& other) noexcept = delete;
+		Engine(Engine&& other) noexcept = delete;
+		Engine& operator=(const Engine& other) noexcept = delete;
+		Engine& operator=(Engine&& other) noexcept = delete;
 		 
 		// ACCESSOR
 		input::InputManager * const				getInputManager() noexcept			{ return _input_manager.get(); }
 		renderer::Renderer * const				getRenderer() noexcept				{ return _renderer.get(); };
 		windows::WindowManager * const			getWindowManager() noexcept			{ return _window_manager.get(); };
 		windows::WindowsMessageManager * const	getWindowsMessageManager() noexcept	{ return _windows_message_manager.get(); };
-		time::TimeManager * const				getTimeManager() noexcept			{ return _time_manager.get(); };
+		time::TimeManagerInterface * const		getTimeManager() noexcept			{ return _time_manager.get(); };
 
 		bool isDestroyed() const noexcept { return _instance == nullptr; };
 		bool isShuttingDown() const noexcept { return _is_shutting_down; }
@@ -86,6 +89,6 @@ export namespace mt
 		void destroy() noexcept;
 	};
 
-	using Task = std::expected<void, mt::Error> (mt::Engine&) noexcept;
+
 }
 

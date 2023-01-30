@@ -1,22 +1,18 @@
 export module StopWatch;
 
-import <chrono>;
-import <string_view>;
-import <vector>;
+export import <chrono>;
+export import <string_view>;
+export import <vector>;
 
-export using namespace std::literals;
+export import Task;
 
-import Engine;
+using namespace std::literals;
 
 export namespace mt::time
 {
-    class TimeManager;
-
     class StopWatch
     {
         static const size_t _number_of_samples = 128;
-
-        TimeManager& _time_manager;
 
         const std::string_view _name;
 
@@ -47,12 +43,10 @@ export namespace mt::time
     public:
 
         StopWatch(
-			TimeManager& _time_manager,
 			std::string_view name,
 			std::chrono::steady_clock::time_point created = std::chrono::steady_clock::now()
 		) noexcept
-			: _time_manager(_time_manager)
-            , _name(name)
+			: _name(name)
             , _created(created)
             , _task_finished(created)
             , _task_started(created)
@@ -120,12 +114,20 @@ export namespace mt::time
             }
         }
 
-        void doTask(mt::Task* doTask) noexcept;
+		void doTask(mt::Task* task) noexcept
+		{
+			startTask();
+			(*task)();
+			finishTask();
+		}
 
-        std::chrono::steady_clock::duration getActive() const { return _total_active; }
-        std::chrono::steady_clock::duration getPaused() const { return _total_idle; }
-        std::chrono::steady_clock::duration getAverageTaskInterval() const { return _average_task_interval; }
+        [[nodiscard]] std::chrono::steady_clock::duration getActive() const { return _total_active; }
+        [[nodiscard]] std::chrono::steady_clock::duration getPaused() const { return _total_idle; }
+        [[nodiscard]] std::chrono::steady_clock::duration getAverageTaskInterval() const
+		{
+			return _average_task_interval;
+		}
 
-        std::vector<std::chrono::steady_clock::duration> get() const { return _task_intervals; }
+        [[nodiscard]] std::vector<std::chrono::steady_clock::duration> get() const { return _task_intervals; }
     };
 }

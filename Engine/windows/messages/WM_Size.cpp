@@ -8,7 +8,6 @@ module WindowsMessages.Size;
 import Engine;
 import WindowManager;
 import Camera;
-import TimeManager;
 
 LRESULT mt::windows::WM_Size::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
@@ -18,9 +17,9 @@ LRESULT mt::windows::WM_Size::execute(
 	auto _window_width = LOWORD(lParam);
 	auto _window_height = HIWORD(lParam);
 
-	mt::renderer::Renderer* renderer = _engine.getRenderer();
-	mt::time::TimeManager& time_manager = *_engine.getTimeManager();
-	WindowManager& window_manager = *_engine.getWindowManager();
+	mt::renderer::Renderer* renderer = _engine->getRenderer();
+	mt::time::TimeManagerInterface& time_manager = *_engine->getTimeManager();
+	WindowManager& window_manager = *_engine->getWindowManager();
 
 	window_manager.resize(_window_width, _window_height);
 

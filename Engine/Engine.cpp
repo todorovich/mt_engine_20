@@ -11,7 +11,8 @@ import Camera;
 import DirectXRenderer;
 import BasicInputManager;
 import StopWatch;
-import TimeManager;
+import StandardTimeManager;
+
 import WindowManager;
 import WindowsMessageManager;
 
@@ -45,14 +46,6 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 #pragma warning(pop)  
 }
 
-const std::string_view mt::time::TimeManager::DefaultTimers::RUN_TIME= "Run Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME = "Windows Message Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::TICK_TIME = "Engine Tick Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::UPDATE_TIME = "Update Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::INPUT_TIME = "Input Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::RENDER_TIME = "Render Time"sv;
-const std::string_view mt::time::TimeManager::DefaultTimers::FRAME_TIME = "Frame Time"sv;
-
 using namespace mt;
 
 Engine* Engine::_instance = nullptr;
@@ -60,30 +53,28 @@ Engine* Engine::_instance = nullptr;
 Engine::Engine(HINSTANCE instance_handle)
 	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
-	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
+	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(this))
 	, _window_manager(std::make_unique<windows::WindowManager>(*this))
-	, _time_manager(std::make_unique<time::TimeManager>(*this))
+	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
 {
 	if (_instance == nullptr)
 		_instance = this;
 	else
-		throw new std::runtime_error("Only one mt:::Engine may exist at a time.");
+		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
 
-	_windows_message_manager->initialize();
-	 
 	// Will Register Message Handler WNDPROC
 	if (!getWindowManager()->initializeMainWindow(instance_handle))
-		throw new std::runtime_error("Could not initialize main window");
+		throw std::runtime_error("Could not initialize main window");
 
 	if (auto expected = getRenderer()->initialize(); !expected)
-		throw new std::runtime_error("Could not initialize direct3d");
+		throw std::runtime_error("Could not initialize direct3d");
 
 	// Do the initial Resize code.
 	if (auto expected =
 			getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
 		!expected
 	)
-		throw new std::runtime_error("Could not resize the window");
+		throw std::runtime_error("Could not resize the window");
 }
 
 Engine::~Engine() noexcept
@@ -92,21 +83,19 @@ Engine::~Engine() noexcept
 	{
 		destroy();
 	}
-};
+}
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> Engine::run(Game& game) noexcept
 {
-	auto run_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RUN_TIME);
+	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
-	auto input_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::INPUT_TIME);
-	auto frame_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::FRAME_TIME);
-	auto update_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::UPDATE_TIME);
-	auto render_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::RENDER_TIME);
-	auto tick_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::TICK_TIME);
-	auto windows_message_time = getTimeManager()->findStopWatch(mt::time::TimeManager::DefaultTimers::WINDOWS_MESSAGE_TIME);
+	auto input_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::INPUT_TIME);
+	auto frame_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::FRAME_TIME);
+	auto update_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::UPDATE_TIME);
+	auto render_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RENDER_TIME);
+	auto tick_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::TICK_TIME);
+	auto windows_message_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::WINDOWS_MESSAGE_TIME);
 
 	frame_time->startTask();
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
@@ -137,9 +126,18 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 			);
 		}
 
-		windows_message_time->doTask(
-			[](mt::Engine& engine) noexcept -> std::expected<void, mt::Error> {
-				MSG msg = {0};
+		class WindowsMessageLoopTask : public mt::Task
+		{
+			mt::Engine* _engine;
+
+		public:
+			WindowsMessageLoopTask(mt::Engine* engine)
+				: _engine(engine)
+			{}
+
+			std::expected<void, mt::Error> operator()() noexcept
+			{
+				MSG msg = { 0 };
 				// If there are Window messages then process them.
 				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 				{
@@ -148,14 +146,16 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 					DispatchMessage(&msg);
 					if (msg.message == WM_QUIT)
 					{
-						if (!engine.isShuttingDown()) engine.shutdown();
+						if (!_engine->isShuttingDown()) _engine->shutdown();
 						break;
 					}
 				}
 
 				return {};
 			}
-		);
+		};
+
+		windows_message_time->doTask(new WindowsMessageLoopTask(this));
 
 		if (this->_is_shutting_down) break;
 
@@ -164,12 +164,14 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	};
 
 	run_time->finishTask();
+
+	return {};
 }
-#pragma warning ( pop )
+
 
 void Engine::shutdown() noexcept
 {
-	if (_is_shutting_down == false)
+	if (!_is_shutting_down)
 	{
 		_is_shutting_down = true;
 
@@ -200,8 +202,6 @@ void Engine::destroy() noexcept
 		OutputDebugStringW(L"Engine Already Destroyed\n");
 }
 
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, Error> Engine::_tick(
 	mt::time::StopWatch* tick_time, 
 	mt::time::StopWatch* update_time, 
@@ -244,5 +244,6 @@ std::expected<void, Error> Engine::_tick(
 	render_time->finishTask();
 
 	tick_time->finishTask();
+
+	return {};
 }
-#pragma warning ( pop )

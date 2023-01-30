@@ -16,9 +16,10 @@ target_sources(
 	Error.ixx
 	Engine.cpp
 	Engine.ixx
-	Game.ixx
 	FontManager.ixx
+	Game.ixx
 	ObjectPool.ixx
+	Task.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
