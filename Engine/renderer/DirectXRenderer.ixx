@@ -77,9 +77,6 @@ export namespace mt::renderer
         ComPtr<ID3D12DescriptorHeap> _dx_rtv_heap;
         ComPtr<ID3D12DescriptorHeap> _dx_dsv_heap;
 
-		vector<unique_ptr<FrameResource>> _frame_resources =
-			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
-
 		vector<std::unique_ptr<RenderItem>> _render_items;
 
         ComPtr<ID3D12RootSignature> _dx_root_signature;
@@ -91,6 +88,9 @@ export namespace mt::renderer
 		ComPtr<ID3DBlob> _mps_byte_code;
 
 		vector<ComPtr<ID3D12PipelineState>> _pipeline_state_objects{std::size_t{2}};
+
+		vector<unique_ptr<FrameResource>> _frame_resources =
+			vector<unique_ptr<FrameResource>>(_number_of_frame_resources);
 
         // 8 byte types
         UINT64 _fence_index = 0;
@@ -125,7 +125,7 @@ export namespace mt::renderer
 
         // Mutators
 
-		[[nodiscard]] std::expected<void, Error> _flushCommandQueue() noexcept;
+		[[nodiscard]] std::expected<void, Error> _flushCommandQueue(std::size_t fence_index) noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createCommandList() noexcept;
 
@@ -162,21 +162,7 @@ export namespace mt::renderer
             : _engine(engine)
         {}
 
-        virtual ~DirectXRenderer() {
-            if (_dx_device != nullptr)
-			{
-				auto expected = _flushCommandQueue();
-
-				/*_fence()->release();
-				_depth_stencil_buffer()->release();
-				_swap_chain_buffer-release();
-				_dx_swap_chain.release();
-				_dx_dxgi_factory->release();
-				_dx_command_queue->release();
-				_dx_command_list->release();
-				_dx_device->release();*/
-			}
-        }
+        virtual ~DirectXRenderer() = default;
         
         DirectXRenderer(const DirectXRenderer&) = delete;
         DirectXRenderer(DirectXRenderer&&) = default;
@@ -185,7 +171,12 @@ export namespace mt::renderer
 
         // Accessors
 
-		bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
+		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept override
+		{
+			return _flushCommandQueue(_fence_index);
+		}
+
+		[[nodiscard]] bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
 
 		// Mutators
 

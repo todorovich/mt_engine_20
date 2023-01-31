@@ -32,7 +32,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 {
 	// TODO: make this something I can call on the engine proper.
 	auto quit = [](mt::Engine& engine) noexcept {
-		PostMessage(engine.getWindowManager()->getMainWindowHandle(), WM_CLOSE, 0, 0);
+		engine.shutdown();
 	};
 	_engine.getInputManager()->registerInputHandler(quit, { KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, ESCAPE });
 
@@ -45,8 +45,7 @@ void mt::EngineDemo::map_input_controls() noexcept
 		InputType(MOUSE, BUTTON_RELEASED, NO_CONTEXT, VirtualKeyCode::ONE)
 	);
 
-	constexpr float walk_speed =1.0f;
-	//constexpr float walk_speed = 1.0f * 1s / getRenderer()->getRenderInterval();
+	constexpr float walk_speed = 1.0f;
 
 	auto walk_forward = [](mt::Engine& engine) noexcept {
 		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getRenderInterval());

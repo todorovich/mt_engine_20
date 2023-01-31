@@ -10,18 +10,10 @@ import WindowsMessageManager;
 
 using namespace mt::windows;
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
-	// before CreateWindow returns, and thus before mhMainWnd is valid.
-	return mt::Engine::_instance->_windows_message_manager->handle_message(hwnd, msg, wParam, lParam);
-}
-
 bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 {
 	_instance_handle = instance_handle;
 
-	
 	_window_class.style = CS_HREDRAW | CS_VREDRAW;
 	_window_class.lpfnWndProc = ::MainWndProc;
 	_window_class.cbClsExtra = 0;
@@ -67,8 +59,6 @@ bool WindowManager::initializeMainWindow(HINSTANCE instance_handle)
 }
 
 // TODO: window manager.
-#pragma warning (push)
-#pragma warning (disable: 4715)
 std::expected<void, mt::Error> WindowManager::resize(int width, int height)
 {
 	// This flag should prevent further rendering after the current frame finishes
@@ -84,5 +74,6 @@ std::expected<void, mt::Error> WindowManager::resize(int width, int height)
 
 	// Continue rendering.
 	setIsWindowResizing(false);
+
+	return {};
 }
-#pragma warning (pop)

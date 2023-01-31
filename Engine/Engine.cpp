@@ -79,10 +79,9 @@ Engine::Engine(HINSTANCE instance_handle)
 
 Engine::~Engine() noexcept
 {
-	if (!isDestroyed())
-	{
-		destroy();
-	}
+	_instance = nullptr;
+
+	OutputDebugStringW(L"Engine Shutdown\n");
 }
 
 std::expected<void, Error> Engine::run(Game& game) noexcept
@@ -100,6 +99,42 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	frame_time->startTask();
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
 	long long last_frame_outputed = 0;
+
+	class WindowsMessageLoopTask : public mt::Task
+	{
+		mt::Engine* _engine;
+
+		bool receivedQuit = false;
+
+	public:
+		WindowsMessageLoopTask(mt::Engine* engine)
+			: _engine(engine)
+		{}
+
+		std::expected<void, mt::Error> operator()() noexcept
+		{
+			MSG msg = { 0 };
+			// If there are Window messages then process them.
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			{
+				//VK_ACCEPT
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if (msg.message == WM_QUIT)
+				{
+					if (!_engine->isShuttingDown()) _engine->shutdown();
+					receivedQuit = true;
+					break;
+				}
+			}
+
+			return {};
+		}
+
+		bool hasReceivedQuit() { return receivedQuit; }
+
+	};
+	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(this);
 
 	while (true)
 	{
@@ -126,38 +161,9 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 			);
 		}
 
-		class WindowsMessageLoopTask : public mt::Task
-		{
-			mt::Engine* _engine;
+		windows_message_time->doTask(windows_message_loop_task.get());
 
-		public:
-			WindowsMessageLoopTask(mt::Engine* engine)
-				: _engine(engine)
-			{}
-
-			std::expected<void, mt::Error> operator()() noexcept
-			{
-				MSG msg = { 0 };
-				// If there are Window messages then process them.
-				while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-				{
-					//VK_ACCEPT
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-					if (msg.message == WM_QUIT)
-					{
-						if (!_engine->isShuttingDown()) _engine->shutdown();
-						break;
-					}
-				}
-
-				return {};
-			}
-		};
-
-		windows_message_time->doTask(new WindowsMessageLoopTask(this));
-
-		if (this->_is_shutting_down) break;
+		if (windows_message_loop_task->hasReceivedQuit()) break;
 
 		if (auto expected = _tick(tick_time, update_time, render_time, frame_time, input_time, game); !expected)
 			return std::unexpected(expected.error());
@@ -168,38 +174,32 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	return {};
 }
 
-
+// have to flush commands on gpu before destroying the window,
+// destroying the windows causes PostQuitMessage vis WM_Destroy
+// The quit message terminates the message loop.
 void Engine::shutdown() noexcept
 {
-	if (!_is_shutting_down)
+	if (!isShuttingDown())
 	{
-		_is_shutting_down = true;
+		_is_shutting_down.store(true);
 
 		getTimeManager()->pause();
 
 		OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
-		destroy();
+		// This can fail... but we're shutting down either way right?
+		//ExitProcess(0); // may need exit process if this fails
+		auto expected = getRenderer()->shutdown();
+
+		// Destroy the window
+		DestroyWindow(getWindowManager()->getMainWindowHandle());
+
+		//PostQuitMessage(0);
 	}
 	else
 	{
 		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
 	}
-}
-
-void Engine::destroy() noexcept
-{
-	if (_instance != nullptr) 
-	{
-		// Destroy the window
-		DestroyWindow(getWindowManager()->getMainWindowHandle());
-
-		_instance = nullptr;
-
-		OutputDebugStringW(L"Engine Destroyed\n");
-	}
-	else
-		OutputDebugStringW(L"Engine Already Destroyed\n");
 }
 
 std::expected<void, Error> Engine::_tick(

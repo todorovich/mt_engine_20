@@ -106,6 +106,8 @@ export namespace mt::renderer
 
 		[[nodiscard]] virtual std::expected<void, Error> initialize() noexcept = 0;
 
+		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept = 0;
+
 		virtual void update() = 0;
 	};
 }
