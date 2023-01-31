@@ -5,11 +5,11 @@ module;
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module BasicInputManager;
 
-export import InputManager;
+export import InputManagerInterface;
 
 export namespace mt::input
 {
-	class BasicInputManager : public InputManager
+	class BasicInputManager : public InputManagerInterface
 	{
 		// TODO this can be overflowed. There should be a way to check how many windows messages there are, and to
 		// 	only fetch at most this many before running the frame (and processing the input)
@@ -33,7 +33,7 @@ export namespace mt::input
 
 	public:
 		BasicInputManager(mt::Engine& engine) noexcept
-			: InputManager(engine)
+			: InputManagerInterface(engine)
 		{};
 
 		virtual ~BasicInputManager() noexcept = default;

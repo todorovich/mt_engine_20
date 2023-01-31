@@ -48,6 +48,14 @@ import Engine;
 
 using namespace mt::windows;
 
+LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
+	// before CreateWindow returns, and thus before mhMainWnd is valid.
+	return mt::Engine::_instance->_windows_message_manager->handle_message(hwnd, msg, wParam, lParam);
+}
+
+
 WindowsMessageManager::WindowsMessageManager(mt::Engine* engine)
 	: _engine(engine)
 {
@@ -89,7 +97,6 @@ WindowsMessageManager::WindowsMessageManager(mt::Engine* engine)
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONDOWN, std::make_unique<WM_XButtonDown>(_engine)));
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONUP, std::make_unique<WM_XButtonUp>(_engine)));
 	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
-
 }
 
 LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

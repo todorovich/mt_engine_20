@@ -10,8 +10,6 @@ export import <string>;
 
 export import Error;
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 export namespace mt::windows 
 {
 	class WindowManager 
@@ -33,9 +31,6 @@ export namespace mt::windows
 		WNDCLASS _window_class;
 
 	public:
-
-		friend LRESULT CALLBACK ::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 		WindowManager(mt::Engine& engine)
 			: _engine(engine)
 		{}
@@ -52,12 +47,6 @@ export namespace mt::windows
 		bool initializeMainWindow(HINSTANCE instance_handle);
 
 		[[nodiscard]] std::expected<void, mt::Error> resize(int width, int height);
-
-		void getIsWindowResizing(bool is_resizing) { _is_window_resizing = is_resizing; }
-
-		void getIsWindowMaximized(bool is_maximized) { _is_window_maximized = is_maximized; }
-
-		void getIsWindowMinimized(bool is_minimized) { _is_window_minimized = is_minimized; }
 
 		void setIsWindowResizing(bool is_resizing) { _is_window_resizing = is_resizing; }
 

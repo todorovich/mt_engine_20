@@ -1,5 +1,5 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-export module InputManager;
+export module InputManagerInterface;
 
 export import <map>;
 export import <set>;
@@ -11,7 +11,7 @@ export import ObjectPool;
 // Todo: Relative Mouse Position and locking mouse.
 export namespace mt::input
 {
-    class InputManager
+    class InputManagerInterface
     {
         bool _isMouseRelative = false;
 
@@ -28,19 +28,19 @@ export namespace mt::input
     public:
 		friend mt::Engine;
 
-        InputManager(mt::Engine& engine) noexcept
+        InputManagerInterface(mt::Engine& engine) noexcept
             : _engine(engine)
         {}
 
-        virtual ~InputManager() noexcept = default;
+        virtual ~InputManagerInterface() noexcept = default;
 
-        InputManager(const InputManager &other) noexcept = delete;
+        InputManagerInterface(const InputManagerInterface &other) noexcept = delete;
         
-        InputManager(InputManager&& other) noexcept = default;
+        InputManagerInterface(InputManagerInterface&& other) noexcept = default;
 
-        InputManager& operator=(const InputManager &other) noexcept = delete;
+        InputManagerInterface& operator=(const InputManagerInterface &other) noexcept = delete;
 
-        InputManager& operator=(InputManager&& other) noexcept = default;
+        InputManagerInterface& operator=(InputManagerInterface&& other) noexcept = default;
 
 		bool getIsMouseRelative() const { return _isMouseRelative; }
 

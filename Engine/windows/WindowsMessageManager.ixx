@@ -8,16 +8,18 @@ export module WindowsMessageManager;
 import <map>;
 import <memory>;
 
+export import WindowsMessageManagerInterface;
 export import WindowsMessage;
 
 export namespace mt { class Engine; }
 
+export LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 export namespace mt::windows
 {
-	class WindowsMessageManager
+	class WindowsMessageManager : public WindowsMessageManagerInterface
 	{
-		friend Engine;
-		
+
 		Engine* _engine;
 
 		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;
@@ -30,7 +32,9 @@ export namespace mt::windows
 		WindowsMessageManager& operator=(const WindowsMessageManager&) noexcept = default;
 		WindowsMessageManager& operator=(WindowsMessageManager&&) noexcept = default;
 
+		virtual LRESULT handle_message(
+			const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
+		) override;
 
-		LRESULT handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam);
 	};
 }

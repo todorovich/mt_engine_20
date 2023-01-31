@@ -7,13 +7,6 @@ module;
 module WindowsMessages.MiddleMouseButtonUp;
 
 import Engine;
-import InputManager;
-import InputModel;
-
-import InputDevice;
-import InputDataType;
-import InputContext;
-import VirtualKeyCode;
 
 using namespace mt::input;
 

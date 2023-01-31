@@ -1,4 +1,4 @@
-export module Renderer;
+export module RendererInterface;
 
 export import <expected>;
 
@@ -7,7 +7,7 @@ export import Error;
 
 export namespace mt::renderer
 {
-	class Renderer
+	class RendererInterface
 	{
 		Camera _camera; // 204 bytes (getting kind of bloated)
 
@@ -63,14 +63,14 @@ export namespace mt::renderer
 			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
 		}
 
-		Renderer() noexcept = default;
+		RendererInterface() noexcept = default;
 
 	public:
-		virtual ~Renderer() noexcept = default;
-		Renderer(const Renderer&) noexcept = delete;
-		Renderer(Renderer&&) noexcept = default;
-		Renderer& operator=(const Renderer&) noexcept = delete;
-		Renderer& operator=(Renderer&&) noexcept = default;
+		virtual ~RendererInterface() noexcept = default;
+		RendererInterface(const RendererInterface&) noexcept = delete;
+		RendererInterface(RendererInterface&&) noexcept = default;
+		RendererInterface& operator=(const RendererInterface&) noexcept = delete;
+		RendererInterface& operator=(RendererInterface&&) noexcept = default;
 
 		bool get4xMsaaState() const noexcept { return _4x_msaa_state; };
 
@@ -105,6 +105,8 @@ export namespace mt::renderer
 		[[nodiscard]] virtual std::expected<void, Error> render() noexcept = 0;
 
 		[[nodiscard]] virtual std::expected<void, Error> initialize() noexcept = 0;
+
+		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept = 0;
 
 		virtual void update() = 0;
 	};

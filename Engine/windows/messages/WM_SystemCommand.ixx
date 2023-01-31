@@ -7,7 +7,7 @@ export module WindowsMessages.SystemCommand;
 
 export import WindowsMessage;
 
-export namespace  mt::input { class InputManager; }
+export namespace  mt::input { class InputManagerInterface; }
 
 export namespace mt::windows
 {
