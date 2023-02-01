@@ -3,7 +3,7 @@ export module Error;
 export import <expected>;
 export import <string_view>;
 
-export namespace mt
+export namespace mt::error
 {
 	enum struct ErrorCode : std::uint32_t {
 		FAILED = 1,

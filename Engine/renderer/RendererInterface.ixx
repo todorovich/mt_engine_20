@@ -5,6 +5,8 @@ export import <expected>;
 export import Camera;
 export import Error;
 
+using mt::error::Error;
+
 export namespace mt::renderer
 {
 	class RendererInterface

@@ -10,7 +10,7 @@ export module Engine;
 export import <memory>;
 export import <chrono>;
 
-export import Debug;
+export import Constants;
 export import Error;
 export import Game;
 
@@ -56,7 +56,7 @@ export namespace mt
 
 		std::thread _engine_tick_thread;
 
-		[[nodiscard]] std::expected<void, Error> _tick(
+		[[nodiscard]] std::expected<void, mt::error::Error> _tick(
 			mt::time::StopWatch* tick_time,
 			mt::time::StopWatch* update_time, 
 			mt::time::StopWatch* render_time, 
@@ -89,9 +89,10 @@ export namespace mt
 		bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
 		// MUTATOR
 
-		[[nodiscard]] std::expected<void, Error> run(Game& game) noexcept;
+		[[nodiscard]] std::expected<void, mt::error::Error> run(Game& game) noexcept;
 
 		// Called to begin orderly shutdown.
 		void shutdown() noexcept;
+
 	};
 }

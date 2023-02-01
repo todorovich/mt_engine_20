@@ -31,10 +31,10 @@ export namespace mt::windows
 			UnregisterClass(_window_class.lpszClassName, _window_class.hInstance);
 		}
 
-		virtual std::expected<void, mt::Error> initialize() noexcept override;
-		virtual std::expected<void, mt::Error> shutdown() noexcept override;
+		virtual std::expected<void, mt::error::Error> initialize() noexcept override;
+		virtual std::expected<void, mt::error::Error> shutdown() noexcept override;
 
-		[[nodiscard]] virtual std::expected<void, mt::Error> resize(int width, int height) noexcept override;
+		[[nodiscard]] virtual std::expected<void, mt::error::Error> resize(int width, int height) noexcept override;
 
 		[[nodiscard]] HINSTANCE getInstanceHandle() const noexcept { return _instance_handle; }
 

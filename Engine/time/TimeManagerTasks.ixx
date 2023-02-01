@@ -8,7 +8,7 @@ export import Engine;
 
 export namespace mt::time
 {
-	class TimeManagerSetShouldUpdate : public mt::Task
+class TimeManagerSetShouldUpdate : public mt::task::Task
 	{
 		mt::Engine* _engine;
 	public:
@@ -21,10 +21,10 @@ export namespace mt::time
 		TimeManagerSetShouldUpdate& operator=(const TimeManagerSetShouldUpdate&) = default;
 		TimeManagerSetShouldUpdate& operator=(TimeManagerSetShouldUpdate&&) = default;
 
-		std::expected<void, mt::Error> operator()() noexcept;
+		std::expected<void, mt::error::Error> operator()() noexcept;
 	};
 
-	class TimeManagerSetShouldRender : public mt::Task
+	class TimeManagerSetShouldRender : public mt::task::Task
 	{
 		mt::Engine* _engine;
 	public:
@@ -37,10 +37,10 @@ export namespace mt::time
 		TimeManagerSetShouldRender& operator=(const TimeManagerSetShouldRender&) = default;
 		TimeManagerSetShouldRender& operator=(TimeManagerSetShouldRender&&) = default;
 			
-		std::expected<void, mt::Error> operator()() noexcept;
+		std::expected<void, mt::error::Error> operator()() noexcept;
 	};
 
-	class TimeManagerSetEndOfFrame : public mt::Task
+	class TimeManagerSetEndOfFrame : public mt::task::Task
 	{
 		mt::Engine* _engine;
 	public:
@@ -53,6 +53,6 @@ export namespace mt::time
 		TimeManagerSetEndOfFrame& operator=(const TimeManagerSetEndOfFrame&) = default;
 		TimeManagerSetEndOfFrame& operator=(TimeManagerSetEndOfFrame&&) = default;
 			
-		std::expected<void, mt::Error> operator()() noexcept;
+		std::expected<void, mt::error::Error> operator()() noexcept;
 	};
 }

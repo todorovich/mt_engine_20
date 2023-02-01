@@ -114,7 +114,7 @@ export namespace mt::time
             }
         }
 
-		void doTask(mt::Task* task) noexcept
+		void doTask(mt::task::Task* task) noexcept
 		{
 			startTask();
 			(*task)();

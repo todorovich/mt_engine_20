@@ -19,7 +19,7 @@ export namespace mt::time
 
 		std::chrono::steady_clock::time_point _time_paused;
 
-		mt::Task* _task;
+		mt::task::Task* _task;
 
 		std::chrono::steady_clock::duration _reset_interval;
 
@@ -29,8 +29,8 @@ export namespace mt::time
 
 		bool _is_paused;
 
-		static class DoNothing : public mt::Task {
-			std::expected<void, mt::Error> operator()(){}
+		static class DoNothing : public mt::task::Task {
+			std::expected<void, mt::error::Error> operator()(){}
 		} doNothing;
 
 	public:
@@ -39,7 +39,7 @@ export namespace mt::time
 
 		Alarm(
 			std::chrono::steady_clock::time_point time_point, 
-			mt::Task* task = &doNothing,
+			mt::task::Task* task = &doNothing,
 			bool alarm_repeats = false, 
 			std::chrono::steady_clock::duration reset_interval = std::chrono::steady_clock::duration::min()
 		) noexcept

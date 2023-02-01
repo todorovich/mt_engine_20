@@ -36,7 +36,8 @@ export import RenderItem;
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
-using mt::Error;
+
+using mt::error::Error;
 
 export namespace mt::renderer
 {

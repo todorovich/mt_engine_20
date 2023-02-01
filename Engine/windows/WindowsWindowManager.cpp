@@ -12,7 +12,7 @@ using namespace mt::windows;
 
 using namespace std::literals;
 
-std::expected<void, mt::Error> WindowsWindowManager::initialize() noexcept
+std::expected<void, mt::error::Error> WindowsWindowManager::initialize() noexcept
 {
 	_window_class.style = CS_HREDRAW | CS_VREDRAW;
 	_window_class.lpfnWndProc = ::MainWndProc;
@@ -28,9 +28,9 @@ std::expected<void, mt::Error> WindowsWindowManager::initialize() noexcept
 	if (!RegisterClass(&_window_class))
 	{
 		MessageBox(0, L"RegisterClass Failed.", 0, 0);
-		return std::unexpected(mt::Error{
+		return std::unexpected(mt::error::Error{
 			L"Unable to register the class with windows."sv,
-			mt::ErrorCode::WINDOW_MANAGER_FAILURE,
+			mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
 			__func__, __FILE__, __LINE__
 		});
 	}
@@ -49,9 +49,9 @@ std::expected<void, mt::Error> WindowsWindowManager::initialize() noexcept
 	if (!_main_window_handle)
 	{
 		MessageBox(0, L"CreateWindow Failed.", 0, 0);
-		return std::unexpected(mt::Error{
+		return std::unexpected(mt::error::Error{
 			L"Unable to create the window."sv,
-			mt::ErrorCode::WINDOW_MANAGER_FAILURE,
+			mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
 			__func__, __FILE__, __LINE__
 		});
 	}
@@ -65,14 +65,14 @@ std::expected<void, mt::Error> WindowsWindowManager::initialize() noexcept
 	return {};
 }
 
-std::expected<void, mt::Error> WindowsWindowManager::shutdown() noexcept
+std::expected<void, mt::error::Error> WindowsWindowManager::shutdown() noexcept
 {
 	DestroyWindow(static_cast<HWND>(getMainWindowHandle()));
 
 	return {};
 }
 
-std::expected<void, mt::Error> WindowsWindowManager::resize(int width, int height) noexcept
+std::expected<void, mt::error::Error> WindowsWindowManager::resize(int width, int height) noexcept
 {
 	// This flag should prevent further rendering after the current frame finishes
 	setIsWindowResizing(true);
