@@ -19,7 +19,6 @@ export namespace mt::windows
 {
 	class WindowsMessageManager : public WindowsMessageManagerInterface
 	{
-
 		Engine* _engine;
 
 		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;
