@@ -7,14 +7,14 @@ module Engine;
 import <string_view>;
 import <chrono>;
 
-import Camera;
 import DirectXRenderer;
 import BasicInputManager;
-import StopWatch;
 import StandardTimeManager;
-
-import WindowManager;
+import WindowsWindowManager;
 import WindowsMessageManager;
+
+import Camera;
+import StopWatch;
 
 using namespace std::literals;
 
@@ -54,7 +54,7 @@ Engine::Engine(HINSTANCE instance_handle)
 	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
 	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(this))
-	, _window_manager(std::make_unique<windows::WindowManager>(*this))
+	, _window_manager(std::make_unique<windows::WindowsWindowManager>(this, instance_handle))
 	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
 {
 	if (_instance == nullptr)
@@ -63,7 +63,7 @@ Engine::Engine(HINSTANCE instance_handle)
 		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
 
 	// Will Register Message Handler WNDPROC
-	if (!getWindowManager()->initializeMainWindow(instance_handle))
+	if (auto expected = getWindowManager()->initialize(); !expected)
 		throw std::runtime_error("Could not initialize main window");
 
 	if (auto expected = getRenderer()->initialize(); !expected)
@@ -245,11 +245,14 @@ void Engine::shutdown() noexcept
 
 		// This can fail... but we're shutting down either way right?
 		//ExitProcess(0); // may need exit process if this fails
-		auto expected = getRenderer()->shutdown();
+		auto expected1 = getRenderer()->shutdown();
 
-		// Destroy the window
-		DestroyWindow(getWindowManager()->getMainWindowHandle());
+		// Destroy the windows.
 
+		auto expected2 = getWindowManager()->shutdown();
+
+		// This will eventually be called by WM_Destroy after it receives the message from windows that the window was
+		// destroyed.
 		//PostQuitMessage(0);
 	}
 	else

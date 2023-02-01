@@ -1,11 +1,12 @@
-target_sources(Engine
-	PRIVATE
-		WindowManager.cpp
-		WindowsMessageManager.cpp
-		WindowManager.ixx
-		WindowsMessage.ixx
-		WindowsMessageManager.ixx
-		WindowsMessageManagerInterface.ixx
+target_sources(
+	Engine PRIVATE
+	WindowsWindowManager.cpp
+	WindowsWindowManager.ixx
+	WindowsMessageManager.cpp
+	WindowManagerInterface.ixx
+	WindowsMessage.ixx
+	WindowsMessageManager.ixx
+	WindowsMessageManagerInterface.ixx
 )
 
 add_subdirectory(messages)

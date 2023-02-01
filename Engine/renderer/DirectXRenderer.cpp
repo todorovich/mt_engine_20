@@ -27,7 +27,6 @@ import Engine;
 import Debug;
 import FrameResource;
 import DirectXUtility;
-import WindowManager;
 import MeshGeometry;
 import Error;
 
@@ -442,7 +441,7 @@ void DirectXRenderer::_drawRenderItems(
 
 std::expected<void, Error> DirectXRenderer::initialize() noexcept
 {
-	_main_window_handle = _engine.getWindowManager()->getMainWindowHandle();
+	_main_window_handle = static_cast<HWND>(_engine.getWindowManager()->getMainWindowHandle());
 
 	if constexpr (mt::DEBUG)
 	{
