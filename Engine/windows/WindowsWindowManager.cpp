@@ -1,4 +1,5 @@
-module; 
+// Copyright 2023 Micho Todorovich, all rights reserved.
+module;
 
 #include <windows.h>
 
