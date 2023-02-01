@@ -9,6 +9,7 @@ export namespace mt
 		FAILED = 1,
 		OUT_OF_MEMORY = 100,
 		GRAPHICS_FAILURE = 200,
+		WINDOW_MANAGER_FAILURE = 300
 	};
 
 	struct Error

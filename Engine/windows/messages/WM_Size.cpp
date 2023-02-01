@@ -6,7 +6,7 @@ module;
 module WindowsMessages.Size;
 
 import Engine;
-import WindowManager;
+import WindowManagerInterface;
 import Camera;
 
 LRESULT mt::windows::WM_Size::execute(
@@ -19,7 +19,7 @@ LRESULT mt::windows::WM_Size::execute(
 
 	mt::renderer::RendererInterface* renderer = _engine->getRenderer();
 	mt::time::TimeManagerInterface& time_manager = *_engine->getTimeManager();
-	WindowManager& window_manager = *_engine->getWindowManager();
+	WindowManagerInterface& window_manager = *_engine->getWindowManager();
 
 	window_manager.resize(_window_width, _window_height);
 

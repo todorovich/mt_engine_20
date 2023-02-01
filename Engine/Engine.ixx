@@ -17,7 +17,9 @@ export import Game;
 export import RendererInterface;
 export import TimeManagerInterface;
 export import InputManagerInterface;
+export import WindowManagerInterface;
 export import WindowsMessageManagerInterface;
+
 export import StopWatch;
 
 export import Task;
@@ -26,23 +28,19 @@ export using namespace std::literals::chrono_literals;
 
 using mt::input::InputManagerInterface;
 using mt::renderer::RendererInterface;
-//using mt::windows::WindowManager;
 using mt::windows::WindowsMessageManagerInterface;
+using mt::windows::WindowManagerInterface;
 using mt::time::TimeManagerInterface;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 export namespace mt
 {
-	namespace windows {
-		class WindowManager;
-	};
-
 	class Engine
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-		const std::unique_ptr<windows::WindowManager>					_window_manager;
+		const std::unique_ptr<mt::windows::WindowManagerInterface>			_window_manager;
 		const std::unique_ptr<windows::WindowsMessageManagerInterface>	_windows_message_manager;
 		const std::unique_ptr<input::InputManagerInterface>				_input_manager;
 		const std::unique_ptr<time::TimeManagerInterface>				_time_manager;
@@ -80,7 +78,7 @@ export namespace mt
 		// ACCESSOR
 		InputManagerInterface * const	getInputManager() noexcept	{ return _input_manager.get(); }
 		RendererInterface * const		getRenderer() noexcept		{ return _renderer.get(); };
-		windows::WindowManager * const	getWindowManager() noexcept	{ return _window_manager.get(); };
+		WindowManagerInterface * const	getWindowManager() noexcept	{ return _window_manager.get(); };
 		TimeManagerInterface * const	getTimeManager() noexcept	{ return _time_manager.get(); };
 
 		WindowsMessageManagerInterface * const	getWindowsMessageManager() noexcept	{

@@ -5,7 +5,7 @@ module;
 
 module WindowsMessages.EnterSizeMove;
 
-import WindowManager;
+import Engine;
 
 using namespace mt::windows;
 

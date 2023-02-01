@@ -5,7 +5,7 @@ module;
 
 module WindowsMessages.ExitSizeMove;
 
-import WindowManager;
+import Engine;
 
 using namespace mt::windows;
 

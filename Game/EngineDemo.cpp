@@ -9,7 +9,7 @@ module EngineDemo;
 import <chrono>;
 
 import Engine;
-import WindowManager;
+import WindowManagerInterface;
 
 using namespace mt::input;
 
