@@ -94,5 +94,6 @@ export namespace mt
 		// Called to begin orderly shutdown.
 		void shutdown() noexcept;
 
+		void crash(mt::error::Error error) noexcept;
 	};
 }

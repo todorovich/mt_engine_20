@@ -260,3 +260,9 @@ void Engine::shutdown() noexcept
 		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
 	}
 }
+
+void Engine::crash(mt::error::Error error) noexcept
+{
+	OutputDebugStringW(error.message.data());
+	shutdown();
+};
