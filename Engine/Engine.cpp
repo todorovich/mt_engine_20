@@ -174,9 +174,65 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	return {};
 }
 
-// have to flush commands on gpu before destroying the window,
-// destroying the windows causes PostQuitMessage vis WM_Destroy
-// The quit message terminates the message loop.
+std::expected<void, Error> Engine::_tick(
+	mt::time::StopWatch* tick_time,
+	mt::time::StopWatch* update_time,
+	mt::time::StopWatch* render_time,
+	mt::time::StopWatch* frame_time,
+	mt::time::StopWatch* input_time,
+	mt::Game& game
+) noexcept
+{
+	tick_time->startTask();
+
+	getTimeManager()->tick();
+
+	update_time->startTask();
+	if (getTimeManager()->getShouldUpdate())
+	{
+		game.physicsUpdate();
+
+		getTimeManager()->updateComplete();
+	}
+	update_time->finishTask();
+
+	render_time->startTask();
+	// Render whenever you can, but don't wait.
+	if (getTimeManager()->getShouldRender())
+	{
+		input_time->startTask();
+		getInputManager()->processInput();
+		game.inputUpdate();
+		input_time->finishTask();
+
+		game.renderUpdate();
+		getRenderer()->update();
+		if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
+		getTimeManager()->renderComplete();
+
+		frame_time->finishTask();
+		frame_time->startTask();
+	}
+	render_time->finishTask();
+
+	tick_time->finishTask();
+
+	return {};
+}
+
+/**
+ * have to flush commands on gpu before destroying the window,
+ * destroying the windows causes PostQuitMessage via WM_Destroy
+ * The quit message terminates the windows message loop.
+ * would like to use raii and handle most of this shutdown stuff in the destructor.
+ * the problem is we won't get WM_Destroy, unless we destroy the window.
+ * We can't destroy the window while the renderer is using it.
+ *
+ * If we destroy in the destructor then we will never receive the WM_Destroy and therefore never PostQuitMessage
+ *
+ *  If we just delay quiting the message loop, then it'll eventually call to an non-existant WindowMessageManager
+ *
+ */
 void Engine::shutdown() noexcept
 {
 	if (!isShuttingDown())
@@ -200,50 +256,4 @@ void Engine::shutdown() noexcept
 	{
 		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
 	}
-}
-
-std::expected<void, Error> Engine::_tick(
-	mt::time::StopWatch* tick_time, 
-	mt::time::StopWatch* update_time, 
-	mt::time::StopWatch* render_time, 
-	mt::time::StopWatch* frame_time,
-	mt::time::StopWatch* input_time,
-	mt::Game& game
-) noexcept
-{
-	tick_time->startTask();
-
-	getTimeManager()->tick();
-		
-	update_time->startTask();
-	if (getTimeManager()->getShouldUpdate())
-	{
-		game.physicsUpdate();
-
-		getTimeManager()->updateComplete();
-	}
-	update_time->finishTask();
-
-	render_time->startTask();
-	// Render whenever you can, but don't wait.
-	if (getTimeManager()->getShouldRender())
-	{
-		input_time->startTask();
-		getInputManager()->processInput(); 
-		game.inputUpdate();
-		input_time->finishTask();
-
-		game.renderUpdate();
-		getRenderer()->update();
-		if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
-		getTimeManager()->renderComplete();
-
-		frame_time->finishTask();
-		frame_time->startTask();
-	}	
-	render_time->finishTask();
-
-	tick_time->finishTask();
-
-	return {};
 }
