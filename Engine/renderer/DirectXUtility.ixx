@@ -1,3 +1,4 @@
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -12,7 +13,7 @@ export module DirectXUtility;
 
 export import <expected>;
 
-export import Debug;
+export import Constants;
 export import Error;
 
 export namespace mt::renderer
@@ -43,14 +44,14 @@ export namespace mt::renderer
 		return (byteSize + 255) & ~255;
 	}
 
-	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::Error> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::error::Error> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
 		const std::string& target
 	) noexcept;
 
-	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::Error> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::error::Error> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const void* initData,
@@ -114,7 +115,7 @@ module : private;
 
 namespace mt::renderer
 {
-	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::Error> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::error::Error> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
@@ -123,7 +124,7 @@ namespace mt::renderer
 	{
 		UINT compileFlags = 0;
 
-		if constexpr (mt::DEBUG) compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+		if constexpr (mt::IS_DEBUG) compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 
 		Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> errors;
@@ -143,9 +144,9 @@ namespace mt::renderer
 			if (errors != nullptr)
 				OutputDebugStringA((char*)errors->GetBufferPointer());
 
-			return std::unexpected(mt::Error{
+			return std::unexpected(mt::error::Error{
 				L"Unable to compile shader."sv,
-				mt::ErrorCode::GRAPHICS_FAILURE,
+				mt::error::ErrorCode::GRAPHICS_FAILURE,
 				__func__, __FILE__, __LINE__
 			});
 		}
@@ -161,7 +162,7 @@ namespace mt::renderer
 		return { buffer };
 	}
 
-	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::Error> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::error::Error> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* command_lists,
 		const void* initialization_data,
@@ -184,9 +185,9 @@ namespace mt::renderer
 			IID_PPV_ARGS(default_buffer.GetAddressOf())
 		)))
 		{
-			return std::unexpected(mt::Error{
+			return std::unexpected(mt::error::Error {
 				L"Unable to create a committed default buffer resource."sv,
-				mt::ErrorCode::GRAPHICS_FAILURE,
+				mt::error::ErrorCode::GRAPHICS_FAILURE,
 				__func__, __FILE__, __LINE__
 			});
 		}
@@ -205,9 +206,9 @@ namespace mt::renderer
 			IID_PPV_ARGS(upload_buffer.GetAddressOf())
 		)))
 		{
-			return std::unexpected(mt::Error{
+			return std::unexpected(mt::error::Error{
 				L"Unable to create a committed upload buffer resource."sv,
-				mt::ErrorCode::GRAPHICS_FAILURE,
+				mt::error::ErrorCode::GRAPHICS_FAILURE,
 				__func__, __FILE__, __LINE__
 			});
 		}

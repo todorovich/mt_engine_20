@@ -30,7 +30,7 @@ export namespace mt::time
 
 		virtual void addAlarm(
 			steady_clock::time_point time_point,
-			Task* callback, 
+			mt::task::Task* callback,
 			bool repeats = false, 
 			steady_clock::duration repeat_interval = steady_clock::duration::min()
 		) noexcept  = 0;

@@ -1,10 +1,11 @@
+// Copyright 2023 Micho Todorovich, all rights reserved.
 export module ObjectPool;
 
 import <ctime>;
 import <queue>;
 import <set>;
 
-export namespace mt 
+export namespace mt::memory
 {
 	template<typename T, std::size_t number_of_objects>
 	class ObjectPool

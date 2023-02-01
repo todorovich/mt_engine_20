@@ -12,21 +12,21 @@ target_compile_options(
 
 target_sources(
 	Engine PRIVATE
-	Debug.ixx
-	Error.ixx
+	Constants.ixx
 	Engine.cpp
 	Engine.ixx
-	FontManager.ixx
 	Game.ixx
-	ObjectPool.ixx
-	Task.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
+add_subdirectory("error")
+add_subdirectory("font")
 add_subdirectory("geometry")
 add_subdirectory("input")
 add_subdirectory("math")
+add_subdirectory("memory")
 add_subdirectory("renderer")
+add_subdirectory("task")
 add_subdirectory("time")
 add_subdirectory("windows")

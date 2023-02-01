@@ -1,4 +1,4 @@
-// Copyright 2018 Micho Todorovich, all rights reserved.
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -19,7 +19,6 @@ export namespace mt::windows
 {
 	class WindowsMessageManager : public WindowsMessageManagerInterface
 	{
-
 		Engine* _engine;
 
 		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;

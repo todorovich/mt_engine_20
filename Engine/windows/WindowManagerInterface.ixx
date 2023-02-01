@@ -1,3 +1,4 @@
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -7,6 +8,8 @@ export module WindowManagerInterface;
 export import <string>;
 
 export import Error;
+
+using mt::error::Error;
 
 export namespace mt::windows 
 {
@@ -26,13 +29,13 @@ export namespace mt::windows
 		WindowManagerInterface() noexcept = default;
 		virtual ~WindowManagerInterface() noexcept = default;
 
-		virtual std::expected<void, mt::Error> initialize() noexcept = 0;
+		virtual std::expected<void, Error> initialize() noexcept = 0;
 
-		virtual std::expected<void, mt::Error> shutdown() noexcept = 0;
+		virtual std::expected<void, Error> shutdown() noexcept = 0;
 
 		[[nodiscard]] virtual HANDLE getMainWindowHandle() const noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, mt::Error> resize(int width, int height) noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept = 0;
 
 		void setIsWindowResizing(bool is_resizing) noexcept { _is_window_resizing = is_resizing; }
 

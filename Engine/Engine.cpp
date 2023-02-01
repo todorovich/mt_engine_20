@@ -1,3 +1,4 @@
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <windows.h>
@@ -84,7 +85,7 @@ Engine::~Engine() noexcept
 	OutputDebugStringW(L"Engine Shutdown\n");
 }
 
-std::expected<void, Error> Engine::run(Game& game) noexcept
+std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 {
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
@@ -100,7 +101,7 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
 	long long last_frame_outputed = 0;
 
-	class WindowsMessageLoopTask : public mt::Task
+	class WindowsMessageLoopTask : public mt::task::Task
 	{
 		mt::Engine* _engine;
 
@@ -111,7 +112,7 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 			: _engine(engine)
 		{}
 
-		std::expected<void, mt::Error> operator()() noexcept
+		std::expected<void, mt::error::Error> operator()() noexcept
 		{
 			MSG msg = { 0 };
 			// If there are Window messages then process them.
@@ -174,7 +175,7 @@ std::expected<void, Error> Engine::run(Game& game) noexcept
 	return {};
 }
 
-std::expected<void, Error> Engine::_tick(
+std::expected<void, mt::error::Error> Engine::_tick(
 	mt::time::StopWatch* tick_time,
 	mt::time::StopWatch* update_time,
 	mt::time::StopWatch* render_time,
@@ -260,3 +261,9 @@ void Engine::shutdown() noexcept
 		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
 	}
 }
+
+void Engine::crash(mt::error::Error error) noexcept
+{
+	OutputDebugStringW(error.message.data());
+	shutdown();
+};

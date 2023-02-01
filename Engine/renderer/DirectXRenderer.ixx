@@ -1,4 +1,4 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
+// Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <wrl.h>
@@ -36,7 +36,8 @@ export import RenderItem;
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
-using mt::Error;
+
+using mt::error::Error;
 
 export namespace mt::renderer
 {

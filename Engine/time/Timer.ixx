@@ -10,7 +10,7 @@ export namespace mt::time
 	{		
 	public:
 
-		Timer(std::chrono::steady_clock::duration offset, mt::Task* callback) noexcept
+		Timer(std::chrono::steady_clock::duration offset, mt::task::Task* callback) noexcept
 			: Alarm(std::chrono::steady_clock::now() + offset, callback)
 		{}
 

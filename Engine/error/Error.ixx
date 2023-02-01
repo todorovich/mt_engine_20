@@ -1,9 +1,10 @@
+// Copyright 2023 Micho Todorovich, all rights reserved.
 export module Error;
 
 export import <expected>;
 export import <string_view>;
 
-export namespace mt
+export namespace mt::error
 {
 	enum struct ErrorCode : std::uint32_t {
 		FAILED = 1,

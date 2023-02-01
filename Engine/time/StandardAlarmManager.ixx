@@ -13,7 +13,7 @@ export namespace mt::time
 {
 	class StandardAlarmManager : public AlarmManagerInterface
 	{
-		mt::ObjectPool<Alarm, 1024> _alarm_pool;
+		mt::memory::ObjectPool<Alarm, 1024> _alarm_pool;
 
 		std::priority_queue <Alarm*, std::vector <Alarm*>, AlarmCompare> _alarm_queue;
 
@@ -78,7 +78,7 @@ export namespace mt::time
 
 		void addAlarm(
 			steady_clock::time_point time_point,
-			Task* task,
+			mt::task::Task* task,
 			bool repeats = false,
 			steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
 		) noexcept

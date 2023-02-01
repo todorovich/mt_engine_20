@@ -21,7 +21,9 @@ LRESULT mt::windows::WM_Size::execute(
 	mt::time::TimeManagerInterface& time_manager = *_engine->getTimeManager();
 	WindowManagerInterface& window_manager = *_engine->getWindowManager();
 
-	window_manager.resize(_window_width, _window_height);
+	if (auto expected = window_manager.resize(_window_width, _window_height); !expected)
+		_engine->crash(expected.error());
+
 
 	if (renderer->getIsInitialized())
 	{
@@ -36,7 +38,8 @@ LRESULT mt::windows::WM_Size::execute(
 			time_manager.resume();
 			window_manager.setIsWindowMinimized(false);
 			window_manager.setIsWindowMaximized(true);
-			window_manager.resize(_window_width, _window_height);
+			if (auto expected = window_manager.resize(_window_width, _window_height); !expected)
+				_engine->crash(expected.error());
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
@@ -45,7 +48,8 @@ LRESULT mt::windows::WM_Size::execute(
 			{
 				time_manager.resume();
 				window_manager.setIsWindowMinimized(false);
-				window_manager.resize(_window_width, _window_height);
+				if (auto expected = window_manager.resize(_window_width, _window_height); !expected)
+					_engine->crash(expected.error());
 			}
 
 			// Restoring from maximized state?
@@ -53,7 +57,8 @@ LRESULT mt::windows::WM_Size::execute(
 			{
 				time_manager.resume();
 				window_manager.setIsWindowMinimized(false);
-				window_manager.resize(_window_width, _window_height);
+				if (auto expected = window_manager.resize(_window_width, _window_height); !expected)
+					_engine->crash(expected.error());
 			}
 
 			else if (window_manager.isWindowResizing())
@@ -66,12 +71,11 @@ LRESULT mt::windows::WM_Size::execute(
 				// the Resize bars.  So instead, we reset after the user is 
 				// done resizing the window and releases the Resize bars, which 
 				// sends a WM_EXITSIZEMOVE message.
-
-
 			}
 			else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
 			{
-				window_manager.resize(_window_width, _window_height);
+				if (auto expected = window_manager.resize(_window_width, _window_height); !expected)
+					_engine->crash(expected.error());
 			}
 		}
 	}
