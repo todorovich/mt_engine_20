@@ -51,10 +51,10 @@ using namespace mt;
 
 Engine* Engine::_instance = nullptr;
 
-Engine::Engine(HINSTANCE instance_handle)
+Engine::Engine(HINSTANCE instance_handle )
 	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
-	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(this))
+	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
 	, _window_manager(std::make_unique<windows::WindowsWindowManager>(this, instance_handle))
 	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
 {
@@ -176,11 +176,11 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 }
 
 std::expected<void, mt::error::Error> Engine::_tick(
-	mt::time::StopWatch* tick_time,
-	mt::time::StopWatch* update_time,
-	mt::time::StopWatch* render_time,
-	mt::time::StopWatch* frame_time,
-	mt::time::StopWatch* input_time,
+	gsl::not_null<mt::time::StopWatch*> tick_time,
+	gsl::not_null<mt::time::StopWatch*> update_time,
+	gsl::not_null<mt::time::StopWatch*> render_time,
+	gsl::not_null<mt::time::StopWatch*> frame_time,
+	gsl::not_null<mt::time::StopWatch*> input_time,
 	mt::Game& game
 ) noexcept
 {
@@ -206,10 +206,14 @@ std::expected<void, mt::error::Error> Engine::_tick(
 		game.inputUpdate();
 		input_time->finishTask();
 
-		game.renderUpdate();
-		getRenderer()->update();
-		if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
-		getTimeManager()->renderComplete();
+		// Processing input could result in a shutdown.
+		if (!isShuttingDown())
+		{
+			game.renderUpdate();
+			getRenderer()->update();
+			if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
+			getTimeManager()->renderComplete();
+		}
 
 		frame_time->finishTask();
 		frame_time->startTask();
@@ -247,7 +251,6 @@ void Engine::shutdown() noexcept
 		// This can fail... but we're shutting down either way right?
 		//ExitProcess(0); // may need exit process if this fails
 		auto expected1 = getRenderer()->shutdown();
-
 		// Destroy the windows.
 
 		auto expected2 = getWindowManager()->shutdown();

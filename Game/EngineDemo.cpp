@@ -8,10 +8,11 @@ module;
 module EngineDemo;
 
 import <chrono>;
+import <functional>; // std::hash
 
-import Engine;
-import WindowManagerInterface;
+import gsl;
 
+using namespace mt;
 using namespace mt::input;
 
 using namespace std::literals;
@@ -29,98 +30,66 @@ using mt::input::InputContext::RELATIVE;
 
 using mt::input::VirtualKeyCode::ESCAPE;
 
+const std::size_t mt::Keys::QUIT = std::hash<std::wstring>()(L"QUIT");
+const std::size_t mt::Keys::TOGGLE_RELATIVE_MOUSE = std::hash<std::wstring>()(L"TOGGLE_RELATIVE_MOUSE");
+const std::size_t mt::Keys::WALK_FORWARD = std::hash<std::wstring>()(L"WALK_FORWARD");
+const std::size_t mt::Keys::WALK_BACKWARD = std::hash<std::wstring>()(L"WALK_BACKWARD");
+const std::size_t mt::Keys::STRAFE_LEFT = std::hash<std::wstring>()(L"STRAFE_LEFT");
+const std::size_t mt::Keys::STRAFE_RIGHT = std::hash<std::wstring>()(L"STRAFE_RIGHT");
+const std::size_t mt::Keys::FLY_UP = std::hash<std::wstring>()(L"FLY_UP");
+const std::size_t mt::Keys::FLY_DOWN = std::hash<std::wstring>()(L"FLY_DOWN");
+
 void mt::EngineDemo::map_input_controls() noexcept
 {
-	// TODO: make this something I can call on the engine proper.
-	auto quit = [](mt::Engine& engine) noexcept {
-		engine.shutdown();
-	};
-	_engine.getInputManager()->registerInputHandler(quit, { KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, ESCAPE });
-
-	auto toggle_relative_mouse = [](mt::Engine& engine) noexcept {
-		engine.getInputManager()->toggleRelativeMouse();
-	};
 	_engine.getInputManager()->registerInputHandler(
-		toggle_relative_mouse,
+		_tasks.find(Keys::QUIT)->second.get(),
+		{ KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, ESCAPE }
+	);
+
+	_engine.getInputManager()->registerInputHandler(
+		_tasks.find(Keys::TOGGLE_RELATIVE_MOUSE)->second.get(),
 		InputType(MOUSE, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::ONE),
 		InputType(MOUSE, BUTTON_RELEASED, NO_CONTEXT, VirtualKeyCode::ONE)
 	);
 
-	constexpr float walk_speed = 1.0f;
-
-	auto walk_forward = [](mt::Engine& engine) noexcept {
-		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		walk_forward,
+		_tasks.find(Keys::WALK_FORWARD)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::W),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::W)
 	);
 
-	auto walk_backward = [](mt::Engine& engine) noexcept {
-		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().walk(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		walk_backward,
+		_tasks.find(Keys::WALK_BACKWARD)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::S),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::S)
 	);
 
-	auto strafe_left = [](mt::Engine& engine) noexcept {
-		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		strafe_left,
+		_tasks.find(Keys::STRAFE_LEFT)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::A),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::A)
 	);
 
-	auto strafe_right = [](mt::Engine& engine)noexcept {
-		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().strafe(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		strafe_right,
+		_tasks.find(Keys::STRAFE_RIGHT)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::D),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::D)
 	);
 
-	auto fly_up = [](mt::Engine& engine) noexcept {
-		auto adjusted_walk_speed = walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		fly_up,
+		_tasks.find(Keys::FLY_UP)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::SPACE),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::SPACE)
 	);
 
-	auto fly_down = [](mt::Engine& engine) noexcept {
-		auto adjusted_walk_speed = -walk_speed / (1s / engine.getTimeManager()->getRenderInterval());
-		engine.getRenderer()->getCurrentCamera().fly(adjusted_walk_speed);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		fly_down,
+		_tasks.find(Keys::FLY_DOWN)->second.get(),
 		InputType(KEYBOARD, BUTTON_PRESSED, NO_CONTEXT, VirtualKeyCode::CONTROL),
 		InputType(KEYBOARD, BUTTON_HELD, 	NO_CONTEXT, VirtualKeyCode::CONTROL)
 	);
 
-	auto mouse_look = [](mt::Engine& engine, int x, int y) noexcept {
-		auto& camera = engine.getRenderer()->getCurrentCamera();
-
-		// TODO: This should be fov dependant.
-		// Make each pixel correspond to 1/100th of a degree.
-		float dx = DirectX::XMConvertToRadians(0.01f * static_cast<float>(x));
-		float dy = DirectX::XMConvertToRadians(0.01f * static_cast<float>(y));
-
-		camera.pitch(dy);
-		camera.rotateY(dx);
-	};
 	_engine.getInputManager()->registerInputHandler(
-		mouse_look,
+		_mouse_look.get(),
 		InputType(MOUSE, TWO_DIMENSIONAL, RELATIVE, VirtualKeyCode::NO_KEY)
 	);
 }

@@ -4,12 +4,14 @@ export import <chrono>;
 export import <memory>;
 
 export import AlarmManager;
+
+export import gsl;
+export import Engine;
 export import TimeManagerInterface;
 export import TimeManagerTasks;
 
 using namespace std::literals;
-
-export import Engine;
+using namespace gsl;
 
 export namespace mt::time
 {
@@ -28,7 +30,7 @@ export namespace mt::time
 		mt::time::TimeManagerSetEndOfFrame _set_end_of_frame;
 
 	public:
-		explicit StandardTimeManager(mt::Engine* engine) noexcept;
+		StandardTimeManager(mt::Engine* engine) noexcept;
 
 		virtual void resume() noexcept override;		// Call to unpaused.
 		virtual void pause() noexcept override;			// Call to pause.

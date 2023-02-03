@@ -6,11 +6,12 @@ target_compile_options(Game PRIVATE
 	/wd5106
 )
 
-target_sources(Game
-	PRIVATE
+target_sources(
+	Game PRIVATE
 		EngineDemo.cpp
 	PUBLIC
 		EngineDemo.ixx
+		InputHandlers.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

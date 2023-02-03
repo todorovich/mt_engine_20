@@ -21,8 +21,8 @@ export import WindowManagerInterface;
 export import WindowsMessageManagerInterface;
 
 export import StopWatch;
-
 export import Task;
+export import gsl;
 
 export using namespace std::literals::chrono_literals;
 
@@ -40,11 +40,11 @@ export namespace mt
 	{
 		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-		const std::unique_ptr<mt::windows::WindowManagerInterface>			_window_manager;
-		const std::unique_ptr<windows::WindowsMessageManagerInterface>	_windows_message_manager;
-		const std::unique_ptr<input::InputManagerInterface>				_input_manager;
-		const std::unique_ptr<time::TimeManagerInterface>				_time_manager;
-		const std::unique_ptr<renderer::RendererInterface>				_renderer;
+		std::unique_ptr<mt::windows::WindowManagerInterface>		_window_manager;
+		std::unique_ptr<windows::WindowsMessageManagerInterface>	_windows_message_manager;
+		std::unique_ptr<input::InputManagerInterface>				_input_manager;
+		std::unique_ptr<time::TimeManagerInterface>					_time_manager;
+		std::unique_ptr<renderer::RendererInterface>				_renderer;
 
 		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
 
@@ -57,23 +57,23 @@ export namespace mt
 		std::thread _engine_tick_thread;
 
 		[[nodiscard]] std::expected<void, mt::error::Error> _tick(
-			mt::time::StopWatch* tick_time,
-			mt::time::StopWatch* update_time, 
-			mt::time::StopWatch* render_time, 
-			mt::time::StopWatch* frame_time,
-			mt::time::StopWatch* input_time,
+			gsl::not_null<mt::time::StopWatch*> tick_time,
+			gsl::not_null<mt::time::StopWatch*> update_time,
+			gsl::not_null<mt::time::StopWatch*> render_time,
+			gsl::not_null<mt::time::StopWatch*> frame_time,
+			gsl::not_null<mt::time::StopWatch*> input_time,
 			mt::Game& game
 		) noexcept;
 
 
 	public:
 		// Big 5
-		Engine(HINSTANCE hInstance);
+		Engine(HINSTANCE hInstance = nullptr);
 		~Engine() noexcept;
-		Engine(const Engine& other) noexcept = delete;
-		Engine(Engine&& other) noexcept = delete;
-		Engine& operator=(const Engine& other) noexcept = delete;
-		Engine& operator=(Engine&& other) noexcept = delete;
+		Engine(const Engine& other) noexcept = default;
+		Engine(Engine&& other) noexcept = default;
+		Engine& operator=(const Engine& other) noexcept = default;
+		Engine& operator=(Engine&& other) noexcept = default;
 		 
 		// ACCESSOR
 		InputManagerInterface * const	getInputManager() noexcept	{ return _input_manager.get(); }

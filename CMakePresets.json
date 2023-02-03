@@ -12,7 +12,8 @@
       },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe"
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_CXX_FLAGS": "/DWIN32 /D_WINDOWS /W3"
       },
       "condition": {
         "type": "equals",

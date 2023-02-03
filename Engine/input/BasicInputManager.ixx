@@ -8,7 +8,14 @@ export module BasicInputManager;
 
 export import InputManagerInterface;
 
+export import gsl;
+export import Engine;
+export import Task;
+
 import ObjectPool;
+
+using namespace gsl;
+using namespace mt::task;
 
 export namespace mt::input
 {
@@ -18,12 +25,12 @@ export namespace mt::input
 		// 	only fetch at most this many before running the frame (and processing the input)
 		mt::memory::ObjectPool<InputMessage, 2048> _message_pool;
 
-		std::queue<InputMessage*> _input_queue;
+		std::queue<not_null<InputMessage*>> _input_queue;
 
-		std::multimap<InputType, button_function*>              button_input_handler;
-		std::multimap<InputType, one_dimensional_function*>     one_dimensional_input_handler;
-		std::multimap<InputType, two_dimensional_function*>     two_dimensional_input_handler;
-		std::multimap<InputType, three_dimensional_function*>   three_dimensional_input_handler;
+		std::multimap<InputType, not_null<Task*>>              				button_input_handler;
+		std::multimap<InputType, not_null<OneDimensionalInputTask*>>    	one_dimensional_input_handler;
+		std::multimap<InputType, not_null<TwoDimensionalInputTask*>>    	two_dimensional_input_handler;
+		std::multimap<InputType, not_null<ThreeDimensionalInputTask*>>  	three_dimensional_input_handler;
 
 		// Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
 		// you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
@@ -32,11 +39,13 @@ export namespace mt::input
 		POINT _mouse_return_position;
 
 	protected:
+		mt::Engine& _engine;
+
 		virtual void processInput() noexcept override;
 
 	public:
 		BasicInputManager(mt::Engine& engine) noexcept
-			: InputManagerInterface(engine)
+			: _engine(engine)
 		{};
 
 		virtual ~BasicInputManager() noexcept = default;
@@ -59,3 +68,4 @@ export namespace mt::input
 		virtual void registerInputHandler(InputHandler input_handler, InputType input_types) noexcept override;
 	};
 }
+

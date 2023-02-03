@@ -209,7 +209,7 @@ void Camera::walk(float d) noexcept
 	XMVECTOR look = XMLoadFloat3(&_look);
 	XMVECTOR position = XMLoadFloat3(&_position);
 
-	OutputDebugStringW((std::to_wstring(++i) + L'\n' + std::to_wstring(_position.x) + L' ' + std::to_wstring(_position.y) + L' ' + std::to_wstring(_position.z)).c_str());
+	//OutputDebugStringW((std::to_wstring(++i) + L'\n' + std::to_wstring(_position.x) + L' ' + std::to_wstring(_position.y) + L' ' + std::to_wstring(_position.z)).c_str());
 
 	XMStoreFloat3(&_position, XMVectorMultiplyAdd(scalar, look, position));
 

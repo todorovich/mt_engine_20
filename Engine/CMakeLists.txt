@@ -18,6 +18,16 @@ target_sources(
 	Game.ixx
 )
 
+message("CMAKE_C_FLAGS_DEBUG is ${CMAKE_C_FLAGS_DEBUG}")
+message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
+message("CMAKE_C_FLAGS_RELWITHDEBINFO is ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+message("CMAKE_C_FLAGS_MINSIZEREL is ${CMAKE_C_FLAGS_MINSIZEREL}")
+
+message("CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
+message("CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
+message("CMAKE_CXX_FLAGS_RELWITHDEBINFO is ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message("CMAKE_CXX_FLAGS_MINSIZEREL is ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory("error")
@@ -26,6 +36,7 @@ add_subdirectory("geometry")
 add_subdirectory("input")
 add_subdirectory("math")
 add_subdirectory("memory")
+add_subdirectory("gsl")
 add_subdirectory("renderer")
 add_subdirectory("task")
 add_subdirectory("time")

@@ -1,6 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module InputManagerInterface;
 
+export import <utility>;
 export import <map>;
 export import <set>;
 export import <variant>;
@@ -15,21 +16,13 @@ export namespace mt::input
         bool _isMouseRelative = false;
 
 	protected:
-		mt::Engine& _engine;
-
-		virtual void processInput() noexcept = 0; // friend engine, make protected?
-
 		void setIsMouseRelative(bool isMouseRelative = true)
 		{
 			_isMouseRelative = isMouseRelative;
 		}
 
     public:
-		friend mt::Engine;
-
-        InputManagerInterface(mt::Engine& engine) noexcept
-            : _engine(engine)
-        {}
+        InputManagerInterface() noexcept = default;
 
         virtual ~InputManagerInterface() noexcept = default;
 
@@ -43,6 +36,8 @@ export namespace mt::input
 
 		bool getIsMouseRelative() const { return _isMouseRelative; }
 
+		virtual void processInput() noexcept = 0;
+
         virtual void acceptInput(
             InputType input_type,
 			std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
@@ -55,16 +50,19 @@ export namespace mt::input
 		// Templated functions for processing varargs of input types, so that more than one trigger may be associated
 		// with each InputHandler
         template <typename First>
-        void registerInputHandler(InputHandler input_handler, const First& first) noexcept
+        void registerInputHandler(InputHandler&& input_handler, First&& first) noexcept
         {
-            registerInputHandler(input_handler, first);
+            registerInputHandler(std::forward<InputHandler>(input_handler), std::forward<First>(first));
         }
 
         template <typename First, typename... Rest> 
-        void registerInputHandler(InputHandler input_handler, const First& first, const Rest&... rest) noexcept
+        void registerInputHandler(InputHandler&& input_handler, First&& first, Rest&&... rest) noexcept
         {
-            registerInputHandler(input_handler, first);
-            registerInputHandler(input_handler, rest...); // recursive call using pack expansion syntax
+            registerInputHandler(std::forward<InputHandler>(input_handler), std::forward<First>(first));
+            registerInputHandler(
+				std::forward<InputHandler>(input_handler),
+				std::forward<Rest>(rest)...
+			); // recursive call using pack expansion syntax
         }
     };
 }

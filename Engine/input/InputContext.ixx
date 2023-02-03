@@ -9,7 +9,6 @@ using namespace std::literals;
 
 export namespace mt::input
 {
-
 	// Feel like i need a custom comparator for this when used in the input map.
 	// THe problem is i want it to consider one with only pressed to be equal to any one with pressed
 	// ,even if its pressed|released for example, for the purpose of finding matching actions.
