@@ -5,11 +5,11 @@ import <chrono>;
 import StandardAlarmManager;
 import TimeManagerTasks;
 
+//using namespace gsl;
 using namespace mt::time;
 
 StandardTimeManager::StandardTimeManager(mt::Engine* engine) noexcept
-	: _engine(engine)
-	, _alarm_manager(std::make_unique<StandardAlarmManager>(engine))
+	: _alarm_manager(std::make_unique<StandardAlarmManager>())
 	, _stop_watches()
 	, _set_should_update(mt::time::TimeManagerSetShouldUpdate{engine})
 	, _set_should_render(mt::time::TimeManagerSetShouldRender(engine))
@@ -29,8 +29,6 @@ StandardTimeManager::StandardTimeManager(mt::Engine* engine) noexcept
 	_setPreviousTickTime(std::chrono::steady_clock::time_point::min());
 
 	_setTickDeltaTime(std::chrono::steady_clock::duration::min());
-
-
 
 	_setIsUpdatePaused(false);
 }

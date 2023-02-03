@@ -2,11 +2,13 @@ export module Alarm;
 
 import <chrono>;
 
-import Engine;
+export import gsl;
+export import Task;
 
-export using namespace std::literals::chrono_literals;
+using namespace gsl;
+using namespace std::literals::chrono_literals;
 
-namespace mt {
+export namespace mt {
 	namespace time { class AlarmManagerInterface; }
 }
 
@@ -19,7 +21,7 @@ export namespace mt::time
 
 		std::chrono::steady_clock::time_point _time_paused;
 
-		mt::task::Task* _task;
+		not_null<mt::task::Task*> _task;
 
 		std::chrono::steady_clock::duration _reset_interval;
 
@@ -35,11 +37,11 @@ export namespace mt::time
 
 	public:
 
-		friend AlarmManagerInterface;
+		friend class mt::time::AlarmManagerInterface;
 
 		Alarm(
-			std::chrono::steady_clock::time_point time_point, 
-			mt::task::Task* task = &doNothing,
+			std::chrono::steady_clock::time_point time_point,
+			not_null<mt::task::Task*> task = &doNothing,
 			bool alarm_repeats = false, 
 			std::chrono::steady_clock::duration reset_interval = std::chrono::steady_clock::duration::min()
 		) noexcept

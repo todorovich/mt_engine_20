@@ -1,6 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
+#include <windows.h>
 #include <wrl.h>
 #include <DirectXMath.h>
 #include <d3d12.h>
@@ -12,11 +13,14 @@ import <ctime>;
 import <memory>;
 import <stdexcept>;
 
-import MathUtility;
-import UploadBuffer;
-import Error;
+export import gsl;
+export import Error;
+export import MathUtility;
+export import UploadBuffer;
 
 using namespace std::literals;
+
+using namespace gsl;
 
 export namespace mt::renderer 
 {
@@ -56,12 +60,16 @@ export namespace mt::renderer
 
     struct FrameResource 
     {
-        FrameResource(ID3D12Device* device, std::uint32_t passCount, std::uint32_t objectCount);
+        FrameResource(not_null<ID3D12Device*> device, std::uint32_t passCount, std::uint32_t objectCount);
         FrameResource(const FrameResource& frameResource) = delete;
         FrameResource(FrameResource&& frameResource) = delete;
         FrameResource& operator=(const FrameResource& frameResource) = delete;
         FrameResource& operator=(FrameResource&& frameResource) = delete;
-        ~FrameResource() = default;
+        ~FrameResource()
+		{
+			OutputDebugStringW(L"~FrameResource()\n");
+			command_list_allocator->Reset();
+		};
 
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> command_list_allocator;
 
@@ -75,7 +83,7 @@ export namespace mt::renderer
 module :private;
 
 mt::renderer::FrameResource::FrameResource(
-    ID3D12Device* dx_device, std::uint32_t pass_count, std::uint32_t object_count
+	not_null<ID3D12Device*> dx_device, std::uint32_t pass_count, std::uint32_t object_count
 )
 {
 	if (FAILED(dx_device->CreateCommandAllocator(

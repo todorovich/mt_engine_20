@@ -2,29 +2,25 @@ export module StandardAlarmManager;
 
 export import AlarmManager;
 
-export import Engine;
-export import ObjectPool;
 export import Alarm;
-export import Task;
+export import gsl;
+export import ObjectPool;
+
+using namespace gsl;
 
 using std::chrono::steady_clock;
 
-export namespace mt::time 
+export namespace mt::time
 {
 	class StandardAlarmManager : public AlarmManagerInterface
 	{
 		mt::memory::ObjectPool<Alarm, 1024> _alarm_pool;
 
-		std::priority_queue <Alarm*, std::vector <Alarm*>, AlarmCompare> _alarm_queue;
+		std::priority_queue <not_null<Alarm*>, std::vector <not_null<Alarm*>>, AlarmCompare> _alarm_queue;
 
-		std::set <Alarm*> _alarms_and_timers;
-
-		mt::Engine* _engine;
+		std::set <not_null<Alarm*>> _alarms_and_timers;
 	public:
-		StandardAlarmManager(mt::Engine* engine) noexcept
-			: _engine(engine)
-		{}
-
+		StandardAlarmManager() noexcept = default;
 		virtual ~StandardAlarmManager() noexcept = default;
 		StandardAlarmManager(const StandardAlarmManager& other) noexcept = delete;
 		StandardAlarmManager(StandardAlarmManager&& other) noexcept  = delete;
@@ -78,7 +74,7 @@ export namespace mt::time
 
 		void addAlarm(
 			steady_clock::time_point time_point,
-			mt::task::Task* task,
+			not_null<mt::task::Task *> task,
 			bool repeats = false,
 			steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
 		) noexcept

@@ -18,8 +18,14 @@ export namespace mt::memory
 
 	public:
 
-		ObjectPool() noexcept
+		// TODO: noexcept all the things.
+		// Seems like the dominant strategy to get around failing to allocate is to preallocate all the memory you need
+		// up front so you either fail to initialize or never run out of memory. Seems easier said than done but we'll
+		// see
+		ObjectPool()
 		{
+			if (_data == nullptr) throw new std::bad_alloc();
+
 			for (auto i = 0; i < number_of_objects; i++)
 			{
 				unused_indices.push(i);

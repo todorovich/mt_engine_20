@@ -14,6 +14,7 @@ export import SubmeshGeometry;
 
 namespace mt::renderer
 {
+	// TODO: no constructors. I'm sure there is code to initialize all this that could be happening in a constructor.
     export struct MeshGeometry
     {
         // Give it a _name so we can look it up by _name.

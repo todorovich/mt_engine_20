@@ -20,14 +20,13 @@ using Microsoft::WRL::ComPtr;
 
 export namespace mt::renderer 
 {
-	void logAdapters(const ComPtr<IDXGIFactory4>& _dxgi_factory, const DXGI_FORMAT& _back_buffer_format);
+	void logAdapters(const IDXGIFactory4 * const _dxgi_factory, const DXGI_FORMAT& _back_buffer_format);
 
-	void logAdapterOutputs(IDXGIAdapter* adapter, const DXGI_FORMAT& _back_buffer_format);
+	void logAdapterOutputs(const IDXGIAdapter * const  adapter, const DXGI_FORMAT& _back_buffer_format);
 	
-	void logOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
+	void logOutputDisplayModes(const IDXGIOutput * const  output, DXGI_FORMAT format);
 
-	
-	void logAdapters(const ComPtr<IDXGIFactory4>& _dxgi_factory, const DXGI_FORMAT& _back_buffer_format)
+	void logAdapters(IDXGIFactory4 * const _dxgi_factory, const DXGI_FORMAT& _back_buffer_format)
 	{
 		IDXGIAdapter* adapter = nullptr;
 		std::vector<IDXGIAdapter*> adapterList;
@@ -53,7 +52,7 @@ export namespace mt::renderer
 		}
 	}
 
-	void logAdapterOutputs(IDXGIAdapter* adapter, const DXGI_FORMAT& _back_buffer_format)
+	void logAdapterOutputs(IDXGIAdapter * const adapter, const DXGI_FORMAT& _back_buffer_format)
 	{
 		UINT i = 0;
 		IDXGIOutput* output = nullptr;
@@ -76,7 +75,7 @@ export namespace mt::renderer
 		}
 	}
 
-	void logOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format)
+	void logOutputDisplayModes(IDXGIOutput * const output, DXGI_FORMAT format)
 	{
 		UINT count = 0;
 		UINT flags = 0;

@@ -9,27 +9,29 @@ export import <string>;
 export import <variant>;
 export import <chrono>;
 
+export import gsl;
 export import InputContext;
 export import InputDataType;
 export import InputDevice;
 export import InputType;
 export import MicrosoftVirtualKeyCode;
 export import VirtualKeyCode;
+export import Task;
 
 export using namespace std::literals;
 
-export namespace mt { class Engine; }
-
+using namespace gsl;
 using namespace mt::input;
+using namespace mt::task;
 
 export namespace mt::input
 {
-	using button_function = void(mt::Engine&) noexcept;
-	using one_dimensional_function = void(mt::Engine&, int) noexcept;
-	using two_dimensional_function = void(mt::Engine&, int, int) noexcept;
-	using three_dimensional_function = void(mt::Engine&, int, int, int) noexcept;
-	using InputHandler =
-		std::variant<button_function*, one_dimensional_function*, two_dimensional_function*, three_dimensional_function*>;
+	using InputHandler = std::variant<
+		not_null<Task*>,
+		not_null<OneDimensionalInputTask*>,
+		not_null<TwoDimensionalInputTask*>,
+		not_null<ThreeDimensionalInputTask*>
+	>;
 
 	struct InputData1D
 	{

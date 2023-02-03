@@ -5,10 +5,13 @@ export import <expected>;
 export import Task;
 
 export import Engine;
+export import gsl;
+
+using namespace gsl;
 
 export namespace mt::time
 {
-class TimeManagerSetShouldUpdate : public mt::task::Task
+	class TimeManagerSetShouldUpdate : public mt::task::Task
 	{
 		mt::Engine* _engine;
 	public:

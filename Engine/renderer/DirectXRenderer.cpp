@@ -49,7 +49,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			assert(_dx_command_list_allocator.Get());
 
 			// Flush before changing any resources.
-			if (auto expected = _flushCommandQueue(++_fence_index); !expected) return std::unexpected(expected.error());
+			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 			if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
 			{
@@ -164,7 +164,7 @@ std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_
 			_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 			// Wait until Resize is complete.
-			if (auto expected = _flushCommandQueue(++_fence_index); !expected) return std::unexpected(expected.error());
+			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 			// Update the viewport transform to cover the client area.
 			_screen_viewport.TopLeftX = 0;
@@ -583,17 +583,17 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
 	// Wait until initialization is complete.
-	if (auto expected = _flushCommandQueue(++_fence_index); !expected) return std::unexpected(expected.error());
+	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
 	_setIsInitialized();
 
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_flushCommandQueue(std::size_t fence_index) noexcept
+std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 {
 	// Advance the fence value to mark commands up to this fence point.
-	_fence_index = fence_index;
+	++_fence_index;
 
 	// Add an instruction to the command queue to set a new fence point.  Because we
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
@@ -684,7 +684,7 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 
 
 
-	// Start off in a closed state.  This is because the first time_manager_ we refer
+	// Start off in a closed state.  This is because the first time we refer
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
 	_dx_command_list->Close();

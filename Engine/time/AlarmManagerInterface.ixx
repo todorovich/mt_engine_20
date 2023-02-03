@@ -4,9 +4,11 @@ export import <set>;
 export import <queue>;
 export import <chrono>;
 
+export import gsl;
 export import Task;
-export import Alarm;
-using namespace std::literals::chrono_literals;
+
+using namespace gsl;
+using namespace std::literals;
 
 using std::chrono::steady_clock;
 
@@ -30,7 +32,7 @@ export namespace mt::time
 
 		virtual void addAlarm(
 			steady_clock::time_point time_point,
-			mt::task::Task* callback,
+			not_null<mt::task::Task*> callback,
 			bool repeats = false, 
 			steady_clock::duration repeat_interval = steady_clock::duration::min()
 		) noexcept  = 0;

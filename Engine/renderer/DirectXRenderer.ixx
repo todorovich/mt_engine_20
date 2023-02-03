@@ -26,6 +26,7 @@ export module DirectXRenderer;
 import <ctime>;
 
 export import Engine;
+export import RendererInterface;
 export import Error;
 export import FrameResource;
 export import Geometry;
@@ -69,7 +70,7 @@ export namespace mt::renderer
 
         ComPtr<ID3D12CommandQueue> _dx_command_queue;
 
-		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> _dx_command_list_allocator;
+		ComPtr<ID3D12CommandAllocator> _dx_command_list_allocator;
 		ComPtr<ID3D12GraphicsCommandList> _dx_command_list;
 
         ComPtr<ID3D12Resource> _swap_chain_buffer[getSwapChainBufferCount()];
@@ -126,7 +127,7 @@ export namespace mt::renderer
 
         // Mutators
 
-		[[nodiscard]] std::expected<void, Error> _flushCommandQueue(std::size_t fence_index) noexcept;
+		[[nodiscard]] std::expected<void, Error> _flushCommandQueue() noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createCommandList() noexcept;
 
@@ -163,7 +164,9 @@ export namespace mt::renderer
             : _engine(engine)
         {}
 
-        virtual ~DirectXRenderer() = default;
+        virtual ~DirectXRenderer()
+		{
+		}
         
         DirectXRenderer(const DirectXRenderer&) = delete;
         DirectXRenderer(DirectXRenderer&&) = default;
@@ -174,7 +177,8 @@ export namespace mt::renderer
 
 		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept override
 		{
-			return _flushCommandQueue(_fence_index);
+			OutputDebugStringW(L"Renderer::shutdown()\n");
+			return _flushCommandQueue();
 		}
 
 		[[nodiscard]] bool isCurrentFenceComplete() noexcept { return _fence->GetCompletedValue() >= _fence_index; }
