@@ -76,17 +76,17 @@ export namespace mt
 		Engine& operator=(Engine&& other) noexcept = default;
 		 
 		// ACCESSOR
-		InputManagerInterface * const	getInputManager() noexcept	{ return _input_manager.get(); }
-		RendererInterface * const		getRenderer() noexcept		{ return _renderer.get(); };
-		WindowManagerInterface * const	getWindowManager() noexcept	{ return _window_manager.get(); };
-		TimeManagerInterface * const	getTimeManager() noexcept	{ return _time_manager.get(); };
+		InputManagerInterface * 	getInputManager() noexcept	{ return _input_manager.get(); }
+		RendererInterface * 		getRenderer() noexcept		{ return _renderer.get(); };
+		WindowManagerInterface * 	getWindowManager() noexcept	{ return _window_manager.get(); };
+		TimeManagerInterface * 	getTimeManager() noexcept	{ return _time_manager.get(); };
 
-		WindowsMessageManagerInterface * const	getWindowsMessageManager() noexcept	{
+		WindowsMessageManagerInterface * 	getWindowsMessageManager() noexcept	{
 			return _windows_message_manager.get();
 		};
 
-		bool isDestroyed() const noexcept { return _instance == nullptr; };
-		bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
+		static [[nodiscard]] bool isDestroyed() noexcept { return _instance == nullptr; };
+		[[nodiscard]] bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
 		// MUTATOR
 
 		[[nodiscard]] std::expected<void, mt::error::Error> run(Game& game) noexcept;

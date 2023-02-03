@@ -10,8 +10,10 @@ export module FrameResource;
 
 import <cstdint>;
 import <ctime>;
+import <format>;
 import <memory>;
 import <stdexcept>;
+import <string>;
 
 export import gsl;
 export import Error;
@@ -67,7 +69,10 @@ export namespace mt::renderer
         FrameResource& operator=(FrameResource&& frameResource) = delete;
         ~FrameResource()
 		{
-			OutputDebugStringW(L"~FrameResource()\n");
+			if constexpr (mt::IS_DEBUG){
+				OutputDebugStringW(L"Destroying FrameResource\n");
+			}
+
 			command_list_allocator->Reset();
 		};
 

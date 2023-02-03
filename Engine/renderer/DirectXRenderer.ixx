@@ -177,7 +177,7 @@ export namespace mt::renderer
 
 		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept override
 		{
-			OutputDebugStringW(L"Renderer::shutdown()\n");
+			if constexpr (mt::IS_DEBUG) OutputDebugStringW(L"Renderer::shutdown()\n");
 			return _flushCommandQueue();
 		}
 

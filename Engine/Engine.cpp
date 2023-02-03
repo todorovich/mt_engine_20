@@ -246,7 +246,7 @@ void Engine::shutdown() noexcept
 
 		getTimeManager()->pause();
 
-		OutputDebugStringW(L"Engine Shutdown Initiated\n");
+		if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
 		// This can fail... but we're shutting down either way right?
 		//ExitProcess(0); // may need exit process if this fails

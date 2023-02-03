@@ -15,7 +15,7 @@ LRESULT mt::windows::WM_Destroy::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
 {
-	OutputDebugStringW(L"WM_Destroy\n");
+	if constexpr(mt::IS_DEBUG) OutputDebugStringW(L"WM_Destroy\n");
 
 	// Causes quit message to appear which will end the windows message processing thread.
 	PostQuitMessage(0);

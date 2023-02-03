@@ -17,6 +17,6 @@ export namespace mt::windows
 
     public:
 
-        WM_SystemCommand() {}
+        WM_SystemCommand() = default;
     };
 }

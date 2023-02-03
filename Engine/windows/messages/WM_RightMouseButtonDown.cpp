@@ -9,6 +9,8 @@ module WindowsMessages.RightMouseButtonDown;
 import Engine;
 import InputModel;
 
+using namespace mt::input::model;
+
 LRESULT mt::windows::WM_RightMouseButtonDown::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
@@ -16,8 +18,8 @@ LRESULT mt::windows::WM_RightMouseButtonDown::execute(
 	//MK_SHIFT and MK_CONTROL exist
 
 	_engine->getInputManager()->acceptInput(
-		mt::input::InputType(
-			mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::TWO
+		InputType(
+			InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::TWO
 		)
 	);
 

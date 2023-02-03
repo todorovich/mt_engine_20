@@ -14,21 +14,21 @@ import gsl;
 
 using namespace mt;
 using namespace mt::input;
-
+using namespace mt::input::model;
 using namespace std::literals;
 
-using mt::input::InputDevice::KEYBOARD;
-using mt::input::InputDevice::MOUSE;
+using mt::input::model::InputDevice::KEYBOARD;
+using mt::input::model::InputDevice::MOUSE;
 
-using mt::input::InputDataType::BUTTON_PRESSED;
-using mt::input::InputDataType::BUTTON_RELEASED;
-using mt::input::InputDataType::BUTTON_HELD;
-using mt::input::InputDataType::TWO_DIMENSIONAL;
+using mt::input::model::InputDataType::BUTTON_PRESSED;
+using mt::input::model::InputDataType::BUTTON_RELEASED;
+using mt::input::model::InputDataType::BUTTON_HELD;
+using mt::input::model::InputDataType::TWO_DIMENSIONAL;
 
-using mt::input::InputContext::NO_CONTEXT;
-using mt::input::InputContext::RELATIVE;
+using mt::input::model::InputContext::NO_CONTEXT;
+using mt::input::model::InputContext::RELATIVE;
 
-using mt::input::VirtualKeyCode::ESCAPE;
+using mt::input::model::VirtualKeyCode::ESCAPE;
 
 const std::size_t mt::Keys::QUIT = std::hash<std::wstring>()(L"QUIT");
 const std::size_t mt::Keys::TOGGLE_RELATIVE_MOUSE = std::hash<std::wstring>()(L"TOGGLE_RELATIVE_MOUSE");

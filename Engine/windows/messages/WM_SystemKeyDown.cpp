@@ -8,8 +8,7 @@ module WindowsMessages.SystemKeyDown;
 import Engine;
 import InputModel;
 
-import InputContext;
-import VirtualKeyCode;
+using namespace mt::input::model;
 
 LRESULT mt::windows::WM_SystemKeyDown::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
@@ -20,10 +19,10 @@ LRESULT mt::windows::WM_SystemKeyDown::execute(
 	bool repeated = lParam & key_held_mask;
 
 	_engine->getInputManager()->acceptInput(
-		mt::input::InputType(
-			(repeated ? mt::input::InputDataType::BUTTON_HELD : mt::input::InputDataType::BUTTON_RELEASED),
-			mt::input::InputContext::NO_CONTEXT,
-			static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam)
+		InputType(
+			(repeated ? InputDataType::BUTTON_HELD : InputDataType::BUTTON_RELEASED),
+			InputContext::NO_CONTEXT,
+			static_cast<MicrosoftVirtualKeyCode>(wParam)
 		)
 	);
 

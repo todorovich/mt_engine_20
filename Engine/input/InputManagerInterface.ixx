@@ -8,6 +8,8 @@ export import <variant>;
 
 export import InputModel;
 
+using namespace mt::input::model;
+
 // Todo: Relative Mouse Position and locking mouse.
 export namespace mt::input
 {

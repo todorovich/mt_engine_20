@@ -1,7 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <windows.h>
+#include <Windows.h>
 
 export module InputModel;
 
@@ -24,8 +24,10 @@ using namespace gsl;
 using namespace mt::input;
 using namespace mt::task;
 
-export namespace mt::input
+export namespace mt::input::model
 {
+
+
 	using InputHandler = std::variant<
 		not_null<Task*>,
 		not_null<OneDimensionalInputTask*>,
@@ -84,7 +86,7 @@ export namespace mt::input
 	struct InputMessage
 	{
 		const std::chrono::steady_clock::time_point	time_point;
-		const mt::input::InputType				input_type;
+		const InputType				input_type;
 
 		const std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data;
 

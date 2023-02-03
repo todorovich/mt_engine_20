@@ -9,22 +9,18 @@ module WindowsMessages.MouseWheel;
 import Engine;
 import InputModel;
 
-import InputDevice;
-import InputDataType;
-import InputContext;
-import VirtualKeyCode;
+using namespace mt::input::model;
 
 LRESULT mt::windows::WM_MouseWheel::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
 {
 	// wParam is the WHEEL_DELTA
-
 	_engine->getInputManager()->acceptInput(
-		mt::input::InputType(
-			mt::input::InputDevice::MOUSE, mt::input::InputDataType::ONE_DIMENSIONAL, mt::input::InputContext::NO_CONTEXT
+		InputType(
+			InputDevice::MOUSE, InputDataType::ONE_DIMENSIONAL, InputContext::NO_CONTEXT
 		),
-		mt::input::InputData1D(static_cast<int>(wParam))
+		InputData1D(static_cast<int>(wParam))
 	);
 
 	return 0;

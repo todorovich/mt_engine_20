@@ -16,6 +16,7 @@ import ObjectPool;
 
 using namespace gsl;
 using namespace mt::task;
+using namespace mt::input::model;
 
 export namespace mt::input
 {
