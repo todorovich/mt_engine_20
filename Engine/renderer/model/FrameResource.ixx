@@ -69,7 +69,8 @@ export namespace mt::renderer
         FrameResource& operator=(FrameResource&& frameResource) = delete;
         ~FrameResource()
 		{
-			if constexpr (mt::IS_DEBUG){
+			// todo: improve this.
+			if constexpr (mt::IS_DEBUG && false){
 				OutputDebugStringW(L"Destroying FrameResource\n");
 			}
 

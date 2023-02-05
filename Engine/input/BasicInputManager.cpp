@@ -16,6 +16,8 @@ using namespace mt::input;
 using namespace mt::input::model;
 using namespace mt::task;
 
+using namespace std::literals;
+
 void BasicInputManager::processInput() noexcept
 {
 	auto size = _input_queue.size();

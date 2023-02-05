@@ -101,6 +101,16 @@ export namespace mt::input::model
 		{
 
 		}
+
+		InputMessage(const InputMessage& other) noexcept = default;
+
+		InputMessage(InputMessage&& other) noexcept = default;
+
+		InputMessage& operator=(const InputMessage& other) noexcept = default;
+
+		InputMessage& operator=(InputMessage&& other) noexcept = default;
+
+		~InputMessage() = default;
 	};
 
 	std::wstring to_wstring(InputMessage input_message) noexcept

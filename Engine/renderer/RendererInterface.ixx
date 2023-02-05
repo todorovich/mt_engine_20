@@ -7,6 +7,7 @@ export import Camera;
 export import Error;
 
 using mt::error::Error;
+using mt::renderer::model::Camera;
 
 export namespace mt::renderer
 {

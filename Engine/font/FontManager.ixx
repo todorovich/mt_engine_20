@@ -2,7 +2,8 @@
 module;
 
 #include <ft2build.h>
-#include FT_FREETYPE_H"freetype/freetype.h"
+
+#include "freetype/freetype.h"
 
 export module FontManager;
 
