@@ -9,18 +9,24 @@ import Engine;
 
 using namespace mt::windows;
 
+// TODO: revisit how the whole resize process is communicated to my window manager.
 LRESULT WM_ExitSizeMove::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
 {
-	// TODO: what to do if this fails?
-	auto expected = _engine->getWindowManager()->resize(
-		_engine->getRenderer()->getWindowWidth(), _engine->getRenderer()->getWindowHeight()
-	);
+
+	auto window_manager =_engine->getWindowManager();
+	if (
+		auto expected = window_manager->resize(window_manager->getWindowWidth(), window_manager->getWindowHeight());
+		!expected
+	)
+	{
+		_engine->crash(expected.error());
+	}
 
 	_engine->getTimeManager()->resume(); // why?
-	
-	_engine->getWindowManager()->setIsWindowResizing(false);
+
+	window_manager->setIsWindowResizing(false);
 	
 	return 0;
 }

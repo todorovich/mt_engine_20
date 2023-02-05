@@ -8,7 +8,7 @@ export import Task;
 
 using namespace std::literals;
 
-export namespace mt::time
+export namespace mt::time::model
 {
     class StopWatch
     {

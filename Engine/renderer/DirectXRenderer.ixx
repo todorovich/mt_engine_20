@@ -164,10 +164,7 @@ export namespace mt::renderer
             : _engine(engine)
         {}
 
-        virtual ~DirectXRenderer()
-		{
-		}
-        
+        virtual ~DirectXRenderer() = default;
         DirectXRenderer(const DirectXRenderer&) = delete;
         DirectXRenderer(DirectXRenderer&&) = default;
         DirectXRenderer& operator=(const DirectXRenderer&) = delete;
@@ -187,7 +184,7 @@ export namespace mt::renderer
 
 		[[nodiscard]] virtual std::expected<void, Error> set4xMsaaState(bool value) noexcept override;
 
-		[[nodiscard]] std::expected<void, Error> resize(int client_width, int client_height) noexcept override;
+		[[nodiscard]] std::expected<void, Error> onResize() noexcept override;
 
 		[[nodiscard]] std::expected<void, Error> render() noexcept override;
 

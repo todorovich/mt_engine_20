@@ -12,7 +12,7 @@ export namespace mt {
 	namespace time { class AlarmManagerInterface; }
 }
 
-export namespace mt::time
+export namespace mt::time::model
 {
 	class Alarm
 	{
@@ -120,7 +120,7 @@ export namespace mt::time
 	};
 }
 
-void mt::time::Alarm::tick(std::chrono::steady_clock::time_point current_tick_time)
+void mt::time::model::Alarm::tick(std::chrono::steady_clock::time_point current_tick_time)
 {
 	// Not triggered or paused
 	if (_has_triggered == false && _is_paused == false)
@@ -134,19 +134,19 @@ void mt::time::Alarm::tick(std::chrono::steady_clock::time_point current_tick_ti
 	}
 }
 
-void mt::time::Alarm::reset() noexcept
+void mt::time::model::Alarm::reset() noexcept
 {
 	_alarm_time += _reset_interval;
 	_has_triggered = false;
 }
 
-void mt::time::Alarm::pause(std::chrono::steady_clock::time_point time_paused) noexcept
+void mt::time::model::Alarm::pause(std::chrono::steady_clock::time_point time_paused) noexcept
 {
 	_time_paused = time_paused;
 	_is_paused = true;
 }
 
-void mt::time::Alarm::resume(std::chrono::steady_clock::time_point time_continued) noexcept
+void mt::time::model::Alarm::resume(std::chrono::steady_clock::time_point time_continued) noexcept
 {
 	// Offset time time by the amount of time spent paused;
 	_alarm_time += time_continued - _time_paused;

@@ -4,12 +4,11 @@ export import Alarm;
 
 export import Task;
 
-export namespace mt::time
+export namespace mt::time::model
 {
 	class Timer : public Alarm
 	{		
 	public:
-
 		Timer(std::chrono::steady_clock::duration offset, mt::task::Task* callback) noexcept
 			: Alarm(std::chrono::steady_clock::now() + offset, callback)
 		{}

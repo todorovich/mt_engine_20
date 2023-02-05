@@ -9,9 +9,11 @@ export import gsl;
 export import Engine;
 export import TimeManagerInterface;
 export import TimeManagerTasks;
+export import TimeModel;
 
-using namespace std::literals;
 using namespace gsl;
+using namespace std::literals;
+using namespace mt::time::model;
 
 export namespace mt::time
 {

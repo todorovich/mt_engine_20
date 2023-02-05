@@ -124,8 +124,8 @@ void BasicInputManager::processInput() noexcept
 
 					const auto range = two_dimensional_input_handler.equal_range(relative_mouse_input_type);
 
-					const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
-					const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+					const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
+					const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
 
 					for (auto it = range.first; it != range.second; ++it)
 					{
@@ -195,8 +195,8 @@ void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 	{
 		setIsMouseRelative();
 
-		const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
-		const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+		const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
+		const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
 
 		GetCursorPos(&_mouse_return_position);
 

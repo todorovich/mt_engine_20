@@ -46,6 +46,8 @@ void FreeFunction;
 template<typename TYPE>
 class ClassName 
 {	
+    bool _is_condition_true;
+
     int _private_member;
 
     void _privateFunction(int some_parameter_1, int some_parameter_2)
@@ -53,6 +55,8 @@ class ClassName
 public:
     
     int public_member;
+
+    bool getIsConditionTrue();
 
     void publicFunction(int some_parameter_1, int some_parameter_2);
 }

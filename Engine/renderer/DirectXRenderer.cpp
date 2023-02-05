@@ -35,153 +35,172 @@ using namespace std::literals;
 using Microsoft::WRL::ComPtr;
 using mt::error::Error;
 
-std::expected<void, Error> DirectXRenderer::resize(int client_width, int client_height) noexcept
+std::expected<void, Error> DirectXRenderer::onResize() noexcept
 {
-	if (client_width != getWindowWidth() || client_height != getWindowHeight())
+	if (_dx_device)
 	{
-		if (auto expected = RendererInterface::resize(client_width, client_height); !expected)
-			return std::unexpected(expected.error());
+		auto width = _engine.getWindowManager()->getWindowWidth();
+		auto height = _engine.getWindowManager()->getWindowHeight();
 
-		if (_dx_device)
+		assert(_dx_swap_chain);
+		assert(_dx_command_list_allocator.Get());
+
+		// Flush before changing any resources.
+		if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
+
+		if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
 		{
-			assert(_dx_device);
-			assert(_dx_swap_chain);
-			assert(_dx_command_list_allocator.Get());
-
-			// Flush before changing any resources.
-			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
-
-			if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
-			{
-				return std::unexpected(mt::error::Error{
+			return std::unexpected(
+				mt::error::Error{
 					L"Unable to reset the command list allocator."sv,
 					mt::error::ErrorCode::GRAPHICS_FAILURE,
 					__func__, __FILE__, __LINE__
-				});
-			}
+				}
+			);
+		}
 
-			// Release the previous resources we will be recreating.
-			for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
-			{
-				_swap_chain_buffer[i].Reset();
-			}
-			_depth_stencil_buffer.Reset();
+		// Release the previous resources we will be recreating.
+		for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
+		{
+			_swap_chain_buffer[i].Reset();
+		}
+		_depth_stencil_buffer.Reset();
 
-			// Resize the swap chain.
-			if (FAILED(_dx_swap_chain->ResizeBuffers(
-				getSwapChainBufferCount(),
-				getWindowWidth(), getWindowHeight(),
-				_back_buffer_format,
-				DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
-			)))
-			{
-				return std::unexpected(mt::error::Error{
+		// Resize the swap chain.
+		if (FAILED(_dx_swap_chain->ResizeBuffers(
+			getSwapChainBufferCount(),
+			width, height,
+			_back_buffer_format,
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+		)))
+		{
+			return std::unexpected(
+				mt::error::Error{
 					L"Unable to reset the swap chain."sv,
 					mt::error::ErrorCode::GRAPHICS_FAILURE,
 					__func__, __FILE__, __LINE__
-				});
-			}
+				}
+			);
+		}
 
-			_current_back_buffer = 0;
+		_current_back_buffer = 0;
 
-			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-			for (UINT i = 0; i < getSwapChainBufferCount(); i++)
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
+		for (UINT i = 0; i < getSwapChainBufferCount(); i++)
+		{
+			if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
 			{
-				if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
-				{
-					return std::unexpected(mt::error::Error{
+				return std::unexpected(
+					mt::error::Error{
 						L"Unable to retrieve the swap chain buffer."sv,
 						mt::error::ErrorCode::GRAPHICS_FAILURE,
 						__func__, __FILE__, __LINE__
-					});
-				}
-
-				_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
-				rtvHeapHandle.Offset(1, _rtv_descriptor_size);
+					}
+				);
 			}
 
-			// Create the depth/stencil buffer and view.
-			D3D12_RESOURCE_DESC depthStencilDesc;
-			depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-			depthStencilDesc.Alignment = 0;
-			depthStencilDesc.Width = getWindowWidth();
-			depthStencilDesc.Height = getWindowHeight();
-			depthStencilDesc.DepthOrArraySize = 1;
-			depthStencilDesc.MipLevels = 1;
-			depthStencilDesc.Format = _depth_stencil_format;
-			depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
-			depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
-			depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-			depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+			_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
+			rtvHeapHandle.Offset(1, _rtv_descriptor_size);
+		}
 
-			D3D12_CLEAR_VALUE optClear;
-			optClear.Format = _depth_stencil_format;
-			optClear.DepthStencil.Depth = 1.0f;
-			optClear.DepthStencil.Stencil = 0;
+		// Create the depth/stencil buffer and view.
+		D3D12_RESOURCE_DESC depthStencilDesc;
+		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Alignment = 0;
+		depthStencilDesc.Width = width;
+		depthStencilDesc.Height = height;
+		depthStencilDesc.DepthOrArraySize = 1;
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.Format = _depth_stencil_format;
+		depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+		depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
+		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-			auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+		D3D12_CLEAR_VALUE optClear;
+		optClear.Format = _depth_stencil_format;
+		optClear.DepthStencil.Depth = 1.0f;
+		optClear.DepthStencil.Stencil = 0;
 
-			if (FAILED(_dx_device->CreateCommittedResource(
-				&heap_properties,
-				D3D12_HEAP_FLAG_NONE,
-				&depthStencilDesc,
-				D3D12_RESOURCE_STATE_COMMON,
-				&optClear,
-				IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
-			)))
-			{
-				return std::unexpected(mt::error::Error{
+		auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+		if (FAILED(_dx_device->CreateCommittedResource(
+			&heap_properties,
+			D3D12_HEAP_FLAG_NONE,
+			&depthStencilDesc,
+			D3D12_RESOURCE_STATE_COMMON,
+			&optClear,
+			IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
+		)))
+		{
+			return std::unexpected(
+				mt::error::Error{
 					L"Unable to create committed depth stencil buffer resource."sv,
 					mt::error::ErrorCode::GRAPHICS_FAILURE,
 					__func__, __FILE__, __LINE__
-				});
-			}
-
-			// Create descriptor to mip level 0 of entire resource using the format of the resource.
-			_dx_device->CreateDepthStencilView(_depth_stencil_buffer.Get(), nullptr, _getDepthStencilView());
-
-
-			auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				_depth_stencil_buffer.Get(),
-				D3D12_RESOURCE_STATE_COMMON,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE
+				}
 			);
+		}
 
-			// Transition the resource from its initial state to be used as a depth buffer.
-			_dx_command_list->ResourceBarrier(1, &resource_barrier);
+		// Create descriptor to mip level 0 of entire resource using the format of the resource.
+		_dx_device->CreateDepthStencilView(_depth_stencil_buffer.Get(), nullptr, _getDepthStencilView());
 
-			// Execute the Resize commands.
-			if (FAILED(_dx_command_list->Close()))
-			{
-				return std::unexpected(mt::error::Error{
+
+		auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			_depth_stencil_buffer.Get(),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE
+		);
+
+		// Transition the resource from its initial state to be used as a depth buffer.
+		_dx_command_list->ResourceBarrier(1, &resource_barrier);
+
+		// Execute the Resize commands.
+		if (FAILED(_dx_command_list->Close()))
+		{
+			return std::unexpected(
+				mt::error::Error{
 					L"Unable to close the command list."sv,
 					mt::error::ErrorCode::GRAPHICS_FAILURE,
 					__func__, __FILE__, __LINE__
-				});
-			}
-
-			ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
-			_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
-
-			// Wait until Resize is complete.
-			if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
-
-			// Update the viewport transform to cover the client area.
-			_screen_viewport.TopLeftX = 0;
-			_screen_viewport.TopLeftY = 0;
-			_screen_viewport.Width = static_cast<float>(getWindowWidth());
-			_screen_viewport.Height = static_cast<float>(getWindowHeight());
-			_screen_viewport.MinDepth = 0.0f;
-			_screen_viewport.MaxDepth = 1.0f;
-
-			_scissor_rectangle = { 0, 0, getWindowWidth(), getWindowHeight() };
-
-			// The window resized, so update the aspect ratio and recompute the projection matrix.
-			getCurrentCamera().setLens(0.25f * pi_v<float>, getWindowAspectRatio(), 1.0f, 1000.0f);
+				}
+			);
 		}
+
+		ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
+		_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
+
+		// Wait until Resize is complete.
+		if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
+
+		// Update the viewport transform to cover the client area.
+		_screen_viewport.TopLeftX = 0;
+		_screen_viewport.TopLeftY = 0;
+		_screen_viewport.Width = static_cast<float>(width);
+		_screen_viewport.Height = static_cast<float>(height);
+		_screen_viewport.MinDepth = 0.0f;
+		_screen_viewport.MaxDepth = 1.0f;
+
+		_scissor_rectangle = { 0, 0, width, height };
+
+		// The window resized, so update the aspect ratio and recompute the projection matrix.
+		getCurrentCamera().setLens(
+			0.25f * pi_v < float > , _engine.getWindowManager()->getWindowAspectRatio(), 1.0f, 1000.0f
+		);
+
+		return {};
+	}
+	else
+	{
+		return std::unexpected(
+			mt::error::Error{
+				L"The renderer may not be resized before it is initialized."sv,
+				mt::error::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			}
+		);
 	}
 
-	return {};
 }
 
 std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
@@ -193,7 +212,7 @@ std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 		// Recreate the swapchain and buffers with new multisample settings.
 		if (auto expected = _createSwapChain(); !expected) return std::unexpected(expected.error());
 
-		if (auto expected = resize(getWindowWidth(), getWindowHeight()); !expected)
+		if (auto expected = onResize(); !expected)
 			return std::unexpected(expected.error());
 	}
 
@@ -275,9 +294,12 @@ void DirectXRenderer::_updatePassConstants()
 	XMStoreFloat4x4(&pass_constants.view_and_projection_matrix, XMMatrixTranspose(view_and_projection_matrix));
 	XMStoreFloat4x4(&pass_constants.inverse_view_and_projection_matrix, XMMatrixTranspose(inverse_view_and_projection_matrix));
 
+	auto width = _engine.getWindowManager()->getWindowWidth();
+	auto height = _engine.getWindowManager()->getWindowWidth();
+
 	pass_constants.eye_position_world_space = { 0.0f, 0.0f, 0.0f }; // todo: get from camera?
-	pass_constants.render_target_size = { static_cast<float>(getWindowWidth()), static_cast<float>(getWindowHeight()) };
-	pass_constants.inverse_render_target_size = { 1.0f / getWindowWidth(), 1.0f / getWindowHeight() };
+	pass_constants.render_target_size = { static_cast<float>(width), static_cast<float>(height) };
+	pass_constants.inverse_render_target_size = { 1.0f / width, 1.0f / height };
 	pass_constants.near_z_clipping_distance = 0.0f;
 	pass_constants.far_z_clipping_distance = 1'000'000.0f;
 	pass_constants.total_time_ns = 0.0f;
@@ -699,8 +721,8 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 	_dx_swap_chain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC swap_chain_description;
-	swap_chain_description.BufferDesc.Width = getWindowWidth();
-	swap_chain_description.BufferDesc.Height = getWindowHeight();
+	swap_chain_description.BufferDesc.Width = _engine.getWindowManager()->getWindowWidth();
+	swap_chain_description.BufferDesc.Height = _engine.getWindowManager()->getWindowHeight();
 	swap_chain_description.BufferDesc.RefreshRate.Numerator = 60;
 	swap_chain_description.BufferDesc.RefreshRate.Denominator = 1;
 	swap_chain_description.BufferDesc.Format = _back_buffer_format;

@@ -1,15 +1,14 @@
-target_sources(Engine
-	PRIVATE
-		Alarm.ixx
-		AlarmManagerInterface.ixx
-		Stopwatch.ixx
-		StandardAlarmManager.ixx
-		StandardTimeManager.cpp
-		StandardTimeManager.ixx
-		TimeManagerTasks.cpp
-		TimeManagerTasks.ixx
-    	TimeManagerInterface.ixx
-		TImer.ixx
+target_sources(
+	Engine PRIVATE
+	AlarmManagerInterface.ixx
+	StandardAlarmManager.ixx
+	StandardTimeManager.cpp
+	StandardTimeManager.ixx
+	TimeManagerInterface.ixx
+	TimeManagerTasks.cpp
+	TimeManagerTasks.ixx
 )
 
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_subdirectory("model")

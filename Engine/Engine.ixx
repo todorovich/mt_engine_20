@@ -20,11 +20,11 @@ export import InputManagerInterface;
 export import WindowManagerInterface;
 export import WindowsMessageManagerInterface;
 
-export import StopWatch;
-export import Task;
 export import gsl;
+export import InputModel;
+export import Task;
 
-export using namespace std::literals::chrono_literals;
+using namespace std::literals;
 
 using mt::input::InputManagerInterface;
 using mt::renderer::RendererInterface;
@@ -32,19 +32,16 @@ using mt::windows::WindowsMessageManagerInterface;
 using mt::windows::WindowManagerInterface;
 using mt::time::TimeManagerInterface;
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+using std::unique_ptr;
 
 export namespace mt
 {
 	class Engine
 	{
-		friend LRESULT CALLBACK::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-		std::unique_ptr<mt::windows::WindowManagerInterface>		_window_manager;
-		std::unique_ptr<windows::WindowsMessageManagerInterface>	_windows_message_manager;
-		std::unique_ptr<input::InputManagerInterface>				_input_manager;
-		std::unique_ptr<time::TimeManagerInterface>					_time_manager;
-		std::unique_ptr<renderer::RendererInterface>				_renderer;
+		unique_ptr<InputManagerInterface>			_input_manager;
+		unique_ptr<TimeManagerInterface>			_time_manager;
+		unique_ptr<WindowManagerInterface>			_window_manager;
+		unique_ptr<RendererInterface>				_renderer;
 
 		std::chrono::steady_clock::duration _time_since_stat_update = 0ns;
 
@@ -56,19 +53,19 @@ export namespace mt
 
 		std::thread _engine_tick_thread;
 
+		// TODO: move this to own service? Time Manager?
 		[[nodiscard]] std::expected<void, mt::error::Error> _tick(
-			gsl::not_null<mt::time::StopWatch*> tick_time,
-			gsl::not_null<mt::time::StopWatch*> update_time,
-			gsl::not_null<mt::time::StopWatch*> render_time,
-			gsl::not_null<mt::time::StopWatch*> frame_time,
-			gsl::not_null<mt::time::StopWatch*> input_time,
+			gsl::not_null<mt::time::model::StopWatch*> tick_time,
+			gsl::not_null<mt::time::model::StopWatch*> update_time,
+			gsl::not_null<mt::time::model::StopWatch*> render_time,
+			gsl::not_null<mt::time::model::StopWatch*> frame_time,
+			gsl::not_null<mt::time::model::StopWatch*> input_time,
 			mt::Game& game
 		) noexcept;
 
-
 	public:
 		// Big 5
-		Engine(HINSTANCE hInstance = nullptr);
+		Engine();
 		~Engine() noexcept;
 		Engine(const Engine& other) noexcept = default;
 		Engine(Engine&& other) noexcept = default;
@@ -76,14 +73,10 @@ export namespace mt
 		Engine& operator=(Engine&& other) noexcept = default;
 		 
 		// ACCESSOR
-		InputManagerInterface * 	getInputManager() noexcept	{ return _input_manager.get(); }
-		RendererInterface * 		getRenderer() noexcept		{ return _renderer.get(); };
-		WindowManagerInterface * 	getWindowManager() noexcept	{ return _window_manager.get(); };
-		TimeManagerInterface * 	getTimeManager() noexcept	{ return _time_manager.get(); };
-
-		WindowsMessageManagerInterface * 	getWindowsMessageManager() noexcept	{
-			return _windows_message_manager.get();
-		};
+		InputManagerInterface * 	getInputManager() 	noexcept	{ return _input_manager.get(); }
+		RendererInterface * 		getRenderer() 		noexcept	{ return _renderer.get(); };
+		WindowManagerInterface * 	getWindowManager() 	noexcept	{ return _window_manager.get(); };
+		TimeManagerInterface * 		getTimeManager() 	noexcept	{ return _time_manager.get(); };
 
 		static [[nodiscard]] bool isDestroyed() noexcept { return _instance == nullptr; };
 		[[nodiscard]] bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }

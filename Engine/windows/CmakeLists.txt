@@ -6,6 +6,7 @@ target_sources(
 	WindowManagerInterface.ixx
 	WindowsMessage.ixx
 	WindowsMessageManager.ixx
+	WindowsMessageManagerInterface.cpp
 	WindowsMessageManagerInterface.ixx
 )
 

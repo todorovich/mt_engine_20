@@ -79,7 +79,7 @@ export namespace mt
 			map_input_controls();
 		}
 
-		virtual ~EngineDemo() noexcept {}
+		virtual ~EngineDemo() noexcept = default;
 	};
 }
 
@@ -92,7 +92,7 @@ int WINAPI WinMain(
 {
 	try
 	{
-		mt::Engine engine = mt::Engine(hInstance);
+		mt::Engine engine = mt::Engine();
 
 		mt::EngineDemo engine_demo = mt::EngineDemo(engine);
 

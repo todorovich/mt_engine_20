@@ -20,8 +20,30 @@ export namespace mt::windows
 		volatile bool _is_window_resizing = false;  // are the Resize bars being dragged?
 		volatile bool _is_window_fullscreen = false;// fullscreen enabled
 
+		int _window_width = 0;
+		int _window_height = 0;
+
+		float _window_aspect_ratio = 0.0f;
+
 	protected:
 		const std::wstring _main_window_caption = L"mt_engine";
+
+		void _setWindowAspectRatio(float aspect_ratio) noexcept
+		{
+			_window_aspect_ratio = aspect_ratio;
+		}
+
+		void _setWindowWidth(int width) noexcept
+		{
+			_window_width = width;
+			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+		}
+
+		void _setWindowHeight(int height) noexcept
+		{
+			_window_height = height;
+			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+		}
 
 	public:
 		using HANDLE = void*;
@@ -35,7 +57,13 @@ export namespace mt::windows
 
 		[[nodiscard]] virtual HANDLE getMainWindowHandle() const noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept
+		{
+			_window_width = width;
+			_window_height = height;
+			_window_aspect_ratio = static_cast<float>(_window_width) / _window_height;
+			return {};
+		};
 
 		void setIsWindowResizing(bool is_resizing) noexcept { _is_window_resizing = is_resizing; }
 
@@ -50,5 +78,11 @@ export namespace mt::windows
 		bool isWindowResizing() const noexcept { return _is_window_resizing; };
 
 		bool isWindowFullscreen() const noexcept { return _is_window_fullscreen; };
+
+		float getWindowAspectRatio() const noexcept { return _window_aspect_ratio; }
+
+		int getWindowWidth() const noexcept { return _window_width; }
+
+		int getWindowHeight() const noexcept { return _window_height; }
 	};
 }
