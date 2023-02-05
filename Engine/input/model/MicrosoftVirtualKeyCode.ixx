@@ -9,7 +9,7 @@ export import <string>;
 
 import <format>;
 
-export namespace mt::input
+export namespace mt::input::model
 {
 	enum struct MicrosoftVirtualKeyCode : unsigned short
 	{

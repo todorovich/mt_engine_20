@@ -9,7 +9,7 @@ import <mutex>;
 
 export import MathUtility;
 
-export namespace mt::renderer
+export namespace mt::renderer::model
 {
     class Camera
     {

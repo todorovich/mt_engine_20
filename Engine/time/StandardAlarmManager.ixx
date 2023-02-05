@@ -2,13 +2,14 @@ export module StandardAlarmManager;
 
 export import AlarmManager;
 
-export import Alarm;
 export import gsl;
 export import ObjectPool;
+export import TimeModel;
 
 using namespace gsl;
 
 using std::chrono::steady_clock;
+using namespace mt::time::model;
 
 export namespace mt::time
 {

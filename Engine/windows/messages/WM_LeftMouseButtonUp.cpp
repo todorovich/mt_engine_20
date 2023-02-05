@@ -7,7 +7,9 @@ module;
 module WindowsMessages.LeftMouseButtonUp;
 
 import Engine;
+import InputModel;
 
+using namespace mt::input::model;
 using namespace mt::windows;
 
 LRESULT mt::windows::WM_LeftMouseButtonUp::execute(
@@ -15,8 +17,8 @@ LRESULT mt::windows::WM_LeftMouseButtonUp::execute(
 )
 {
 	_engine->getInputManager()->acceptInput(
-		mt::input::InputType(
-			mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::ONE
+		InputType(
+			InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::ONE
 		)
 	);
 

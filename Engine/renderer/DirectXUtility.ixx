@@ -58,19 +58,6 @@ export namespace mt::renderer
 		UINT64 byteSize,
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 	) noexcept;
-
-	/*
-	void getMessage()
-	{
-		// Get the size of the message
-		SIZE_T messageLength = 0;
-		HRESULT hr = pInfoQueue->GetMessage(0, NULL, &messageLength);
-
-		// Allocate space and get the message
-		D3D12_MESSAGE * pMessage = (D3D12_MESSAGE*)malloc(messageLength);
-		hr = pInfoQueue->GetMessage(0, pMessage, &messageLength);
-	}
- 	*/
 }
 
 using namespace std::literals;
@@ -98,8 +85,6 @@ namespace mt::renderer
 		{
 			// Get the string description of the error code.
 			_com_error err(error_code);
-
-			//std::wstring msg = std::wstring(err.ErrorMessage());
 
 			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: ";// +msg;
 		}

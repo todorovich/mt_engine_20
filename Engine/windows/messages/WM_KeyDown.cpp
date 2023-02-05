@@ -5,6 +5,10 @@ module;
 
 module WindowsMessages.KeyDown;
 
+import InputModel;
+
+using namespace mt::input::model;
+
 LRESULT mt::windows::WM_KeyDown::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
 )
@@ -14,10 +18,10 @@ LRESULT mt::windows::WM_KeyDown::execute(
 	bool repeated = lParam & key_held_mask;
 
 	_engine->getInputManager()->acceptInput(
-		mt::input::InputType(
-			(repeated ? mt::input::InputDataType::BUTTON_HELD : mt::input::InputDataType::BUTTON_PRESSED),
-			mt::input::InputContext::NO_CONTEXT,
-			static_cast<mt::input::MicrosoftVirtualKeyCode>(wParam)
+		InputType(
+			(repeated ? InputDataType::BUTTON_HELD : InputDataType::BUTTON_PRESSED),
+			InputContext::NO_CONTEXT,
+			static_cast<MicrosoftVirtualKeyCode>(wParam)
 		)
 	);
 

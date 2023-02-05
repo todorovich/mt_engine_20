@@ -16,7 +16,7 @@ using namespace std::literals;
 std::expected<void, mt::error::Error> WindowsWindowManager::initialize() noexcept
 {
 	_window_class.style = CS_HREDRAW | CS_VREDRAW;
-	_window_class.lpfnWndProc = ::MainWndProc;
+	_window_class.lpfnWndProc = WindowsMessageManagerInterface::MainWndProc;
 	_window_class.cbClsExtra = 0;
 	_window_class.cbWndExtra = 0;
 	_window_class.hInstance = _instance_handle;
@@ -37,7 +37,7 @@ std::expected<void, mt::error::Error> WindowsWindowManager::initialize() noexcep
 	}
 
 	// Compute window rectangle dimensions based on requested client area dimensions.
-	RECT rectangle = { 0, 0, _engine->getRenderer()->getWindowWidth(), _engine->getRenderer()->getWindowHeight() };
+	RECT rectangle = { 0, 0, getWindowWidth(), getWindowHeight() };
 	AdjustWindowRect(&rectangle, WS_OVERLAPPEDWINDOW, false);
 	int width = rectangle.right - rectangle.left;
 	int height = rectangle.bottom - rectangle.top;
@@ -75,16 +75,24 @@ std::expected<void, mt::error::Error> WindowsWindowManager::shutdown() noexcept
 
 std::expected<void, mt::error::Error> WindowsWindowManager::resize(int width, int height) noexcept
 {
+	if (auto expected = mt::windows::WindowManagerInterface::resize(width, height); !expected)
+		return std::unexpected(expected.error());
+
 	// This flag should prevent further rendering after the current frame finishes
 	setIsWindowResizing(true);
 
+	auto renderer = _engine.getRenderer();
+
+	// TODO: don't wait.
 	// wait until rendering is finished.
-	while (_engine->getRenderer()->getIsRendering()) {};
+	while (renderer->getIsRendering()) {};
 
-	if (auto expected = _engine->getRenderer()->resize(width, height); !expected)
-		return std::unexpected(expected.error());
-
-	// TODO: Callbacks?
+	// TODO: Observer Pattern?
+	if(renderer->getIsInitialized())
+	{
+		if (auto expected = renderer->onResize(); !expected)
+			return std::unexpected(expected.error());
+	}
 
 	// Continue rendering.
 	setIsWindowResizing(false);

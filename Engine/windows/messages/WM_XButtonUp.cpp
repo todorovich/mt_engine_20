@@ -6,6 +6,10 @@ module;
 
 module WindowsMessages.XButtonUp;
 
+import InputModel;
+
+using namespace mt::input::model;
+
 LRESULT mt::windows::WM_XButtonUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
 	bool button_1 = 0x00010000 & wParam;
@@ -14,8 +18,8 @@ LRESULT mt::windows::WM_XButtonUp::execute(const HWND& hwnd, const UINT& msg, co
 	if (button_1)
 	{
 		_engine->getInputManager()->acceptInput(
-			mt::input::InputType(
-				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FOUR
+			InputType(
+				InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::FOUR
 			)
 		);
 
@@ -24,8 +28,8 @@ LRESULT mt::windows::WM_XButtonUp::execute(const HWND& hwnd, const UINT& msg, co
 	else if (button_2)
 	{
 		_engine->getInputManager()->acceptInput(
-			mt::input::InputType(
-				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_RELEASED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FIVE
+			InputType(
+				InputDevice::MOUSE, InputDataType::BUTTON_RELEASED, InputContext::NO_CONTEXT, VirtualKeyCode::FIVE
 			)
 		);
 

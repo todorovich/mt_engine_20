@@ -51,11 +51,10 @@ using namespace mt;
 
 Engine* Engine::_instance = nullptr;
 
-Engine::Engine(HINSTANCE instance_handle )
+Engine::Engine()
 	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
 	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
-	, _windows_message_manager(std::make_unique<windows::WindowsMessageManager>(*this))
-	, _window_manager(std::make_unique<windows::WindowsWindowManager>(this, instance_handle))
+	, _window_manager(std::make_unique<windows::WindowsWindowManager>(*this))
 	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
 {
 	if (_instance == nullptr)
@@ -70,6 +69,7 @@ Engine::Engine(HINSTANCE instance_handle )
 	if (auto expected = getRenderer()->initialize(); !expected)
 		throw std::runtime_error("Could not initialize direct3d");
 
+	// TODO: pass these as parameters into the renderer, and do this resize in the renderer's init;
 	// Do the initial Resize code.
 	if (auto expected =
 			getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
@@ -176,11 +176,11 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 }
 
 std::expected<void, mt::error::Error> Engine::_tick(
-	gsl::not_null<mt::time::StopWatch*> tick_time,
-	gsl::not_null<mt::time::StopWatch*> update_time,
-	gsl::not_null<mt::time::StopWatch*> render_time,
-	gsl::not_null<mt::time::StopWatch*> frame_time,
-	gsl::not_null<mt::time::StopWatch*> input_time,
+	gsl::not_null<mt::time::model::StopWatch*> tick_time,
+	gsl::not_null<mt::time::model::StopWatch*> update_time,
+	gsl::not_null<mt::time::model::StopWatch*> render_time,
+	gsl::not_null<mt::time::model::StopWatch*> frame_time,
+	gsl::not_null<mt::time::model::StopWatch*> input_time,
 	mt::Game& game
 ) noexcept
 {
@@ -246,7 +246,7 @@ void Engine::shutdown() noexcept
 
 		getTimeManager()->pause();
 
-		OutputDebugStringW(L"Engine Shutdown Initiated\n");
+		if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
 
 		// This can fail... but we're shutting down either way right?
 		//ExitProcess(0); // may need exit process if this fails

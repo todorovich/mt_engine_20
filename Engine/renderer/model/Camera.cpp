@@ -10,7 +10,7 @@ import <string>;
 import <mutex>;
 import <numbers>;
 
-using namespace mt::renderer;
+using namespace mt::renderer::model;
 using namespace DirectX;
 using namespace mt;
 using namespace std::numbers;

@@ -5,9 +5,10 @@ export import <map>;
 export import <string_view>;
 export import <chrono>;
 
-export import StopWatch;
+export import TimeModel;
 
 using namespace std::literals;
+using namespace mt::time::model;
 
 // TODO: need a tick and a physics tick. 
 export namespace mt::time

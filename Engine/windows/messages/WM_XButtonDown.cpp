@@ -6,6 +6,9 @@ module;
 module WindowsMessages.XButtonDown;
 
 import Engine;
+import InputModel;
+
+using namespace mt::input::model;
 
 LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
@@ -15,8 +18,8 @@ LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, 
 	if (button_1)
 	{
 		_engine->getInputManager()->acceptInput(
-			mt::input::InputType(
-				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FOUR
+			InputType(
+				InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::FOUR
 			)
 		);
 
@@ -25,8 +28,8 @@ LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, 
 	else if (button_2)
 	{
 		_engine->getInputManager()->acceptInput(
-			mt::input::InputType(
-				mt::input::InputDevice::MOUSE, mt::input::InputDataType::BUTTON_PRESSED, mt::input::InputContext::NO_CONTEXT, mt::input::VirtualKeyCode::FIVE
+			InputType(
+				InputDevice::MOUSE, InputDataType::BUTTON_PRESSED, InputContext::NO_CONTEXT, VirtualKeyCode::FIVE
 			)
 		);
 

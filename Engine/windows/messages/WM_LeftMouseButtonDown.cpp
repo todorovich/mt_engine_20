@@ -8,7 +8,7 @@ module WindowsMessages.LeftMouseButtonDown;
 
 import Engine;
 
-using namespace mt::input;
+using namespace mt::input::model;
 
 LRESULT mt::windows::WM_LeftMouseButtonDown::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam

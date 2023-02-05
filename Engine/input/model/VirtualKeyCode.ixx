@@ -5,7 +5,7 @@ import <string>;
 
 using namespace std::literals;
 
-export namespace mt::input
+export namespace mt::input::model
 {
 	enum struct VirtualKeyCode : unsigned char
 	{

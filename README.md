@@ -1,12 +1,10 @@
 # mt_engine_20
 
-
-Dependencies:
+## External Dependencies:
 - truetype
 - catch2
 
-Converted to use modules and c++20
-
+### Naming Conventions
 ```
 static const int COMPILE_TIME_CONSTANT;
 
@@ -51,6 +49,8 @@ class ClassName
     void _privateFunction(int some_parameter_1, int some_parameter_2)
 
 public:
+    
+    static void StaticFunction();
     
     int public_member;
 

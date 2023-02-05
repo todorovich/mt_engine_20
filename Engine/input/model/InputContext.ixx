@@ -7,14 +7,8 @@ import <vector>;
 
 using namespace std::literals;
 
-export namespace mt::input
+export namespace mt::input::model
 {
-	// Feel like i need a custom comparator for this when used in the input map.
-	// THe problem is i want it to consider one with only pressed to be equal to any one with pressed
-	// ,even if its pressed|released for example, for the purpose of finding matching actions.
-	// For the purpose of add/replacing/removing from the map, only exact matches will do.
-	// Will have to allow mutlple things to register for the same input when combos/sequences are intro'd
-	// for example a and a+b would both need to be able to register for A PRESSED
 	enum struct InputContext : unsigned char
 	{
 		NO_CONTEXT		= 0x00,
@@ -25,14 +19,14 @@ export namespace mt::input
 		RELATIVE		= 0x10,
 	};
 
-	constexpr InputContext operator|(InputContext a, InputContext b) noexcept
+	constexpr InputContext operator|(const InputContext& a, const InputContext& b) noexcept
 	{
-		return static_cast<InputContext>(static_cast<unsigned short>(a) | static_cast<unsigned short>(b));
+		return static_cast<InputContext>(static_cast<unsigned char>(a) | static_cast<unsigned char>(b));
 	}
 
 	constexpr InputContext operator&(InputContext a, InputContext b) noexcept
 	{
-		return static_cast<InputContext>(static_cast<unsigned short>(a) & static_cast<unsigned short>(b));
+		return static_cast<InputContext>(static_cast<unsigned char>(a) & static_cast<unsigned char>(b));
 	}
 
 	constexpr std::wstring_view to_wstring(InputContext key) noexcept

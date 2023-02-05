@@ -13,7 +13,10 @@ import InputModel;
 
 using namespace gsl;
 using namespace mt::input;
+using namespace mt::input::model;
 using namespace mt::task;
+
+using namespace std::literals;
 
 void BasicInputManager::processInput() noexcept
 {
@@ -69,9 +72,9 @@ void BasicInputManager::processInput() noexcept
 			}
 				break;
 
-				// check if button is in held buttons
-				// if so then noop (Wait for held buttons loop to trigger action)
-				// if not then trigger button pressed and put button in set to be added to held buttons after the action loop
+			// check if button is in held buttons
+			// if so then noop (Wait for held buttons loop to trigger action)
+			// if not then trigger button pressed and put button in set to be added to held buttons after the action loop
 			case InputDataType::BUTTON_HELD: [[fallthrough]];
 			case InputDataType::BUTTON_PRESSED:
 			{
@@ -103,7 +106,7 @@ void BasicInputManager::processInput() noexcept
 
 				for (auto it = range.first; it != range.second; ++it)
 				{
-					InputData1D input_data = std::get<mt::input::InputData1D>(input_message.data);
+					InputData1D input_data = std::get<InputData1D>(input_message.data);
 					(*it->second)(input_data.x);
 				}
 			}
@@ -111,18 +114,18 @@ void BasicInputManager::processInput() noexcept
 
 			case InputDataType::TWO_DIMENSIONAL:
 			{
-				const auto& data2d = std::get<mt::input::InputData2D>(input_message.data);
+				const auto& data2d = std::get<InputData2D>(input_message.data);
 
-				if (getIsMouseRelative() && input_type.input_device == mt::input::InputDevice::MOUSE)
+				if (getIsMouseRelative() && input_type.input_device == InputDevice::MOUSE)
 				{
-					const auto relative_mouse_input_type = mt::input::InputType(
-						mt::input::InputDevice::MOUSE, mt::input::InputDataType::TWO_DIMENSIONAL, mt::input::InputContext::RELATIVE
+					const auto relative_mouse_input_type = InputType(
+						InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE
 					);
 
 					const auto range = two_dimensional_input_handler.equal_range(relative_mouse_input_type);
 
-					const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
-					const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+					const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
+					const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
 
 					for (auto it = range.first; it != range.second; ++it)
 					{
@@ -192,8 +195,8 @@ void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 	{
 		setIsMouseRelative();
 
-		const int half_width = _engine.getRenderer()->getWindowWidth() / 2;
-		const int half_height = _engine.getRenderer()->getWindowHeight() / 2;
+		const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
+		const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
 
 		GetCursorPos(&_mouse_return_position);
 
@@ -203,9 +206,7 @@ void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 	}
 }
 
-void mt::input::BasicInputManager::registerInputHandler(
-	mt::input::InputHandler input_handler, mt::input::InputType input_type
-) noexcept
+void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handler, InputType input_type) noexcept
 {
 	switch (input_type.input_data_type)
 	{

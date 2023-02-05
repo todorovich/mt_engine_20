@@ -48,14 +48,6 @@ import Engine;
 
 using namespace mt::windows;
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	// Forward hwnd on because we can get messages (e.g., WM_CREATE)
-	// before CreateWindow returns, and thus before mhMainWnd is valid.
-	return mt::Engine::_instance->_windows_message_manager->handle_message(hwnd, msg, wParam, lParam);
-}
-
-
 WindowsMessageManager::WindowsMessageManager(mt::Engine& engine)
 	: _engine(engine)
 {

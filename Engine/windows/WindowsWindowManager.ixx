@@ -6,6 +6,7 @@ module;
 export module WindowsWindowManager;
 
 export import WindowManagerInterface;
+export import WindowsMessageManager;
 
 export import Engine;
 
@@ -13,7 +14,9 @@ export namespace mt::windows
 {
 	class WindowsWindowManager : public WindowManagerInterface
 	{
-		mt::Engine* _engine;
+		std::unique_ptr<WindowsMessageManagerInterface>	_windows_message_manager;
+
+		mt::Engine& _engine;
 
 		HINSTANCE _instance_handle;
 
@@ -22,10 +25,13 @@ export namespace mt::windows
 		HWND _main_window_handle;
 	public:
 
-		WindowsWindowManager(mt::Engine* engine, HINSTANCE instance_handle) noexcept
-			: _engine(engine)
-			, _instance_handle(instance_handle)
-		{}
+		WindowsWindowManager(mt::Engine& engine) noexcept
+			: _windows_message_manager(std::make_unique<WindowsMessageManager>(engine))
+			, _engine(engine)
+			, _instance_handle(GetModuleHandle(nullptr))
+		{
+
+		}
 
 		virtual ~WindowsWindowManager() noexcept
 		{

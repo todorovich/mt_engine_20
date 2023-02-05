@@ -4,9 +4,11 @@ import <chrono>;
 
 import StandardAlarmManager;
 import TimeManagerTasks;
+import TimeModel;
 
-//using namespace gsl;
+
 using namespace mt::time;
+using namespace mt::time::model;
 
 StandardTimeManager::StandardTimeManager(mt::Engine* engine) noexcept
 	: _alarm_manager(std::make_unique<StandardAlarmManager>())

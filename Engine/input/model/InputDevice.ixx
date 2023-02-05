@@ -5,7 +5,7 @@ export import <string_view>;
 
 using namespace std::literals;
 
-export namespace mt::input
+export namespace mt::input::model
 {
 	enum struct InputDevice : unsigned char
 	{

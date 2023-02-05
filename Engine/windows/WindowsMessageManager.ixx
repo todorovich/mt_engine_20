@@ -12,8 +12,6 @@ export import Engine;
 export import WindowsMessageManagerInterface;
 export import WindowsMessage;
 
-export LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 export namespace mt::windows
 {
 	class WindowsMessageManager : public WindowsMessageManagerInterface
@@ -22,7 +20,6 @@ export namespace mt::windows
 
 		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;
 	public:
-
 		WindowsMessageManager(Engine& engine);
 		~WindowsMessageManager() = default;
 		WindowsMessageManager(const WindowsMessageManager&) noexcept = default;
