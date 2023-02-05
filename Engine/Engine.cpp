@@ -62,20 +62,11 @@ Engine::Engine()
 	else
 		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
 
-	// Will Register Message Handler WNDPROC
 	if (auto expected = getWindowManager()->initialize(); !expected)
 		throw std::runtime_error("Could not initialize main window");
 
 	if (auto expected = getRenderer()->initialize(); !expected)
 		throw std::runtime_error("Could not initialize direct3d");
-
-	// TODO: pass these as parameters into the renderer, and do this resize in the renderer's init;
-	// Do the initial Resize code.
-	if (auto expected =
-			getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
-		!expected
-	)
-		throw std::runtime_error("Could not resize the window");
 }
 
 Engine::~Engine() noexcept

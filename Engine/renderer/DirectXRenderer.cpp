@@ -607,6 +607,9 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	// Wait until initialization is complete.
 	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
 
+	// Do the initial Resize code.
+	if (auto expected = onResize(); !expected) return std::unexpected{ expected.error() };
+
 	_setIsInitialized();
 
 	return {};
