@@ -16,6 +16,7 @@ import WindowsMessageManager;
 
 import Camera;
 import StopWatch;
+import MakeUnique;
 
 using namespace std::literals;
 
@@ -48,21 +49,32 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 }
 
 using namespace mt;
+using namespace mt::memory;
 
 Engine* Engine::_instance = nullptr;
 
 Engine::Engine()
-	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
-	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
-	, _window_manager(std::make_unique<windows::WindowsWindowManager>(*this))
-	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
+	: _input_manager(make_unique_nothrow<input::BasicInputManager>(*this))
+	, _time_manager(make_unique_nothrow<time::StandardTimeManager>(this))
+	, _window_manager(make_unique_nothrow<windows::WindowsWindowManager>(*this, _error))
+	, _renderer(make_unique_nothrow<renderer::DirectXRenderer>(*this))
 {
-	if (_instance == nullptr)
-		_instance = this;
-	else
+	if (_instance != nullptr)
 		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
 
-	if (auto expected = getWindowManager()->initialize(); !expected)
+	_instance = this;
+
+	// Todo: noexpect all the thing.
+	if (_input_manager.get() == nullptr) throw std::runtime_error("Unable to allocate input manager");
+	if (_time_manager.get() == nullptr) throw std::runtime_error("Unable to allocate time manager");
+	if (_window_manager.get() == nullptr) throw std::runtime_error("Unable to allocate window manager");
+	if (_renderer.get() == nullptr) throw std::runtime_error("Unable to allocate renderer");
+
+	// TODO: Check the error, maybe return the error?
+	if (_error.getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED)
+		throw std::runtime_error("Unable to create windows manager");
+
+	if (auto expected = getWindowManager()->createMainWindow(); !expected)
 		throw std::runtime_error("Could not initialize main window");
 
 	if (auto expected = getRenderer()->initialize(); !expected)
@@ -106,7 +118,7 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 		std::expected<void, mt::error::Error> operator()() noexcept
 		{
 			MSG msg = { 0 };
-			// If there are Window messages then process them.
+			// If there are Window.ixx messages then process them.
 			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				//VK_ACCEPT
@@ -244,7 +256,7 @@ void Engine::shutdown() noexcept
 		auto expected1 = getRenderer()->shutdown();
 		// Destroy the windows.
 
-		auto expected2 = getWindowManager()->shutdown();
+		auto expected2 = getWindowManager()->destroyMainWindow();
 
 		// This will eventually be called by WM_Destroy after it receives the message from windows that the window was
 		// destroyed.
@@ -258,6 +270,6 @@ void Engine::shutdown() noexcept
 
 void Engine::crash(mt::error::Error error) noexcept
 {
-	OutputDebugStringW(error.message.data());
+	OutputDebugStringW(error.getMessage().data());
 	shutdown();
 };

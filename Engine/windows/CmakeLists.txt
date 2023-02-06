@@ -8,6 +8,7 @@ target_sources(
 	WindowsMessageManager.ixx
 	WindowsMessageManagerInterface.cpp
 	WindowsMessageManagerInterface.ixx
+	Window.ixx
 )
 
 add_subdirectory(messages)

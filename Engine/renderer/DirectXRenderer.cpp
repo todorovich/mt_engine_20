@@ -185,7 +185,10 @@ std::expected<void, Error> DirectXRenderer::onResize() noexcept
 
 		// The window resized, so update the aspect ratio and recompute the projection matrix.
 		getCurrentCamera().setLens(
-			0.25f * pi_v < float > , _engine.getWindowManager()->getWindowAspectRatio(), 1.0f, 1000.0f
+			_engine.getRenderer()->getCurrentCamera().getFovX(),
+			_engine.getWindowManager()->getWindowAspectRatio(),
+			_engine.getRenderer()->getCurrentCamera().getNearZ(),
+			_engine.getRenderer()->getCurrentCamera().getFarZ()
 		);
 
 		return {};
@@ -462,7 +465,7 @@ void DirectXRenderer::_drawRenderItems(
 
 std::expected<void, Error> DirectXRenderer::initialize() noexcept
 {
-	_main_window_handle = static_cast<HWND>(_engine.getWindowManager()->getMainWindowHandle());
+	_main_window_handle = static_cast<HWND>(_engine.getWindowManager()->getWindow()->getHandle());
 
 	if constexpr (mt::IS_DEBUG)
 	{
@@ -491,9 +494,9 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 		});
 	}
 
-	// If we failed to create the D3D12 Device then try to fall back to Windows Advanced Rasterization Platform (WARP)(software) device
+	// If we failed to create the D3D12 Device then try to fall back to Windows Advanced Rasterization Platform
+	// (WARP)(software) device
 	if (
-		// Try to create hardware device.
 		// param 1 is the adapter to use, nullptr for default
 		HRESULT hardwareResult = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device));
 		FAILED(hardwareResult)

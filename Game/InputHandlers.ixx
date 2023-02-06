@@ -7,7 +7,11 @@ export module InputHandlers;
 export import Engine;
 export import Task;
 
+import <cmath>;
+import <numbers>;
+
 using namespace std::literals;
+using namespace std::numbers;
 
 export namespace mt
 {
@@ -124,17 +128,30 @@ export namespace mt
 			: _engine(engine)
 		{}
 
+		//
 		virtual std::expected<void, mt::error::Error> operator()(int x, int y) override
 		{
+			auto width = _engine.getWindowManager()->getWindowWidth();
+			auto height = _engine.getWindowManager()->getWindowHeight();
+
+			auto degreesToRadians = (pi_v<float> / 180.0f);
+
 			auto& camera = _engine.getRenderer()->getCurrentCamera();
 
-			// TODO: This should be fov dependant.
-			// Make each pixel correspond to 1/100th of a degree.
-			float dx = DirectX::XMConvertToRadians(0.01f * static_cast<float>(x));
-			float dy = DirectX::XMConvertToRadians(0.01f * static_cast<float>(y));
+			auto half_h_fov = 0.5f * camera.getFovX();
+			auto x_tangent = tanf(half_h_fov);
+			const float x_base = (2.0f * x * x_tangent) / (width / 2.0f);
+
+			auto half_v_fov = 0.5f * camera.getFovY();
+			auto y_tangent = tanf(half_v_fov);
+			const float y_base = (2.0f * y * y_tangent) / (height / 2.0f);
+
+			float dx = atanf(x_base);
+			float dy = atanf(y_base);
 
 			camera.pitch(dy);
 			camera.rotateY(dx);
+
 			return {};
 		};
 	};

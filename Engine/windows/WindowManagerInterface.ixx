@@ -8,8 +8,11 @@ export module WindowManagerInterface;
 export import <string>;
 
 export import Error;
+export import Window;
 
 using mt::error::Error;
+
+using namespace mt::windows;
 
 export namespace mt::windows 
 {
@@ -26,7 +29,6 @@ export namespace mt::windows
 		float _window_aspect_ratio = 0.0f;
 
 	protected:
-		const std::wstring _main_window_caption = L"mt_engine";
 
 		void _setWindowAspectRatio(float aspect_ratio) noexcept
 		{
@@ -46,16 +48,17 @@ export namespace mt::windows
 		}
 
 	public:
+		// TODO:
 		using HANDLE = void*;
 
 		WindowManagerInterface() noexcept = default;
 		virtual ~WindowManagerInterface() noexcept = default;
 
-		virtual std::expected<void, Error> initialize() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, Error> createMainWindow() noexcept = 0;
 
-		virtual std::expected<void, Error> shutdown() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, Error> destroyMainWindow() noexcept = 0;
 
-		[[nodiscard]] virtual HANDLE getMainWindowHandle() const noexcept = 0;
+		[[nodiscard]] virtual Window* getWindow() const noexcept = 0;
 
 		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept
 		{
