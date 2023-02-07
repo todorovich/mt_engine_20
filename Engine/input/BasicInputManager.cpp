@@ -40,8 +40,10 @@ void BasicInputManager::processInput() noexcept
 			case InputDataType::BUTTON_IDLE: [[fallthrough]];
 			case InputDataType::BUTTON_RELEASED:
 			{
-				const auto held_input_type =
-					InputType(input_type.input_device, InputDataType::BUTTON_HELD, input_type.input_context, input_type.virtual_key_code);
+				const auto held_input_type = InputType(
+					input_type.input_device,	InputDataType::BUTTON_HELD,
+					input_type.input_context,	input_type.virtual_key_code
+				);
 
 				if (auto held_it = _held_buttons.find(held_input_type); held_it != _held_buttons.end())
 				{
@@ -172,6 +174,9 @@ void BasicInputManager::processInput() noexcept
 	}
 
 	_held_buttons.merge(pressed_buttons);
+
+	if (_message_pool.size() < _message_pool.capacity())
+		is_accepting_input.store(true);
 }
 
 void mt::input::BasicInputManager::acceptInput(
@@ -179,6 +184,9 @@ void mt::input::BasicInputManager::acceptInput(
 ) noexcept
 {
 	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
+
+	if (_message_pool.size() == _message_pool.capacity())
+		is_accepting_input.store(false);
 }
 
 void mt::input::BasicInputManager::toggleRelativeMouse() noexcept

@@ -15,10 +15,14 @@ using namespace DirectX;
 using namespace mt;
 using namespace std::numbers;
 
-Camera::Camera() noexcept
+Camera::Camera(float horizontal_fov_degrees, float aspect_ratio) noexcept
 	: _view_matrix_requires_update(false)
 {
-	setLens(0.25f * pi_v<float>, 1.0f, 1.0f, 1000.0f);
+	auto x_fov_radians = horizontal_fov_degrees * pi_v<float> / 180.0f;
+	auto y_fov_radian = x_fov_radians / aspect_ratio;
+	auto near_z = 1.0f;
+	auto far_z = 1000.f;
+	setLens(y_fov_radian, aspect_ratio, near_z, far_z);
 	lookAt(_position, XMFLOAT3(0.0f, 0.0f, 0.0f), _up);
 }
 

@@ -36,7 +36,7 @@ export namespace mt::renderer::model
 
     public:
 
-        Camera() noexcept;
+        Camera(float horizontal_fov_degrees, float aspect_ratio) noexcept;
         ~Camera() noexcept;
 		Camera(const Camera& other) noexcept = delete;
 		Camera(Camera&& other) noexcept = default;

@@ -48,6 +48,9 @@ export namespace mt
 		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 		std::atomic<bool> _is_shutting_down = false;
 
+		// Todo: provide an error pool or something.
+		mt::error::Error _error;
+
 	protected:	
 		static Engine* _instance;
 
@@ -64,7 +67,6 @@ export namespace mt
 		) noexcept;
 
 	public:
-		// Big 5
 		Engine();
 		~Engine() noexcept;
 		Engine(const Engine& other) noexcept = default;

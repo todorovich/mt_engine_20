@@ -21,15 +21,47 @@ export namespace mt::error
 
 	// Should use an object pool (error pool) allocated on the engine at creation.
 	//
-	struct Error
+	class Error
 	{
-		const std::wstring_view message;
-		const std::string_view function_name;
-		const std::string_view file_name;
-		const int line_number;
-		const ErrorCode error_code;
-		const Error* cause;
+		std::wstring_view _message;
+		std::string_view _function_name;
+		std::string_view _file_name;
+		int _line_number;
+		ErrorCode _error_code;
+		Error* _cause;
 
+	protected:
+		void setMessage(std::wstring_view message)
+		{
+			_message = message;
+		}
+
+		void setFunctionName(std::string_view function_name)
+		{
+			_function_name = function_name;
+		}
+
+		void setFileName(std::string_view file_name)
+		{
+			_file_name = file_name;
+		}
+
+		void setLineNumber(int line_number)
+		{
+			_line_number = line_number;
+		}
+
+		void setErrorCode(ErrorCode error_code)
+		{
+			_error_code = error_code;
+		}
+
+		void setCause(Error* cause)
+		{
+			_cause = cause;
+		}
+
+	public:
 		constexpr Error(
 			std::wstring_view message = L""sv,
 			ErrorCode error_code = ErrorCode::ERROR_UNINITIALIZED,
@@ -37,19 +69,26 @@ export namespace mt::error
 			std::string_view file_name= ""sv,
 			int line_number = -1,
 			Error* cause = nullptr
-		)
-			: message(message)
-			, error_code(error_code)
-			, function_name(function_name)
-			, file_name(file_name)
-			, line_number(line_number)
-			, cause(cause)
+		) noexcept
+			: _message(message)
+			, _error_code(error_code)
+			, _function_name(function_name)
+			, _file_name(file_name)
+			, _line_number(line_number)
+			, _cause(cause)
 		{}
 
 		constexpr Error(const Error& other) noexcept = default;
 		constexpr Error(Error&& other) noexcept = default;
 		constexpr Error& operator=(const Error& other) noexcept = delete;
-		constexpr Error& operator=(Error&& other) noexcept = delete;
+		constexpr Error& operator=(Error&& other) noexcept = default;
 		constexpr ~Error() noexcept = default;
+
+		[[nodiscard]] const std::wstring_view	getMessage() const { return _message; }
+		[[nodiscard]] const std::string_view 	getFunctionName() const { return _function_name; }
+		[[nodiscard]] const std::string_view 	getFileName() const { return _file_name; }
+		[[nodiscard]] const int 				getLineNumber() const { return _line_number; }
+		[[nodiscard]] const ErrorCode 			getErrorCode() const { return _error_code; }
+		[[nodiscard]] const Error* 				getCause() const { return _cause; }
 	};
 }

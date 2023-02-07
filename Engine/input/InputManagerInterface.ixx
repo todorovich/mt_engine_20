@@ -29,7 +29,7 @@ export namespace mt::input
         virtual ~InputManagerInterface() noexcept = default;
 
         InputManagerInterface(const InputManagerInterface &other) noexcept = delete;
-        
+
         InputManagerInterface(InputManagerInterface&& other) noexcept = default;
 
         InputManagerInterface& operator=(const InputManagerInterface &other) noexcept = delete;
@@ -39,6 +39,8 @@ export namespace mt::input
 		bool getIsMouseRelative() const { return _isMouseRelative; }
 
 		virtual void processInput() noexcept = 0;
+
+		virtual bool isAcceptingInput() const noexcept = 0;
 
         virtual void acceptInput(
             InputType input_type,

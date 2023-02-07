@@ -16,6 +16,7 @@ import WindowsMessageManager;
 
 import Camera;
 import StopWatch;
+import MakeUnique;
 
 using namespace std::literals;
 
@@ -48,34 +49,36 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 }
 
 using namespace mt;
+using namespace mt::memory;
 
 Engine* Engine::_instance = nullptr;
 
 Engine::Engine()
-	: _renderer(std::make_unique<renderer::DirectXRenderer>(*this))
-	, _input_manager(std::make_unique<input::BasicInputManager>(*this))
-	, _window_manager(std::make_unique<windows::WindowsWindowManager>(*this))
-	, _time_manager(std::make_unique<time::StandardTimeManager>(this))
+	: _input_manager(make_unique_nothrow<input::BasicInputManager>(*this))
+	, _time_manager(make_unique_nothrow<time::StandardTimeManager>(this))
+	, _window_manager(make_unique_nothrow<windows::WindowsWindowManager>(*this, _error))
+	, _renderer(make_unique_nothrow<renderer::DirectXRenderer>(*this))
 {
-	if (_instance == nullptr)
-		_instance = this;
-	else
+	if (_instance != nullptr)
 		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
 
-	// Will Register Message Handler WNDPROC
-	if (auto expected = getWindowManager()->initialize(); !expected)
+	_instance = this;
+
+	// Todo: noexpect all the thing.
+	if (_input_manager.get() == nullptr) throw std::runtime_error("Unable to allocate input manager");
+	if (_time_manager.get() == nullptr) throw std::runtime_error("Unable to allocate time manager");
+	if (_window_manager.get() == nullptr) throw std::runtime_error("Unable to allocate window manager");
+	if (_renderer.get() == nullptr) throw std::runtime_error("Unable to allocate renderer");
+
+	// TODO: Check the error, maybe return the error?
+	if (_error.getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED)
+		throw std::runtime_error("Unable to create windows manager");
+
+	if (auto expected = getWindowManager()->createMainWindow(); !expected)
 		throw std::runtime_error("Could not initialize main window");
 
 	if (auto expected = getRenderer()->initialize(); !expected)
 		throw std::runtime_error("Could not initialize direct3d");
-
-	// TODO: pass these as parameters into the renderer, and do this resize in the renderer's init;
-	// Do the initial Resize code.
-	if (auto expected =
-			getWindowManager()->resize(GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN));
-		!expected
-	)
-		throw std::runtime_error("Could not resize the window");
 }
 
 Engine::~Engine() noexcept
@@ -101,29 +104,30 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
 	long long last_frame_outputed = 0;
 
+	// TODO: extract.
 	class WindowsMessageLoopTask : public mt::task::Task
 	{
-		mt::Engine* _engine;
+		mt::Engine& _engine;
 
 		bool receivedQuit = false;
 
 	public:
-		WindowsMessageLoopTask(mt::Engine* engine)
+		WindowsMessageLoopTask(mt::Engine& engine)
 			: _engine(engine)
 		{}
 
 		std::expected<void, mt::error::Error> operator()() noexcept
 		{
 			MSG msg = { 0 };
-			// If there are Window messages then process them.
-			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			// If there are Window.ixx messages then process them.
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && _engine.getInputManager()->isAcceptingInput())
 			{
 				//VK_ACCEPT
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 				if (msg.message == WM_QUIT)
 				{
-					if (!_engine->isShuttingDown()) _engine->shutdown();
+					if (!_engine.isShuttingDown()) _engine.shutdown();
 					receivedQuit = true;
 					break;
 				}
@@ -133,9 +137,8 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 		}
 
 		bool hasReceivedQuit() { return receivedQuit; }
-
-	};
-	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(this);
+	 };
+	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(*this);
 
 	while (true)
 	{
@@ -197,10 +200,12 @@ std::expected<void, mt::error::Error> Engine::_tick(
 	}
 	update_time->finishTask();
 
+
 	render_time->startTask();
 	// Render whenever you can, but don't wait.
 	if (getTimeManager()->getShouldRender())
 	{
+		// TODO: figure out how to unlink this.
 		input_time->startTask();
 		getInputManager()->processInput();
 		game.inputUpdate();
@@ -253,7 +258,7 @@ void Engine::shutdown() noexcept
 		auto expected1 = getRenderer()->shutdown();
 		// Destroy the windows.
 
-		auto expected2 = getWindowManager()->shutdown();
+		auto expected2 = getWindowManager()->destroyMainWindow();
 
 		// This will eventually be called by WM_Destroy after it receives the message from windows that the window was
 		// destroyed.
@@ -267,6 +272,6 @@ void Engine::shutdown() noexcept
 
 void Engine::crash(mt::error::Error error) noexcept
 {
-	OutputDebugStringW(error.message.data());
+	OutputDebugStringW(error.getMessage().data());
 	shutdown();
 };

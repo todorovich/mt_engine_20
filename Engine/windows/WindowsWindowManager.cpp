@@ -9,68 +9,38 @@ import Engine;
 
 import WindowsMessageManager;
 
+import MakeUnique;
+
+using namespace mt::error;
+using namespace mt::memory;
 using namespace mt::windows;
 
 using namespace std::literals;
-
-std::expected<void, mt::error::Error> WindowsWindowManager::initialize() noexcept
+// TODO: rename me, createMainWindow? Also an init with a matching shutdown seems like an object to me
+std::expected<void, mt::error::Error> WindowsWindowManager::createMainWindow() noexcept
 {
-	_window_class.style = CS_HREDRAW | CS_VREDRAW;
-	_window_class.lpfnWndProc = WindowsMessageManagerInterface::MainWndProc;
-	_window_class.cbClsExtra = 0;
-	_window_class.cbWndExtra = 0;
-	_window_class.hInstance = _instance_handle;
-	_window_class.hIcon = LoadIcon(0, IDI_APPLICATION);
-	_window_class.hCursor = LoadCursor(0, IDC_ARROW);
-	_window_class.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
-	_window_class.lpszMenuName = 0;
-	_window_class.lpszClassName = L"MainWnd";
+	Error error;
+	_window = make_unique_nothrow<Window>(error, getWindowWidth(), getWindowHeight(), _instance_handle);
 
-	if (!RegisterClass(&_window_class))
-	{
-		MessageBox(0, L"RegisterClass Failed.", 0, 0);
+	if (_window.get() == nullptr)
 		return std::unexpected(mt::error::Error{
-			L"Unable to register the class with windows."sv,
+			L"Unable to create the main window."sv,
 			mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
 			__func__, __FILE__, __LINE__
 		});
-	}
 
-	// Compute window rectangle dimensions based on requested client area dimensions.
-	RECT rectangle = { 0, 0, getWindowWidth(), getWindowHeight() };
-	AdjustWindowRect(&rectangle, WS_OVERLAPPEDWINDOW, false);
-	int width = rectangle.right - rectangle.left;
-	int height = rectangle.bottom - rectangle.top;
-
-	_main_window_handle = CreateWindow(
-		L"MainWnd", _main_window_caption.c_str(), WS_MAXIMIZE, 0, 0,
-		width, height, nullptr, nullptr, _instance_handle, 0
-	);
-
-	if (!_main_window_handle)
-	{
-		MessageBox(0, L"CreateWindow Failed.", 0, 0);
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the window."sv,
-			mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-	}
-
-	SetWindowLong(_main_window_handle, GWL_STYLE, 0); //remove all window styles, check MSDN for details
-
-	ShowWindow(_main_window_handle, SW_SHOWMAXIMIZED); //display window
-
-	UpdateWindow(_main_window_handle);
-
-	return {};
+	if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED)
+		return std::unexpected{error};
+	else
+		return {};
 }
 
-std::expected<void, mt::error::Error> WindowsWindowManager::shutdown() noexcept
+std::expected<void, mt::error::Error> WindowsWindowManager::destroyMainWindow() noexcept
 {
-	DestroyWindow(static_cast<HWND>(getMainWindowHandle()));
+	if (_window.get() != nullptr)
+		_window.reset();
 
-	return {};
+	return {}; // todo: do we need expected?
 }
 
 std::expected<void, mt::error::Error> WindowsWindowManager::resize(int width, int height) noexcept

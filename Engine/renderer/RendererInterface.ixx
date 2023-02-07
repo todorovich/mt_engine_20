@@ -45,9 +45,14 @@ export namespace mt::renderer
 			_is_rendering = is_rendering;
 		}
 
-		RendererInterface() noexcept = default;
-
 	public:
+		// TODO: window manager keeps aspect ratio.
+		RendererInterface(float horizontal_fov_degrees = 105.0f, float aspect_ratio = 16.0f/9.0f) noexcept
+			: _camera(horizontal_fov_degrees, aspect_ratio)
+		{
+
+		}
+
 		virtual ~RendererInterface() noexcept = default;
 		RendererInterface(const RendererInterface&) noexcept = delete;
 		RendererInterface(RendererInterface&&) noexcept = default;

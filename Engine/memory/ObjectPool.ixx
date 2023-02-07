@@ -7,15 +7,18 @@ import <set>;
 
 export namespace mt::memory
 {
-	template<typename T, std::size_t number_of_objects>
+	// TODO: make pool allocated smart pointer that keeps a reference to the pool and releases its memory in destructor
+	// template <typename T> class PoolAllocated<T>;
+
+	template<typename T, std::size_t pool_capacity>
 	class ObjectPool
 	{
 	private:
 		// Had to resort to malloc to get uninitialized memory. Not ideal, this is not modern cpp.
-		T*															_data = (T*)malloc(sizeof(T) * number_of_objects);
+		T*															_data = (T*)malloc(sizeof(T) * pool_capacity);
 		std::priority_queue<int, std::vector<int>, std::greater<>> 	unused_indices;
 		std::set<int>												_used_indices;
-
+		const std::size_t _capacity = pool_capacity;
 	public:
 
 		// TODO: noexcept all the things.
@@ -26,7 +29,7 @@ export namespace mt::memory
 		{
 			if (_data == nullptr) throw new std::bad_alloc();
 
-			for (auto i = 0; i < number_of_objects; i++)
+			for (auto i = 0; i < _capacity; i++)
 			{
 				unused_indices.push(i);
 			}
@@ -41,13 +44,14 @@ export namespace mt::memory
 		};
 
 		ObjectPool(const ObjectPool& other) noexcept = delete;
-
 		ObjectPool(ObjectPool&& other) noexcept = delete;
-
 		ObjectPool operator=(const ObjectPool& other) noexcept = delete;
-		
 		ObjectPool operator=(ObjectPool&& other) noexcept = delete;
 
+		[[nodiscard]] std::size_t size() const { return _used_indices.size(); }
+		[[nodiscard]] constexpr std::size_t capacity() { return pool_capacity; }
+
+		// TODO: noexcept all the things.
 		template<class... Types>
 		T* allocate(Types&&... args)
 		{
@@ -66,7 +70,7 @@ export namespace mt::memory
 		{
 			// Check if we actually own this object.
 			int index = static_cast<int>(returned_memory - _data);
-			if (index < 0 || index >= number_of_objects)
+			if (index < 0 || index >= _capacity)
 			{
 				throw std::bad_alloc();
 			}
@@ -82,4 +86,7 @@ export namespace mt::memory
 			}
 		}
 	};
+
+
+
 }
