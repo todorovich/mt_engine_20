@@ -41,6 +41,7 @@ export namespace mt::input
 
 		POINT _mouse_return_position;
 
+		std::atomic<bool> is_accepting_input = true;
 	protected:
 		mt::Engine& _engine;
 
@@ -60,6 +61,11 @@ export namespace mt::input
 		BasicInputManager& operator=(const BasicInputManager &other) noexcept = delete;
 
 		BasicInputManager& operator=(BasicInputManager&& other) noexcept = default;
+
+		virtual bool isAcceptingInput() const noexcept
+		{
+			return is_accepting_input;
+		}
 
 		virtual void acceptInput(
 			InputType input_type,

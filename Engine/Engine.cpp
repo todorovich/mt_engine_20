@@ -104,14 +104,15 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
 	long long last_frame_outputed = 0;
 
+	// TODO: extract.
 	class WindowsMessageLoopTask : public mt::task::Task
 	{
-		mt::Engine* _engine;
+		mt::Engine& _engine;
 
 		bool receivedQuit = false;
 
 	public:
-		WindowsMessageLoopTask(mt::Engine* engine)
+		WindowsMessageLoopTask(mt::Engine& engine)
 			: _engine(engine)
 		{}
 
@@ -119,14 +120,14 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 		{
 			MSG msg = { 0 };
 			// If there are Window.ixx messages then process them.
-			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && _engine.getInputManager()->isAcceptingInput())
 			{
 				//VK_ACCEPT
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 				if (msg.message == WM_QUIT)
 				{
-					if (!_engine->isShuttingDown()) _engine->shutdown();
+					if (!_engine.isShuttingDown()) _engine.shutdown();
 					receivedQuit = true;
 					break;
 				}
@@ -136,9 +137,8 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 		}
 
 		bool hasReceivedQuit() { return receivedQuit; }
-
-	};
-	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(this);
+	 };
+	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(*this);
 
 	while (true)
 	{
@@ -200,10 +200,12 @@ std::expected<void, mt::error::Error> Engine::_tick(
 	}
 	update_time->finishTask();
 
+
 	render_time->startTask();
 	// Render whenever you can, but don't wait.
 	if (getTimeManager()->getShouldRender())
 	{
+		// TODO: figure out how to unlink this.
 		input_time->startTask();
 		getInputManager()->processInput();
 		game.inputUpdate();
