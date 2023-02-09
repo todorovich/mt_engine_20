@@ -24,8 +24,6 @@ export namespace mt::input
 	{
 		static const std::size_t POOL_SIZE = 2048;
 
-		// TODO this can be overflowed. There should be a way to check how many windows messages there are, and to
-		// 	only fetch at most this many before running the frame (and processing the input)
 		mt::memory::ObjectPool<InputMessage, POOL_SIZE> _message_pool;
 
 		std::queue<not_null<InputMessage*>> _input_queue;
