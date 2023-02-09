@@ -22,6 +22,7 @@ module DirectXRenderer;
 import <array>;
 import <filesystem>;
 import <numbers>;
+import <memory>;
 
 import Engine;
 import FrameResource;
@@ -890,6 +891,7 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 	return {};
 }
 
+// TODO: look over example with multiple objects in the vertex buffer.
 std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
@@ -904,8 +906,10 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 	const UINT vbByteSize = (UINT) vertices.size() * sizeof(mt::renderer::Vertex);
 	const UINT ibByteSize = (UINT) box.indices.size() * sizeof(uint16_t);
 
-	_box_mesh_geometry = std::make_unique<MeshGeometry>();
-	_box_mesh_geometry->name = "box";
+	if (auto expected = mt::memory::factory::MeshGeometry("box"); !expected)
+		return std::unexpected(expected.error());
+	else
+		_box_mesh_geometry = std::move(expected.value());
 
 	if (FAILED(D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu)))
 	{
