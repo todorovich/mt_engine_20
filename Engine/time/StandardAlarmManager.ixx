@@ -3,12 +3,17 @@ export module StandardAlarmManager;
 export import AlarmManager;
 
 export import gsl;
+export import Error;
 export import ObjectPool;
 export import TimeModel;
+
+import MakeUnique;
 
 using namespace gsl;
 
 using std::chrono::steady_clock;
+using namespace mt::error;
+using namespace mt::memory;
 using namespace mt::time::model;
 
 export namespace mt::time
@@ -20,8 +25,12 @@ export namespace mt::time
 		std::priority_queue <not_null<Alarm*>, std::vector <not_null<Alarm*>>, AlarmCompare> _alarm_queue;
 
 		std::set <not_null<Alarm*>> _alarms_and_timers;
+
 	public:
-		StandardAlarmManager() noexcept = default;
+		StandardAlarmManager(Error& error) noexcept
+			: _alarm_pool(error)
+		{}
+
 		virtual ~StandardAlarmManager() noexcept = default;
 		StandardAlarmManager(const StandardAlarmManager& other) noexcept = delete;
 		StandardAlarmManager(StandardAlarmManager&& other) noexcept  = delete;
@@ -47,6 +56,8 @@ export namespace mt::time
 					}
 					else
 					{
+						// Todo: crash if this doesn't work?
+						//  Or even better, make a deleter for this, use unique_ptr and then make this not necessary.
 						_alarm_pool.releaseMemory(alarm);
 						_alarms_and_timers.erase(alarm);
 					}

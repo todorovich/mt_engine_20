@@ -23,6 +23,7 @@ export import UploadBuffer;
 using namespace std::literals;
 
 using namespace gsl;
+using namespace mt::error;
 
 export namespace mt::renderer 
 {
@@ -62,14 +63,14 @@ export namespace mt::renderer
 
     struct FrameResource 
     {
-        FrameResource(not_null<ID3D12Device*> device, std::uint32_t passCount, std::uint32_t objectCount);
+        FrameResource(not_null<ID3D12Device*> device, std::uint32_t passCount, std::uint32_t objectCount, Error& error);
         FrameResource(const FrameResource& frameResource) = delete;
         FrameResource(FrameResource&& frameResource) = delete;
         FrameResource& operator=(const FrameResource& frameResource) = delete;
         FrameResource& operator=(FrameResource&& frameResource) = delete;
         ~FrameResource()
 		{
-			// todo: improve this.
+			// TODO: improve this.
 			if constexpr (mt::IS_DEBUG && false){
 				OutputDebugStringW(L"Destroying FrameResource\n");
 			}
@@ -89,7 +90,7 @@ export namespace mt::renderer
 module :private;
 
 mt::renderer::FrameResource::FrameResource(
-	not_null<ID3D12Device*> dx_device, std::uint32_t pass_count, std::uint32_t object_count
+	not_null<ID3D12Device*> dx_device, std::uint32_t pass_count, std::uint32_t object_count, Error& error
 )
 {
 	if (FAILED(dx_device->CreateCommandAllocator(
@@ -97,9 +98,16 @@ mt::renderer::FrameResource::FrameResource(
 		IID_PPV_ARGS(command_list_allocator.GetAddressOf())
 	)))
 	{
-		throw new std::runtime_error("Unable to present the swap chain (swap front/back buffers).");
+		error = Error(
+			L"Unable to present the swap chain (swap front/back buffers)."sv,
+			mt::error::ErrorCode::CREATE_COMMAND_ALLOCATOR_FAILED,
+			__func__, __FILE__, __LINE__
+		);
+
 	}
 
-    pass_constants_upload_buffer = std::make_unique<UploadBuffer<PassConstants>>(dx_device, pass_count, true);
-    object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(dx_device, object_count, true);
+    pass_constants_upload_buffer = std::make_unique<UploadBuffer<PassConstants>>(dx_device, pass_count, true, error);
+	if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return;
+
+    object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(dx_device, object_count, true, error);
 }

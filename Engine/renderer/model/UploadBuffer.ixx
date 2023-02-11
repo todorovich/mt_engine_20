@@ -7,9 +7,13 @@ module;
 
 export module UploadBuffer;
 
+export import <string_view>;
+
 export import DirectXUtility;
 
-import <stdexcept>;
+using namespace mt::error;
+
+using namespace std::string_view_literals;
 
 export template<typename T> class UploadBuffer
 {
@@ -21,8 +25,8 @@ export template<typename T> class UploadBuffer
 
 public:
 	// TODO: make the constructor private, create factory function that reports std::expected
-    UploadBuffer(ID3D12Device* device, UINT64 element_count, bool is_constant_buffer) :
-        _is_constant_buffer(is_constant_buffer)
+    UploadBuffer(ID3D12Device* device, UINT64 element_count, bool is_constant_buffer, Error& error) noexcept
+		: _is_constant_buffer(is_constant_buffer)
     {
         element_byte_size = sizeof(T);
 
@@ -46,10 +50,24 @@ public:
 			nullptr,
 			IID_PPV_ARGS(&_upload_buffer)
 		)))
-			throw new std::runtime_error("unable to create committed resource for upload buffer.");
+		{
+			error = Error(
+				L"Unable to create committed resource for upload buffer."sv,
+				mt::error::ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED,
+				__func__, __FILE__, __LINE__
+			);
+			return;
+		}
 
 		if (FAILED(_upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&_mapped_data))))
-			throw new std::runtime_error("unable to map the upload buffer.");
+		{
+			error = Error(
+				L"unable to map the upload buffer."sv,
+				mt::error::ErrorCode::MAPPING_RESOURCE_FAILED,
+				__func__, __FILE__, __LINE__
+			);
+			return;
+		}
 
         // We do not need to unmap until we are done with the resource.  However, we must not write to
         // the resource while it is in use by the GPU (so we must use synchronization techniques).

@@ -2,20 +2,22 @@ module StandardTimeManager;
 
 import <chrono>;
 
+import Error;
 import StandardAlarmManager;
 import TimeManagerTasks;
 import TimeModel;
 
-
+using namespace mt::error;
 using namespace mt::time;
 using namespace mt::time::model;
 
-StandardTimeManager::StandardTimeManager(mt::Engine* engine) noexcept
-	: _alarm_manager(std::make_unique<StandardAlarmManager>())
+StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manager_error) noexcept
+	: _alarm_manager(std::make_unique<StandardAlarmManager>(_alarm_manager_error))
 	, _stop_watches()
-	, _set_should_update(mt::time::TimeManagerSetShouldUpdate{engine})
+	, _set_should_update(mt::time::TimeManagerSetShouldUpdate(engine))
 	, _set_should_render(mt::time::TimeManagerSetShouldRender(engine))
 	, _set_end_of_frame(mt::time::TimeManagerSetEndOfFrame(engine))
+	, _engine(engine)
 {
 	_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::make_unique<StopWatch>(DefaultTimers::RUN_TIME)));
 	_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::make_unique<StopWatch>(DefaultTimers::WINDOWS_MESSAGE_TIME)));

@@ -90,20 +90,13 @@ int WINAPI WinMain(
 	[[maybe_unused]] int showCmd
 )
 {
-	try
-	{
-		mt::Engine engine = mt::Engine();
+	mt::Engine engine = mt::Engine();
 
-		mt::EngineDemo engine_demo = mt::EngineDemo(engine);
+	mt::EngineDemo engine_demo = mt::EngineDemo(engine);
 
-		if (auto expected = engine.run(engine_demo); expected)
-			return 0;
-		else
-			return static_cast<int>(expected.error().getErrorCode());
-	}
-	catch (mt::renderer::DxException& e)
-	{
-		MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+	if (auto expected = engine.run(engine_demo); expected)
 		return 0;
-	}
+	else
+		// TODO: do something with the errors returned. Also make that a better data structure.
+		return static_cast<int>(expected.error()->getErrorCode());
 }

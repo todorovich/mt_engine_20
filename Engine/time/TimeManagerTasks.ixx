@@ -2,8 +2,6 @@ export module TimeManagerTasks;
 
 export import <expected>;
 
-export import Task;
-
 export import Engine;
 export import gsl;
 
@@ -13,9 +11,9 @@ export namespace mt::time
 {
 	class TimeManagerSetShouldUpdate : public mt::task::Task
 	{
-		mt::Engine* _engine;
+		mt::Engine& _engine;
 	public:
-		TimeManagerSetShouldUpdate(mt::Engine* engine)
+		TimeManagerSetShouldUpdate(mt::Engine& engine)
 			: _engine(engine) {}
 
 		~TimeManagerSetShouldUpdate() = default;
@@ -29,9 +27,9 @@ export namespace mt::time
 
 	class TimeManagerSetShouldRender : public mt::task::Task
 	{
-		mt::Engine* _engine;
+		mt::Engine& _engine;
 	public:
-		TimeManagerSetShouldRender(mt::Engine* engine)
+		TimeManagerSetShouldRender(mt::Engine& engine)
 			: _engine(engine) {}
 
 		~TimeManagerSetShouldRender() = default;
@@ -45,9 +43,9 @@ export namespace mt::time
 
 	class TimeManagerSetEndOfFrame : public mt::task::Task
 	{
-		mt::Engine* _engine;
+		mt::Engine& _engine;
 	public:
-		TimeManagerSetEndOfFrame(mt::Engine* engine)
+		TimeManagerSetEndOfFrame(mt::Engine& engine)
 			: _engine(engine) {}
 
 		~TimeManagerSetEndOfFrame() = default;

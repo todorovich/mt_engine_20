@@ -5,10 +5,12 @@ export import <map>;
 export import <string_view>;
 export import <chrono>;
 
+export import gsl;
 export import TimeModel;
 
-using namespace std::literals;
+using namespace gsl;
 using namespace mt::time::model;
+using namespace std::literals;
 
 // TODO: need a tick and a physics tick. 
 export namespace mt::time

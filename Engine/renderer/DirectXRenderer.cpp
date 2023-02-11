@@ -22,18 +22,18 @@ module DirectXRenderer;
 import <array>;
 import <filesystem>;
 import <numbers>;
+import <memory>;
 
 import Engine;
 import FrameResource;
-import DirectXUtility;
 import MeshGeometry;
-import Error;
 
+using namespace mt::error;
 using namespace mt::renderer;
-using namespace std::numbers;
 using namespace std::literals;
+using namespace std::numbers;
+
 using Microsoft::WRL::ComPtr;
-using mt::error::Error;
 
 std::expected<void, Error> DirectXRenderer::onResize() noexcept
 {
@@ -222,7 +222,7 @@ std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 	return {};
 }
 
-void DirectXRenderer::update()
+std::expected<void, Error> DirectXRenderer::update() noexcept
 {
 	getCurrentCamera().updateViewMatrix();
 
@@ -232,10 +232,14 @@ void DirectXRenderer::update()
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.
-		throwIfFailed(
-			_fence->SetEventOnCompletion(_getCurrentFrameResource()->fence, eventHandle),
-			__FUNCTION__, __FILE__, __LINE__
-		);
+		if (FAILED(_fence->SetEventOnCompletion(_getCurrentFrameResource()->fence, eventHandle)))
+		{
+			return std::unexpected(mt::error::Error{
+				L"Unable to set the completion event for the fence."sv,
+				mt::error::ErrorCode::GRAPHICS_FAILURE,
+				__func__, __FILE__, __LINE__
+			});
+		}
 
 		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
@@ -243,18 +247,13 @@ void DirectXRenderer::update()
 		CloseHandle(eventHandle);
 	}
 
-/*	DirectX::XMMATRIX world_view_projection = _camera.getViewMatrix() * _camera.getProjectionMatrix();
-	// Update the constant buffer with the latest worldViewProj matrix.
-	ObjectConstants object_constants;
-	// The transpose is necessary because we are switching from row major (DirectXMath) to column major (HLSL)
-	XMStoreFloat4x4(&object_constants.world_matrix, XMMatrixTranspose(world_view_projection));
-	_getCurrentFrameResource()->object_constants_upload_buffer->CopyData(0, object_constants);*/
-
 	_updateObjectConstants();
 	_updatePassConstants();
+
+	return {};
 }
 
-void DirectXRenderer::_updateObjectConstants()
+void DirectXRenderer::_updateObjectConstants() noexcept
 {
 	auto current_upload_buffer = _getCurrentFrameResource()->object_constants_upload_buffer.get();
 
@@ -274,7 +273,7 @@ void DirectXRenderer::_updateObjectConstants()
 	}
 }
 
-void DirectXRenderer::_updatePassConstants()
+void DirectXRenderer::_updatePassConstants() noexcept
 {
 	DirectX::XMMATRIX view_matrix = getCurrentCamera().getViewMatrix();
 	DirectX::XMMATRIX inverse_view_matrix = XMMatrixInverse(nullptr, view_matrix); 
@@ -586,7 +585,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 
 	_createRenderItems();
 
-	_createFrameResources();
+	if (auto expected = _createFrameResources(); !expected) return std::unexpected(expected.error());
 
 	if (auto expected = _createDescriptorHeaps(); !expected) return std::unexpected(expected.error());
 
@@ -890,6 +889,7 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 	return {};
 }
 
+// TODO: look over example with multiple objects in the vertex buffer.
 std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
@@ -904,8 +904,10 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 	const UINT vbByteSize = (UINT) vertices.size() * sizeof(mt::renderer::Vertex);
 	const UINT ibByteSize = (UINT) box.indices.size() * sizeof(uint16_t);
 
-	_box_mesh_geometry = std::make_unique<MeshGeometry>();
-	_box_mesh_geometry->name = "box";
+	if (auto expected = mt::memory::factory::MeshGeometry("box"); !expected)
+		return std::unexpected(expected.error());
+	else
+		_box_mesh_geometry = std::move(expected.value());
 
 	if (FAILED(D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu)))
 	{
@@ -1036,14 +1038,18 @@ void DirectXRenderer::_createRenderItems() noexcept
 	}
 }
 
-void DirectXRenderer::_createFrameResources() noexcept
+[[nodiscard]] std::expected<void, Error> DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
+		Error error;
 		_frame_resources[index] = std::make_unique<FrameResource>(
-			_dx_device.Get(), 1, static_cast<std::uint32_t>(_render_items.size())
+			_dx_device.Get(), 1, static_cast<std::uint32_t>(_render_items.size()), error
 		);
+		if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected{error};
 	}
+
+	return {};
 }
 
 std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept

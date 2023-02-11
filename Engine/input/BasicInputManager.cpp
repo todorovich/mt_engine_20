@@ -163,6 +163,7 @@ void BasicInputManager::processInput() noexcept
 
 		_input_queue.pop();
 
+		// TODO: smart pointer.
 		_message_pool.releaseMemory(&input_message);
 	}
 
@@ -252,6 +253,6 @@ void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handl
 		}
 			break;
 
-		case InputDataType::NO_DATA_TYPE: break; // THROW HERE?
+		case InputDataType::NO_DATA_TYPE: break; // TODO: Return Error Here? Crash/Shutdown?
 	}
 }
