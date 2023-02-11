@@ -39,6 +39,7 @@ using std::unique_ptr;
 
 using namespace mt::error;
 using namespace mt::memory;
+using namespace mt::task;
 
 export namespace mt
 {
@@ -46,26 +47,17 @@ export namespace mt
 	{
 		std::unique_ptr<Error> _error = make_unique_nothrow<Error>();
 
-		unique_ptr<InputManagerInterface>			_input_manager = nullptr;
-		unique_ptr<TimeManagerInterface>			_time_manager = nullptr;
-		unique_ptr<WindowManagerInterface>			_window_manager = nullptr;
-		unique_ptr<RendererInterface>				_renderer = nullptr;
+		unique_ptr<InputManagerInterface>	_input_manager 	= nullptr;
+		unique_ptr<TimeManagerInterface>	_time_manager 	= nullptr;
+		unique_ptr<WindowManagerInterface>	_window_manager = nullptr;
+		unique_ptr<RendererInterface>		_renderer		= nullptr;
+		unique_ptr<Game>					_game 			= nullptr;
 
 		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 		std::atomic<bool> _is_shutting_down = false;
 
 	protected:	
 		static Engine* _instance;
-
-		// TODO: move this to own service? Time Manager?
-		[[nodiscard]] std::expected<void, mt::error::Error> _tick(
-			gsl::not_null<mt::time::model::StopWatch*> tick_time,
-			gsl::not_null<mt::time::model::StopWatch*> update_time,
-			gsl::not_null<mt::time::model::StopWatch*> render_time,
-			gsl::not_null<mt::time::model::StopWatch*> frame_time,
-			gsl::not_null<mt::time::model::StopWatch*> input_time,
-			mt::Game& game
-		) noexcept;
 
 	public:
 		Engine() noexcept;
@@ -80,16 +72,21 @@ export namespace mt
 		[[nodiscard]] RendererInterface * 		getRenderer() 		noexcept	{ return _renderer.get(); };
 		[[nodiscard]] WindowManagerInterface * 	getWindowManager() 	noexcept	{ return _window_manager.get(); };
 		[[nodiscard]] TimeManagerInterface * 	getTimeManager() 	noexcept	{ return _time_manager.get(); };
+		[[nodiscard]] Game * 					getGame() 			noexcept	{ return _game.get(); };
 
 		[[nodiscard]] static bool isDestroyed() noexcept { return _instance == nullptr; };
 		[[nodiscard]] bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
 		// MUTATOR
 
-		[[nodiscard]] std::expected<void, std::unique_ptr<Error>> run(Game& game) noexcept;
+		[[nodiscard]] std::expected<void, std::unique_ptr<Error>> run(std::unique_ptr<Game> game) noexcept;
 
 		// Called to begin orderly shutdown.
 		void shutdown() noexcept;
 
 		void crash(mt::error::Error error) noexcept;
 	};
+
+
+
+
 }

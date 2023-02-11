@@ -11,13 +11,12 @@ export module EngineDemo;
 export import <map>;
 
 export import Game;
-export import Engine;
 export import DirectXUtility;
-export import Task;
 export import InputHandlers;
+export import MakeUnique;
 
 using namespace mt::task;
-
+using namespace mt::memory;
 export namespace mt
 {
 	struct Keys
@@ -92,9 +91,7 @@ int WINAPI WinMain(
 {
 	mt::Engine engine = mt::Engine();
 
-	mt::EngineDemo engine_demo = mt::EngineDemo(engine);
-
-	if (auto expected = engine.run(engine_demo); expected)
+	if (auto expected = engine.run(make_unique_nothrow<mt::EngineDemo>(engine)); expected)
 		return 0;
 	else
 		// TODO: do something with the errors returned. Also make that a better data structure.

@@ -4,12 +4,15 @@ export module TimeManagerInterface;
 export import <map>;
 export import <string_view>;
 export import <chrono>;
+export import <expected>;
 
 export import gsl;
 export import TimeModel;
 
 using namespace gsl;
+using namespace mt::error;
 using namespace mt::time::model;
+using namespace mt::task;
 using namespace std::literals;
 
 // TODO: need a tick and a physics tick. 
@@ -29,6 +32,11 @@ export namespace mt::time
 		inline static const std::string_view FRAME_TIME = "Frame Time"sv;
 	};
 
+	class NullTickFunction : public Task
+	{
+		virtual std::expected<void, Error> operator()() override { return {}; };
+	};
+
 	class TimeManagerInterface
 	{
 		std::chrono::steady_clock::duration	_update_interval_ns;
@@ -41,6 +49,10 @@ export namespace mt::time
 
 		std::chrono::steady_clock::duration _tick_delta_time_ns = 0ns;
 
+		NullTickFunction _null_tick_function;
+
+		not_null<Task*> _tick_function = &_null_tick_function;
+
 		bool _is_paused;
 
 		bool _should_update = false;
@@ -48,6 +60,14 @@ export namespace mt::time
 		bool _end_of_frame = false;
 
 	protected:
+		[[nodiscard]] not_null<Task*> _getTickFunction() noexcept { return _tick_function; }
+		[[nodiscard]] NullTickFunction& _getNullTickFunction() noexcept { return _null_tick_function; }
+
+		void _setTickFunction(not_null<Task*> tick_function) noexcept
+		{
+			_tick_function = tick_function;
+		}
+
 		void _setShouldUpdate() noexcept
 		{
 			_should_update = true;
@@ -85,7 +105,6 @@ export namespace mt::time
 			 _tick_delta_time_ns = tick_delta_time_ns;
 		};
 
-
 	public:
 		friend mt::time::TimeManagerSetShouldUpdate;
 		friend mt::time::TimeManagerSetShouldRender;
@@ -97,7 +116,9 @@ export namespace mt::time
 			, _frame_interval (16666666ns)
 			, _command_list_interval (0ns)
 			, _is_paused(true)
-		{}
+		{
+
+		}
 
 		virtual ~TimeManagerInterface() noexcept = default;
 		TimeManagerInterface(const TimeManagerInterface& other) noexcept = default;
@@ -141,6 +162,8 @@ export namespace mt::time
 		[[nodiscard]] bool getShouldRender() const { return _should_render; }
 		[[nodiscard]] bool getEndOfFrame() const { return _end_of_frame; }
 
+		virtual void shutdown() noexcept = 0;
+
 		void updateComplete() noexcept
 		{
 			_should_update = false;
@@ -158,7 +181,10 @@ export namespace mt::time
 
 		virtual void resume() noexcept = 0;		// Call to unpaused.
 		virtual void pause() noexcept = 0;			// Call to pause.
-		virtual void tick() noexcept = 0;			// Call every frame.
+		virtual void tick() noexcept
+		{
+			(*_tick_function)();
+		}
 
 		virtual StopWatch* findStopWatch(std::string_view name) = 0;
 

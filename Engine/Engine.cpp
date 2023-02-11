@@ -28,7 +28,6 @@ using namespace mt::error;
 
 Engine* Engine::_instance = nullptr;
 
-
 Engine::Engine() noexcept
 {
 	if (_instance != nullptr)
@@ -120,13 +119,23 @@ Engine::~Engine() noexcept
 	OutputDebugStringW(L"Engine Shutdown\n");
 }
 
-std::expected<void, std::unique_ptr<Error>> Engine::run(Game& game) noexcept
+std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> game) noexcept
 {
 	if (_error == nullptr) return std::unexpected(std::move(_error));
 
+	if (!game) {
+		(*_error) = Error(
+			L"The game provided to Engine::run must not be null"sv,
+			mt::error::ErrorCode::INVALID_GAME_PROVIDED,
+			__func__, __FILE__, __LINE__
+		);
+		return std::unexpected{std::move(_error)};
+	}
+	else
+		_game = std::move(game);
+
 	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected(std::move(_error));
 
-	// TODO: these could be returning null, need to check each of these expecteds
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
@@ -139,6 +148,7 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(Game& game) noexcept
 
 	frame_time->startTask();
 	// TODO: windows messages (input) should be processed on a different thread than the ticks.
+	//  would still require some synchronization.
 	long long last_frame_outputed = 0;
 
 	// TODO: extract.
@@ -204,74 +214,15 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(Game& game) noexcept
 
 		windows_message_time->doTask(windows_message_loop_task.get());
 
-		// TODO: move tick out to a functor, and swap functor for null functor when shutting down.
-		if (!isShuttingDown())
-		{
-			if (auto expected = _tick(tick_time, update_time, render_time, frame_time, input_time, game); !expected)
-			{
-				// TODO: this really needs to move the error and its causes possibly plural into the error buffer
-				//  and then return the error buffer.
-				(*_error) = std::move(expected.error());
-				return std::unexpected{ std::move(_error) };
-			}
-		}
+		_time_manager->tick();
 	};
 
 	run_time->finishTask();
 
-	// TODO: check if errors happened, and if so return them
-	return {};
-}
-
-std::expected<void, mt::error::Error> Engine::_tick(
-	gsl::not_null<mt::time::model::StopWatch*> tick_time,
-	gsl::not_null<mt::time::model::StopWatch*> update_time,
-	gsl::not_null<mt::time::model::StopWatch*> render_time,
-	gsl::not_null<mt::time::model::StopWatch*> frame_time,
-	gsl::not_null<mt::time::model::StopWatch*> input_time,
-	mt::Game& game
-) noexcept
-{
-	tick_time->startTask();
-
-	getTimeManager()->tick();
-
-	update_time->startTask();
-	if (getTimeManager()->getShouldUpdate())
-	{
-		game.physicsUpdate();
-
-		getTimeManager()->updateComplete();
-	}
-	update_time->finishTask();
-
-	render_time->startTask();
-	// Render whenever you can, but don't wait.
-	if (getTimeManager()->getShouldRender())
-	{
-		// TODO: figure out how to unlink this.
-		input_time->startTask();
-		getInputManager()->processInput();
-		game.inputUpdate();
-		input_time->finishTask();
-
-		// Processing input could result in a shutdown.
-		if (!isShuttingDown())
-		{
-			game.renderUpdate();
-			if (auto expected = getRenderer()->update(); !expected) return std::unexpected(expected.error());
-			if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
-			getTimeManager()->renderComplete();
-		}
-
-		frame_time->finishTask();
-		frame_time->startTask();
-	}
-	render_time->finishTask();
-
-	tick_time->finishTask();
-
-	return {};
+	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED)
+		return std::unexpected{ std::move(_error) };
+	else
+		return {};
 }
 
 /**
@@ -293,7 +244,7 @@ void Engine::shutdown() noexcept
 	{
 		_is_shutting_down.store(true);
 
-		getTimeManager()->pause();
+		getTimeManager()->shutdown();
 
 		if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
 

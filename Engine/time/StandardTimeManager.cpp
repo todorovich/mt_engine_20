@@ -19,13 +19,26 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 	, _set_end_of_frame(mt::time::TimeManagerSetEndOfFrame(engine))
 	, _engine(engine)
 {
-	_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::make_unique<StopWatch>(DefaultTimers::RUN_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::make_unique<StopWatch>(DefaultTimers::WINDOWS_MESSAGE_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::TICK_TIME,				std::make_unique<StopWatch>(DefaultTimers::TICK_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::UPDATE_TIME,			std::make_unique<StopWatch>(DefaultTimers::UPDATE_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::INPUT_TIME,				std::make_unique<StopWatch>(DefaultTimers::INPUT_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::RENDER_TIME,			std::make_unique<StopWatch>(DefaultTimers::RENDER_TIME)));
-	_stop_watches.emplace(std::make_pair(DefaultTimers::FRAME_TIME,				std::make_unique<StopWatch>(DefaultTimers::FRAME_TIME)));
+	// TODO: this can be offloaded to a function that returns the map
+	auto run_time = std::make_unique<StopWatch>(DefaultTimers::RUN_TIME);
+	auto windows_message_time = std::make_unique<StopWatch>(DefaultTimers::WINDOWS_MESSAGE_TIME);
+	auto tick_time = std::make_unique<StopWatch>(DefaultTimers::TICK_TIME);
+	auto update_time = std::make_unique<StopWatch>(DefaultTimers::UPDATE_TIME);
+	auto input_time = std::make_unique<StopWatch>(DefaultTimers::INPUT_TIME);
+	auto render_time = std::make_unique<StopWatch>(DefaultTimers::RENDER_TIME);
+	auto frame_time = std::make_unique<StopWatch>(DefaultTimers::FRAME_TIME);
+
+	_standardTickFunction = StandardTickFunction(
+		tick_time.get(), update_time.get(), render_time.get(), frame_time.get(), input_time.get(), &_engine
+	);
+
+	_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::move(run_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::move(windows_message_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::TICK_TIME,				std::move(tick_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::UPDATE_TIME,			std::move(update_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::INPUT_TIME,				std::move(input_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::RENDER_TIME,			std::move(render_time)));
+	_stop_watches.emplace(std::make_pair(DefaultTimers::FRAME_TIME,				std::move(frame_time)));
 
 	_addEngineAlarms();
 
@@ -35,12 +48,12 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 	_setTickDeltaTime(std::chrono::steady_clock::duration::min());
 
 	_setIsUpdatePaused(false);
+
+	_setTickFunction(&_standardTickFunction);
 }
 
 void StandardTimeManager::tick() noexcept
 {
-	//auto now = std::chrono::steady_clock::now();
-
 	_setPreviousTickTime(getCurrentTickTime());
 
 	_setCurrentTickTime();
@@ -49,7 +62,7 @@ void StandardTimeManager::tick() noexcept
 
 	_alarm_manager->tick(getCurrentTickTime());
 
-	//now = std::chrono::steady_clock::now();
+	TimeManagerInterface::tick();
 }
 
 void StandardTimeManager::resume() noexcept
@@ -90,6 +103,12 @@ void StandardTimeManager::pause() noexcept
 	}
 
 	// else do nothing
+}
+
+void StandardTimeManager::shutdown() noexcept
+{
+	pause();
+	_setTickFunction(&_getNullTickFunction());
 }
 
 void StandardTimeManager::_addEngineAlarms() noexcept
