@@ -126,6 +126,7 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(Game& game) noexcept
 
 	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected(std::move(_error));
 
+	// TODO: these could be returning null, need to check each of these expecteds
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
@@ -258,7 +259,7 @@ std::expected<void, mt::error::Error> Engine::_tick(
 		if (!isShuttingDown())
 		{
 			game.renderUpdate();
-			getRenderer()->update();
+			if (auto expected = getRenderer()->update(); !expected) return std::unexpected(expected.error());
 			if (auto expected = getRenderer()->render(); !expected) return std::unexpected(expected.error());
 			getTimeManager()->renderComplete();
 		}

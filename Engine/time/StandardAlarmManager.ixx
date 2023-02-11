@@ -56,6 +56,8 @@ export namespace mt::time
 					}
 					else
 					{
+						// Todo: crash if this doesn't work?
+						//  Or even better, make a deleter for this, use unique_ptr and then make this not necessary.
 						_alarm_pool.releaseMemory(alarm);
 						_alarms_and_timers.erase(alarm);
 					}

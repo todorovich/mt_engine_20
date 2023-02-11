@@ -27,12 +27,12 @@ using namespace std::literals;
 
 export namespace mt::renderer
 {
-	// TODO: no constructors. I'm sure there is code to initialize all this that could be happening in a constructor.
 	class MeshGeometry
 	{
 		// Give it a _name so we can look it up by _name.
 		std::string _name;
 
+		// TODO: improve this
 		MeshGeometry(std::string&& name) noexcept
 			: _name(name)
 		{

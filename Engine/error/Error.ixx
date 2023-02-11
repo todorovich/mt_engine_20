@@ -14,6 +14,9 @@ export namespace mt::error
 		ONE_ENGINE_RULE_VIOLATED = 10,
 		BAD_ALLOCATION = 100,
 		OUT_OF_MEMORY = 110,
+		CREATE_COMMITTED_RESOURCE_FAILED = 120,
+		MAPPING_RESOURCE_FAILED = 125,
+		CREATE_COMMAND_ALLOCATOR_FAILED = 130,
 		GRAPHICS_FAILURE = 200,
 		WINDOW_MANAGER_FAILURE = 300
 	};
@@ -79,7 +82,7 @@ export namespace mt::error
 
 		constexpr Error(const Error& other) noexcept = default;
 		constexpr Error(Error&& other) noexcept = default;
-		constexpr Error& operator=(const Error& other) noexcept = delete;
+		constexpr Error& operator=(const Error& other) noexcept = default;
 		constexpr Error& operator=(Error&& other) noexcept = default;
 		constexpr ~Error() noexcept = default;
 

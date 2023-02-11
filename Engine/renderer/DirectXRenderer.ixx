@@ -26,13 +26,12 @@ export module DirectXRenderer;
 import <ctime>;
 
 export import Engine;
-export import RendererInterface;
-export import Error;
 export import FrameResource;
 export import Geometry;
 export import MathUtility;
 export import UploadBuffer;
 export import RenderItem;
+export import renderer.Vertex;
 
 using Microsoft::WRL::ComPtr;
 using namespace std;
@@ -149,26 +148,26 @@ export namespace mt::renderer
 
 		void _createRenderItems() noexcept;
 
-		void _createFrameResources() noexcept;
+		[[nodiscard]] std::expected<void, Error> _createFrameResources() noexcept;
 
         void _createConstantBufferViews() noexcept;
 
 		[[nodiscard]] std::expected<void, Error> _createPipelineStateObject() noexcept;
 
-		void _updateObjectConstants();
+		void _updateObjectConstants() noexcept;
 
-		void _updatePassConstants();
+		void _updatePassConstants() noexcept;
 
     public:
-        DirectXRenderer(Engine& engine)
+        DirectXRenderer(Engine& engine) noexcept
             : _engine(engine)
         {}
 
-        virtual ~DirectXRenderer() = default;
-        DirectXRenderer(const DirectXRenderer&) = delete;
-        DirectXRenderer(DirectXRenderer&&) = default;
-        DirectXRenderer& operator=(const DirectXRenderer&) = delete;
-        DirectXRenderer& operator=(DirectXRenderer&&) = default;
+        virtual ~DirectXRenderer() noexcept = default;
+        DirectXRenderer(const DirectXRenderer&) noexcept = delete;
+        DirectXRenderer(DirectXRenderer&&) noexcept = default;
+        DirectXRenderer& operator=(const DirectXRenderer&) noexcept = delete;
+        DirectXRenderer& operator=(DirectXRenderer&&) noexcept = default;
 
         // Accessors
 
@@ -182,13 +181,13 @@ export namespace mt::renderer
 
 		// Mutators
 
-		[[nodiscard]] virtual std::expected<void, Error> set4xMsaaState(bool value) noexcept override;
+		[[nodiscard]] std::expected<void, Error> set4xMsaaState(bool value) noexcept override;
 
 		[[nodiscard]] std::expected<void, Error> onResize() noexcept override;
 
 		[[nodiscard]] std::expected<void, Error> render() noexcept override;
 
-        void update() override;
+		[[nodiscard]] std::expected<void, Error> update() noexcept override;
 
 		[[nodiscard]] std::expected<void, Error> initialize() noexcept override;
     };

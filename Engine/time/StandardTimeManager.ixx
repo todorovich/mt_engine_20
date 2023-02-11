@@ -42,7 +42,8 @@ export namespace mt::time
 			auto find = _stop_watches.find(name);
 			if (find == _stop_watches.end())
 			{
-				throw; //Todo: noexcept all the things
+
+				return nullptr;
 			}
 			else
 			{

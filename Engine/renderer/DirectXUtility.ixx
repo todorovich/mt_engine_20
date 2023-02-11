@@ -18,14 +18,6 @@ export import Error;
 
 export namespace mt::renderer
 {
-	// TODO: Find me a better home.
-	struct Vertex {
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT4 color;
-	};
-
-	class DxException;
-
 	std::wstring AnsiToWString(const std::string& str) noexcept;
 
 	constexpr UINT CalcConstantBufferByteSize(UINT byteSize) noexcept
@@ -61,40 +53,6 @@ export namespace mt::renderer
 }
 
 using namespace std::literals;
-
-namespace mt::renderer
-{
-	class DxException
-	{
-	public:
-		HRESULT error_code = S_OK;
-		std::wstring function_name;
-		std::wstring filename;
-		int line_number = -1;
-
-		DxException() = default;
-		DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber) noexcept
-			: error_code(hr)
-			, function_name(functionName)
-			, filename(filename)
-			, line_number(lineNumber)
-		{
-		}
-
-		std::wstring ToString() const noexcept
-		{
-			// Get the string description of the error code.
-			_com_error err(error_code);
-
-			return function_name + L" failed in " + filename + L"; line " + std::to_wstring(line_number) + L"; error: ";// +msg;
-		}
-	};
-
-	export inline void throwIfFailed(const HRESULT result, const std::string& function, const std::string& file, int line)
-	{
-		if (result < 0) { throw DxException(result, AnsiToWString(function), AnsiToWString(file), line); }
-	}
-}
 
 module : private;
 

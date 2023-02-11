@@ -27,12 +27,6 @@ export namespace mt::memory
 		std::set<int>												_used_indices;
 		const std::size_t _capacity = pool_capacity;
 
-		// TODO: noexcept all the things.
-		// Seems like the dominant strategy to get around failing to allocate is to preallocate all the memory you need
-		// up front so you either fail to initialize or never run out of memory. Seems easier said than done but we'll
-		// see
-
-
 	public:
 		friend std::unique_ptr<ObjectPool<T,pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
 
@@ -68,14 +62,13 @@ export namespace mt::memory
 		ObjectPool& operator=(const ObjectPool& other) noexcept = delete;
 		ObjectPool& operator=(ObjectPool&& other) noexcept = default;
 
-		[[nodiscard]] std::size_t size() const { return _used_indices.size(); }
-		[[nodiscard]] constexpr std::size_t capacity() { return pool_capacity; }
+		[[nodiscard]] std::size_t size() const noexcept { return _used_indices.size(); }
+		[[nodiscard]] constexpr std::size_t capacity() noexcept { return pool_capacity; }
 
-		// TODO: noexcept all the things.
 		template<class... Types>
 		T* allocate(Types&&... args)
 		{
-			if (unused_indices.empty()) throw std::bad_alloc();
+			if (unused_indices.empty()) return nullptr;
 
 			auto index = unused_indices.top();
 
@@ -86,13 +79,13 @@ export namespace mt::memory
 			return new (&_data[index]) T(std::forward<Types>(args)...);
 		}
 
-		void releaseMemory(T* returned_memory)
+		[[nodiscard]] bool releaseMemory(T* returned_memory)
 		{
 			// Check if we actually own this object.
 			int index = static_cast<int>(returned_memory - _data);
 			if (index < 0 || index >= _capacity)
 			{
-				throw std::bad_alloc();
+				return false;
 			}
 			else {
 				returned_memory->~T();
@@ -103,6 +96,8 @@ export namespace mt::memory
 				_used_indices.erase(index);
 
 				unused_indices.push(index);
+
+				return true;
 			}
 		}
 	};
