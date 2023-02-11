@@ -18,7 +18,8 @@ export namespace mt::error
 		MAPPING_RESOURCE_FAILED = 125,
 		CREATE_COMMAND_ALLOCATOR_FAILED = 130,
 		GRAPHICS_FAILURE = 200,
-		WINDOW_MANAGER_FAILURE = 300
+		WINDOW_MANAGER_FAILURE = 300,
+		INVALID_GAME_PROVIDED = 1000,
 	};
 
 	// Should use an object pool (error pool) allocated on the engine at creation.
