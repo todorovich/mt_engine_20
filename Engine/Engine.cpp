@@ -22,63 +22,95 @@ using namespace std::literals;
 
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
-#pragma pack(push,8)  
-struct THREADNAME_INFO
-{
-	DWORD dwType; // Must be 0x1000.  
-	LPCSTR szName; // Pointer to _name (in user addr space).  
-	DWORD dwThreadID; // Thread ID (-1=caller thread).  
-	DWORD dwFlags; // Reserved for future use, must be zero.  
-};
-#pragma pack(pop)  
-
-void SetThreadName(DWORD dwThreadID, const char* threadName) {
-	THREADNAME_INFO info;
-	info.dwType = 0x1000;
-	info.szName = threadName;
-	info.dwThreadID = dwThreadID;
-	info.dwFlags = 0;
-#pragma warning(push)  
-#pragma warning(disable: 6320 6322)  
-	__try {
-		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-	}
-#pragma warning(pop)  
-}
-
 using namespace mt;
 using namespace mt::memory;
+using namespace mt::error;
 
 Engine* Engine::_instance = nullptr;
 
-Engine::Engine()
-	: _input_manager(make_unique_nothrow<input::BasicInputManager>(*this))
-	, _time_manager(make_unique_nothrow<time::StandardTimeManager>(this))
-	, _window_manager(make_unique_nothrow<windows::WindowsWindowManager>(*this, _error))
-	, _renderer(make_unique_nothrow<renderer::DirectXRenderer>(*this))
+
+Engine::Engine() noexcept
 {
 	if (_instance != nullptr)
-		throw std::runtime_error("Only one mt:::Engine may exist at a time.");
+	{
+		(*_error) = Error(
+			L"Only one instance of the engine may exist at a time"sv,
+			mt::error::ErrorCode::ONE_ENGINE_RULE_VIOLATED,
+			__func__, __FILE__, __LINE__
+		);
 
-	_instance = this;
+		return;
+	}
+	else
+		_instance = this;
 
-	// Todo: noexpect all the thing.
-	if (_input_manager.get() == nullptr) throw std::runtime_error("Unable to allocate input manager");
-	if (_time_manager.get() == nullptr) throw std::runtime_error("Unable to allocate time manager");
-	if (_window_manager.get() == nullptr) throw std::runtime_error("Unable to allocate window manager");
-	if (_renderer.get() == nullptr) throw std::runtime_error("Unable to allocate renderer");
+	if (_error == nullptr) return;
 
-	// TODO: Check the error, maybe return the error?
-	if (_error.getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED)
-		throw std::runtime_error("Unable to create windows manager");
+	if (_input_manager = make_unique_nothrow<input::BasicInputManager>(*this, *_error);
+		_input_manager.get() == nullptr
+	)
+	{
+		if (_input_manager.get() == nullptr) (*_error) = Error(
+			L"Unable to allocate the input manager."sv,
+			mt::error::ErrorCode::BAD_ALLOCATION,
+			__func__, __FILE__, __LINE__
+		);
+
+		return;
+	}
+
+	if (_time_manager = make_unique_nothrow<time::StandardTimeManager>(*this, *_error);
+		_time_manager.get() == nullptr || _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
+	)
+	{
+		if (_time_manager.get() == nullptr) (*_error) = Error(
+			L"Unable to allocate the time manager."sv,
+			mt::error::ErrorCode::BAD_ALLOCATION,
+			__func__, __FILE__, __LINE__
+		);
+
+		return;
+	}
+
+	if (_window_manager = make_unique_nothrow<windows::WindowsWindowManager>(*this, *_error);
+		_window_manager.get() == nullptr || _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
+	)
+	{
+		if (_window_manager.get() == nullptr) (*_error) = Error(
+			L"Unable to allocate the window manager."sv,
+			mt::error::ErrorCode::BAD_ALLOCATION,
+			__func__, __FILE__, __LINE__
+		);
+
+		return;
+	}
+
+
+	// TODO: this should be taking in the error and returning error information if it fails.
+	if (_renderer = make_unique_nothrow<renderer::DirectXRenderer>(*this);
+		_renderer.get() == nullptr //|| _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
+	)
+	{
+		(*_error) = Error(
+			L"Unable to allocate the renderer."sv,
+			mt::error::ErrorCode::BAD_ALLOCATION,
+			__func__, __FILE__, __LINE__
+		);
+
+		return;
+	}
 
 	if (auto expected = getWindowManager()->createMainWindow(); !expected)
-		throw std::runtime_error("Could not initialize main window");
+	{
+		(*_error) = std::move(expected.error());
+		return;
+	}
 
 	if (auto expected = getRenderer()->initialize(); !expected)
-		throw std::runtime_error("Could not initialize direct3d");
+	{
+		(*_error) = std::move(expected.error());
+		return;
+	}
 }
 
 Engine::~Engine() noexcept
@@ -88,8 +120,12 @@ Engine::~Engine() noexcept
 	OutputDebugStringW(L"Engine Shutdown\n");
 }
 
-std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
+std::expected<void, std::unique_ptr<Error>> Engine::run(Game& game) noexcept
 {
+	if (_error == nullptr) return std::unexpected(std::move(_error));
+
+	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected(std::move(_error));
+
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
@@ -140,7 +176,7 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 	 };
 	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(*this);
 
-	while (true)
+	while (!windows_message_loop_task->hasReceivedQuit())
 	{
 		auto now = std::chrono::steady_clock::now();
 
@@ -167,14 +203,22 @@ std::expected<void, mt::error::Error> Engine::run(Game& game) noexcept
 
 		windows_message_time->doTask(windows_message_loop_task.get());
 
-		if (windows_message_loop_task->hasReceivedQuit()) break;
-
-		if (auto expected = _tick(tick_time, update_time, render_time, frame_time, input_time, game); !expected)
-			return std::unexpected(expected.error());
+		// TODO: move tick out to a functor, and swap functor for null functor when shutting down.
+		if (!isShuttingDown())
+		{
+			if (auto expected = _tick(tick_time, update_time, render_time, frame_time, input_time, game); !expected)
+			{
+				// TODO: this really needs to move the error and its causes possibly plural into the error buffer
+				//  and then return the error buffer.
+				(*_error) = std::move(expected.error());
+				return std::unexpected{ std::move(_error) };
+			}
+		}
 	};
 
 	run_time->finishTask();
 
+	// TODO: check if errors happened, and if so return them
 	return {};
 }
 
@@ -199,7 +243,6 @@ std::expected<void, mt::error::Error> Engine::_tick(
 		getTimeManager()->updateComplete();
 	}
 	update_time->finishTask();
-
 
 	render_time->startTask();
 	// Render whenever you can, but don't wait.
@@ -272,6 +315,35 @@ void Engine::shutdown() noexcept
 
 void Engine::crash(mt::error::Error error) noexcept
 {
-	OutputDebugStringW(error.getMessage().data());
+	// TODO: what if there is already an error?
+	(*_error) = std::move(error);
+	if constexpr (IS_DEBUG) OutputDebugStringW(_error->getMessage().data());
 	shutdown();
 };
+
+// TODO: do something with me.
+#pragma pack(push,8)
+struct THREADNAME_INFO
+{
+	DWORD dwType; // Must be 0x1000.
+	LPCSTR szName; // Pointer to _name (in user addr space).
+	DWORD dwThreadID; // Thread ID (-1=caller thread).
+	DWORD dwFlags; // Reserved for future use, must be zero.
+};
+#pragma pack(pop)
+
+void SetThreadName(DWORD dwThreadID, const char* threadName) {
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = threadName;
+	info.dwThreadID = dwThreadID;
+	info.dwFlags = 0;
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+	}
+#pragma warning(pop)
+}

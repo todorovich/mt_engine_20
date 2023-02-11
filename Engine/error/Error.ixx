@@ -6,13 +6,12 @@ export import <string_view>;
 
 using namespace std::literals;
 
-
-
 export namespace mt::error
 {
 	enum struct ErrorCode : std::uint32_t {
 		ERROR_UNINITIALIZED = 0,
 		FAILED = 1,
+		ONE_ENGINE_RULE_VIOLATED = 10,
 		BAD_ALLOCATION = 100,
 		OUT_OF_MEMORY = 110,
 		GRAPHICS_FAILURE = 200,

@@ -4,6 +4,13 @@ export module ObjectPool;
 import <ctime>;
 import <queue>;
 import <set>;
+import <memory>;
+import <string_view>;
+
+import Error;
+import MakeUnique;
+
+using namespace mt::error;
 
 export namespace mt::memory
 {
@@ -19,19 +26,32 @@ export namespace mt::memory
 		std::priority_queue<int, std::vector<int>, std::greater<>> 	unused_indices;
 		std::set<int>												_used_indices;
 		const std::size_t _capacity = pool_capacity;
-	public:
 
 		// TODO: noexcept all the things.
 		// Seems like the dominant strategy to get around failing to allocate is to preallocate all the memory you need
 		// up front so you either fail to initialize or never run out of memory. Seems easier said than done but we'll
 		// see
-		ObjectPool()
-		{
-			if (_data == nullptr) throw new std::bad_alloc();
 
-			for (auto i = 0; i < _capacity; i++)
+
+	public:
+		friend std::unique_ptr<ObjectPool<T,pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
+
+		ObjectPool(Error& error) noexcept
+		{
+			if (_data == nullptr)
 			{
-				unused_indices.push(i);
+				error = Error(
+					std::wstring_view(L"Unable to allocate memory for the object pool."),
+					mt::error::ErrorCode::BAD_ALLOCATION,
+					__func__, __FILE__, __LINE__
+				);
+			}
+			else
+			{
+				for (auto i = 0; i < _capacity; i++)
+				{
+					unused_indices.push(i);
+				}
 			}
 		}
 
@@ -44,9 +64,9 @@ export namespace mt::memory
 		};
 
 		ObjectPool(const ObjectPool& other) noexcept = delete;
-		ObjectPool(ObjectPool&& other) noexcept = delete;
-		ObjectPool operator=(const ObjectPool& other) noexcept = delete;
-		ObjectPool operator=(ObjectPool&& other) noexcept = delete;
+		ObjectPool(ObjectPool&& other) noexcept = default;
+		ObjectPool& operator=(const ObjectPool& other) noexcept = delete;
+		ObjectPool& operator=(ObjectPool&& other) noexcept = default;
 
 		[[nodiscard]] std::size_t size() const { return _used_indices.size(); }
 		[[nodiscard]] constexpr std::size_t capacity() { return pool_capacity; }
@@ -87,6 +107,31 @@ export namespace mt::memory
 		}
 	};
 
-
-
+	/*namespace factory
+	{
+		template<typename T, std::size_t pool_capacity>
+		std::expected<std::unique_ptr<ObjectPool<T, pool_capacity>>, Error> ObjectPool() noexcept
+		{
+			Error error;
+			if (auto pointer = make_unique_nothrow<mt::memory::ObjectPool<T, pool_capacity>>(error);
+				pointer
+			)
+			{
+				if (error.getErrorCode() == ErrorCode::ERROR_UNINITIALIZED)
+					return std::unexpected{error};
+				else
+					return std::move(pointer);
+			}
+			else
+			{
+				return std::unexpected(
+					mt::error::Error{
+						std::wstring_view{ L"Unable to reset the command list allocator." },
+						mt::error::ErrorCode::GRAPHICS_FAILURE,
+						__func__, __FILE__, __LINE__
+					}
+				);
+			}
+		};
+	}*/
 }

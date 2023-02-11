@@ -4,7 +4,7 @@ export import <memory>;
 
 export namespace mt::memory
 {
-	template <class T, class... Args>
+	template <typename T, typename... Args>
 	std::unique_ptr<T> make_unique_nothrow(Args&&... args) noexcept
 	{
 		return std::unique_ptr<T>(new (std::nothrow) T(std::forward<Args>(args)...));

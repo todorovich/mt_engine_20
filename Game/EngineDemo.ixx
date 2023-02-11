@@ -99,7 +99,8 @@ int WINAPI WinMain(
 		if (auto expected = engine.run(engine_demo); expected)
 			return 0;
 		else
-			return static_cast<int>(expected.error().getErrorCode());
+			// TODO: do something with the errors returned. Also make that a better data structure.
+			return static_cast<int>(expected.error()->getErrorCode());
 	}
 	catch (mt::renderer::DxException& e)
 	{
