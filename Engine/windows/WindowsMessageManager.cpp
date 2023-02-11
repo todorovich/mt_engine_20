@@ -47,9 +47,11 @@ import WindowsMessages.XButtonUp;
 import Engine;
 
 using namespace mt::windows;
+using namespace mt::error;
 
-WindowsMessageManager::WindowsMessageManager(mt::Engine& engine)
-	: _engine(engine)
+WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, Error& error)
+	: WindowsMessageManagerInterface(error)
+	, _engine(engine)
 {
 	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, std::make_unique<WM_Activate>(&_engine)));
 	_message_handler_map.insert(std::make_pair(WM_CAPTURECHANGED, std::make_unique<WM_CaptureChanged>()));

@@ -12,6 +12,8 @@ export import Engine;
 export import WindowsMessageManagerInterface;
 export import WindowsMessage;
 
+using namespace mt::error;
+
 export namespace mt::windows
 {
 	class WindowsMessageManager : public WindowsMessageManagerInterface
@@ -19,8 +21,12 @@ export namespace mt::windows
 		Engine& _engine;
 
 		std::map<int, std::unique_ptr<WindowsMessage>> _message_handler_map;
+
+	protected:
+
+
 	public:
-		WindowsMessageManager(Engine& engine);
+		WindowsMessageManager(Engine& engine, Error& error);
 		~WindowsMessageManager() = default;
 		WindowsMessageManager(const WindowsMessageManager&) noexcept = default;
 		WindowsMessageManager(WindowsMessageManager&&) noexcept = default;

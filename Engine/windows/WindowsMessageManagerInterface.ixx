@@ -8,7 +8,10 @@ export module WindowsMessageManagerInterface;
 export import <memory>;
 export import <stdexcept>;
 
+export import Error;
 export import WindowsMessage;
+
+using namespace mt::error;
 
 export namespace mt::windows
 {
@@ -18,6 +21,9 @@ export namespace mt::windows
 
 		static WindowsMessageManagerInterface* _instance;
 
+	protected:
+		// For use by the null message manager. Should not be used by any other message manager.
+		WindowsMessageManagerInterface() noexcept = default;
 	public:
 		static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
@@ -26,9 +32,9 @@ export namespace mt::windows
 			return _instance->handle_message(hwnd, msg, wParam, lParam);
 		}
 
-		WindowsMessageManagerInterface();
+		WindowsMessageManagerInterface(Error& error) noexcept;
 
-		virtual ~WindowsMessageManagerInterface()
+		virtual ~WindowsMessageManagerInterface() noexcept
 		{
 			_instance = _defaultWindowsMessageHandler.get();
 		};
