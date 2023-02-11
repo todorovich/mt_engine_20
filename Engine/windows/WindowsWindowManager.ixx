@@ -34,10 +34,12 @@ export namespace mt::windows
 		bool _registered = false;
 	public:
 		WindowsWindowManager(mt::Engine& engine, Error& error) noexcept
-			: _windows_message_manager(std::make_unique<WindowsMessageManager>(engine))
+			: _windows_message_manager(std::make_unique<WindowsMessageManager>(engine, error))
 			, _engine(engine)
 			, _instance_handle(GetModuleHandle(nullptr))
 		{
+			if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return;
+
 			_window_class.style = CS_HREDRAW | CS_VREDRAW;
 			_window_class.lpfnWndProc = WindowsMessageManagerInterface::MainWndProc;
 			_window_class.cbClsExtra = 0;
