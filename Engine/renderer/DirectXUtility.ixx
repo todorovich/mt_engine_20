@@ -18,8 +18,6 @@ export import Error;
 
 export namespace mt::renderer
 {
-	std::wstring AnsiToWString(const std::string& str) noexcept;
-
 	constexpr UINT CalcConstantBufferByteSize(UINT byteSize) noexcept
 	{
 		// Constant buffers must be a multiple of the minimum hardware
@@ -95,14 +93,6 @@ namespace mt::renderer
 		}
 
 		return byteCode;
-	}
-
-	// TODO: This looks unsafe. buffer is 512 bytes, str is whatever.
-	std::wstring AnsiToWString(const std::string& str) noexcept
-	{
-		WCHAR buffer[512];
-		MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
-		return { buffer };
 	}
 
 	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::error::Error> createDefaultBuffer(
