@@ -60,7 +60,6 @@ export namespace mt::renderer
 
 		bool get4xMsaaState() const noexcept { return _4x_msaa_state; };
 
-		// TODO make a camera interface? Or is the camera renderer agnostic?
 		Camera& getCurrentCamera() noexcept { return _camera; } // NOT CONST!!!!
 
 		long long getFramesRendered() const noexcept { return _frames_rendered; }
