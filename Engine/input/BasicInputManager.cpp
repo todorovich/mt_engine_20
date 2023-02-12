@@ -270,6 +270,12 @@ void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handl
 		}
 			break;
 
-		case InputDataType::NO_DATA_TYPE: break; // TODO: Return Error Here? Crash/Shutdown?
+		case InputDataType::NO_DATA_TYPE:
+			_engine.crash(mt::error::Error{
+				L"Attempted to register InputType with InputDataType::NO_DATA_TYPE which is invalid."sv,
+				mt::error::ErrorCode::INVALID_INPUT_DATA_TYPE,
+				__func__, __FILE__, __LINE__
+			});
+			break;
 	}
 }
