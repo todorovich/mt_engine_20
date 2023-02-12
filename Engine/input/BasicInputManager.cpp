@@ -182,15 +182,29 @@ void mt::input::BasicInputManager::acceptInput(
 	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
 ) noexcept
 {
-	if (auto pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); pointer)
-	{
-		_input_queue.push(std::move(pointer));
+	if (isAcceptingInput()){
+		if (auto pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); pointer)
+		{
+			_input_queue.push(std::move(pointer));
 
-		if (_message_pool.size() == _message_pool.capacity())
-			is_accepting_input.store(false);
+			if (_message_pool.size() == _message_pool.capacity())
+				is_accepting_input.store(false);
+		}
+		else {
+			_engine.crash(mt::error::Error{
+				L"Failed to accept input, message queue is full."sv,
+				mt::error::ErrorCode::UNABLE_TO_ACCEPT_INPUT,
+				__func__, __FILE__, __LINE__
+			});
+		}
 	}
-	// TODO: fail
-	else {}
+	else {
+		_engine.crash(mt::error::Error{
+			L"Input Manager is full and not accepting input."sv,
+			mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
 
 void mt::input::BasicInputManager::toggleRelativeMouse() noexcept

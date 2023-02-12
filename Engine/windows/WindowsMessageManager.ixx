@@ -33,7 +33,7 @@ export namespace mt::windows
 		{
 			MSG msg = { 0 };
 			// If there are Window.ixx messages then process them.
-			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && _engine.getInputManager()->isAcceptingInput())
+			while (_engine.getInputManager()->isAcceptingInput() && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				//VK_ACCEPT
 				TranslateMessage(&msg);
