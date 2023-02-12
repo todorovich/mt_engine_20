@@ -275,14 +275,14 @@ void DirectXRenderer::_updateObjectConstants() noexcept
 
 void DirectXRenderer::_updatePassConstants() noexcept
 {
-	DirectX::XMMATRIX view_matrix = getCurrentCamera().getViewMatrix();
+	auto& camera = getCurrentCamera();
+	DirectX::XMMATRIX view_matrix = camera.getViewMatrix();
 	DirectX::XMMATRIX inverse_view_matrix = XMMatrixInverse(nullptr, view_matrix); 
 	
-	DirectX::XMMATRIX projection_matrix = getCurrentCamera().getProjectionMatrix();
+	DirectX::XMMATRIX projection_matrix = camera.getProjectionMatrix();
 	DirectX::XMMATRIX inverse_projection_matrix = XMMatrixInverse(nullptr, projection_matrix);
 	
-	DirectX::XMMATRIX view_and_projection_matrix =
-		getCurrentCamera().getViewMatrix() * getCurrentCamera().getProjectionMatrix();
+	DirectX::XMMATRIX view_and_projection_matrix = camera.getViewMatrix() * camera.getProjectionMatrix();
 	DirectX::XMMATRIX inverse_view_and_projection_matrix = XMMatrixInverse(nullptr, view_and_projection_matrix);
 
 	PassConstants pass_constants;
@@ -299,7 +299,7 @@ void DirectXRenderer::_updatePassConstants() noexcept
 	auto width = _engine.getWindowManager()->getWindowWidth();
 	auto height = _engine.getWindowManager()->getWindowWidth();
 
-	pass_constants.eye_position_world_space = { 0.0f, 0.0f, 0.0f }; // todo: get from camera?
+	pass_constants.eye_position_world_space = camera.getPosition3f();
 	pass_constants.render_target_size = { static_cast<float>(width), static_cast<float>(height) };
 	pass_constants.inverse_render_target_size = { 1.0f / width, 1.0f / height };
 	pass_constants.near_z_clipping_distance = 0.0f;
