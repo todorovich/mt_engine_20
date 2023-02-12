@@ -151,41 +151,7 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 	//  would still require some synchronization.
 	long long last_frame_outputed = 0;
 
-	// TODO: extract.
-	class WindowsMessageLoopTask : public mt::task::Task
-	{
-		mt::Engine& _engine;
-
-		bool receivedQuit = false;
-
-	public:
-		WindowsMessageLoopTask(mt::Engine& engine)
-			: _engine(engine)
-		{}
-
-		std::expected<void, mt::error::Error> operator()() noexcept
-		{
-			MSG msg = { 0 };
-			// If there are Window.ixx messages then process them.
-			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && _engine.getInputManager()->isAcceptingInput())
-			{
-				//VK_ACCEPT
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-				if (msg.message == WM_QUIT)
-				{
-					if (!_engine.isShuttingDown()) _engine.shutdown();
-					receivedQuit = true;
-					break;
-				}
-			}
-
-			return {};
-		}
-
-		bool hasReceivedQuit() { return receivedQuit; }
-	 };
-	auto windows_message_loop_task = std::make_unique<WindowsMessageLoopTask>(*this);
+	auto windows_message_loop_task = std::make_unique<mt::windows::WindowsMessageLoopTask>(*this);
 
 	while (!windows_message_loop_task->hasReceivedQuit())
 	{

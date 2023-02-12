@@ -5,17 +5,53 @@ module;
 
 export module WindowsMessageManager;
 
-import <map>;
-import <memory>;
+export import <expected>;
 
 export import Engine;
 export import WindowsMessageManagerInterface;
 export import WindowsMessage;
 
+import <map>;
+import <memory>;
+
 using namespace mt::error;
 
 export namespace mt::windows
 {
+	class WindowsMessageLoopTask : public mt::task::Task
+	{
+		mt::Engine& _engine;
+
+		bool receivedQuit = false;
+
+	public:
+		WindowsMessageLoopTask(mt::Engine& engine)
+			: _engine(engine)
+		{}
+
+		std::expected<void, mt::error::Error> operator()() noexcept
+		{
+			MSG msg = { 0 };
+			// If there are Window.ixx messages then process them.
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && _engine.getInputManager()->isAcceptingInput())
+			{
+				//VK_ACCEPT
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if (msg.message == WM_QUIT)
+				{
+					if (!_engine.isShuttingDown()) _engine.shutdown();
+					receivedQuit = true;
+					break;
+				}
+			}
+
+			return {};
+		}
+
+		bool hasReceivedQuit() { return receivedQuit; }
+	};
+
 	class WindowsMessageManager : public WindowsMessageManagerInterface
 	{
 		Engine& _engine;
