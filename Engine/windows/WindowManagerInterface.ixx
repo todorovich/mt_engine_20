@@ -47,9 +47,6 @@ export namespace mt::windows
 		}
 
 	public:
-		// TODO: This is used by other things, not sure it belongs here.
-		using HANDLE = void*;
-
 		// TODO: this is getting fed information about a screen. It probably wouldn't be a bad a idea to make a data
 		//  structure to represent a monitor, its resolutions and refresh rates,
 		//  also, the virtual desktop, its and it's dimensions
