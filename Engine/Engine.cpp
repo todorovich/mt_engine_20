@@ -71,7 +71,9 @@ Engine::Engine() noexcept
 		return;
 	}
 
-	if (_window_manager = make_unique_nothrow<windows::WindowsWindowManager>(*this, *_error);
+	if (_window_manager = make_unique_nothrow<windows::WindowsWindowManager>(
+			*this, *_error, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)
+		);
 		_window_manager.get() == nullptr || _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
 	)
 	{
@@ -83,7 +85,6 @@ Engine::Engine() noexcept
 
 		return;
 	}
-
 
 	// TODO: this should be taking in the error and returning error information if it fails.
 	if (_renderer = make_unique_nothrow<renderer::DirectXRenderer>(*this);

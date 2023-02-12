@@ -29,7 +29,6 @@ export namespace mt::windows
 		float _window_aspect_ratio = 0.0f;
 
 	protected:
-
 		void _setWindowAspectRatio(float aspect_ratio) noexcept
 		{
 			_window_aspect_ratio = aspect_ratio;
@@ -48,10 +47,20 @@ export namespace mt::windows
 		}
 
 	public:
-		// TODO:
+		// TODO: This is used by other things, not sure it belongs here.
 		using HANDLE = void*;
 
-		WindowManagerInterface() noexcept = default;
+		// TODO: this is getting fed information about a screen. It probably wouldn't be a bad a idea to make a data
+		//  structure to represent a monitor, its resolutions and refresh rates,
+		//  also, the virtual desktop, its and it's dimensions
+		WindowManagerInterface(int primary_screen_width, int primary_screen_height) noexcept
+			: _window_width(primary_screen_width)
+			, _window_height(primary_screen_height)
+			, _window_aspect_ratio(static_cast<float>(_window_width) / _window_height)
+		{
+
+		}
+
 		virtual ~WindowManagerInterface() noexcept = default;
 
 		[[nodiscard]] virtual std::expected<void, Error> createMainWindow() noexcept = 0;

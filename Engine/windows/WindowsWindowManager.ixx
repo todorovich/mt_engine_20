@@ -33,8 +33,9 @@ export namespace mt::windows
 
 		bool _registered = false;
 	public:
-		WindowsWindowManager(mt::Engine& engine, Error& error) noexcept
-			: _windows_message_manager(std::make_unique<WindowsMessageManager>(engine, error))
+		WindowsWindowManager(mt::Engine& engine, Error& error, int primary_screen_width, int primary_screen_height) noexcept
+			: WindowManagerInterface(primary_screen_width, primary_screen_height)
+			, _windows_message_manager(std::make_unique<WindowsMessageManager>(engine, error))
 			, _engine(engine)
 			, _instance_handle(GetModuleHandle(nullptr))
 		{
