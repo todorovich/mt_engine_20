@@ -161,10 +161,8 @@ void BasicInputManager::processInput() noexcept
 				break;
 		}
 
+		// This causes the smart pointer to release
 		_input_queue.pop();
-
-		// TODO: smart pointer.
-		_message_pool.releaseMemory(&input_message);
 	}
 
 	// Trigger the held buttons.
@@ -184,10 +182,15 @@ void mt::input::BasicInputManager::acceptInput(
 	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
 ) noexcept
 {
-	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
+	if (auto pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); pointer)
+	{
+		_input_queue.push(std::move(pointer));
 
-	if (_message_pool.size() == _message_pool.capacity())
-		is_accepting_input.store(false);
+		if (_message_pool.size() == _message_pool.capacity())
+			is_accepting_input.store(false);
+	}
+	// TODO: fail
+	else {}
 }
 
 void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
