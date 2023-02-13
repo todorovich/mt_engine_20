@@ -134,10 +134,10 @@ export namespace mt::windows
 
 		virtual mt::task::Task* getMessageLoopTask() noexcept override { return &_windows_message_loop_task; };
 
+		// TODO: these are used as passthrough to the windows message loop
+		//  expose the windows message loop instead.
 		virtual void destroyMainWindow() noexcept override;
-
 		virtual bool hasReceivedQuit() noexcept override;
-
 		virtual void toggleShowCursor() noexcept override;
 	};
 }

@@ -49,6 +49,7 @@ import Engine;
 using namespace mt::windows;
 using namespace mt::error;
 
+
 WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, Error& error)
 	: WindowsMessageManagerInterface(error)
 	, _windows_message_loop_task(engine)

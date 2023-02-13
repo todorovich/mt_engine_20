@@ -143,7 +143,6 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 	auto frame_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::FRAME_TIME);
 	frame_time->startTask();
 
-	// this acts wonky
 	auto tick_thread = std::jthread([&](){
 		HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread");
 		while(getWindowManager()->isMessageLoopRunning())
