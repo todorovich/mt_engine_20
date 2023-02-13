@@ -24,11 +24,33 @@ void BasicInputManager::processInput() noexcept
 
 	std::set<InputType> pressed_buttons{};
 
+	auto default_constructed_input_type = InputType();
+
 	for (auto x = 0u; x < size; x++)
 	{
 		InputMessage& input_message = *_input_queue.front();
 
 		const auto& input_type = input_message.input_type;
+
+		// Lost focus should clear held keys.
+		if (input_type == default_constructed_input_type) {
+
+			for (auto held_button : _held_buttons)
+			{
+				const auto released_input_type =
+					InputType(held_button.input_device, InputDataType::BUTTON_RELEASED, held_button.input_context, held_button.virtual_key_code);
+
+				const auto released_range = button_input_handler.equal_range(released_input_type);
+
+				for (auto released_it = released_range.first; released_it != released_range.second; ++released_it)
+				{
+					(*released_it->second)();
+				}
+			}
+			_held_buttons.clear();
+			_input_queue.pop();
+			continue;
+		}
 
 		const auto& input_data_type = input_type.input_data_type;
 
@@ -159,6 +181,8 @@ void BasicInputManager::processInput() noexcept
 				}
 			}
 				break;
+
+			case InputDataType::
 		}
 
 		// This causes the smart pointer to release
