@@ -15,6 +15,7 @@ using namespace DirectX;
 using namespace mt;
 using namespace std::numbers;
 
+// TODO: camera move is effected by fov. Make that not true;
 Camera::Camera(float horizontal_fov_degrees, float aspect_ratio) noexcept
 	: _view_matrix_requires_update(false)
 {

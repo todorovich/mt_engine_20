@@ -8,6 +8,7 @@ export import <expected>;
 export import <memory>;
 
 export import Error;
+export import Handle;
 
 using namespace mt::error;
 using namespace std::literals;
@@ -17,8 +18,8 @@ export namespace mt::windows
 	class Window
 	{
 		const std::wstring _main_window_caption = L"mt_engine";
-		// TODO UNION this with the engine handle. or at least verify in testing they are converible.
-		HANDLE _main_window_handle = nullptr;
+
+		mt::memory::Handle _main_window_handle = nullptr;
 	public:
 
 		Window(Error& error, int width, int height, HINSTANCE instance_handle)
@@ -55,7 +56,7 @@ export namespace mt::windows
 
 		}
 
-		[[nodiscard]] HANDLE getHandle() const noexcept {
+		[[nodiscard]] mt::memory::Handle getHandle() const noexcept {
 			return _main_window_handle;
 		}
 

@@ -23,7 +23,7 @@ export namespace mt::input
 
 		mt::memory::ObjectPool<InputMessage, POOL_SIZE> _message_pool;
 
-		std::queue<not_null<InputMessage*>> _input_queue;
+		std::queue<mt::memory::ObjectPool<InputMessage, POOL_SIZE>::unique_ptr_t> _input_queue;
 
 		std::multimap<InputType, not_null<Task*>>              				button_input_handler;
 		std::multimap<InputType, not_null<OneDimensionalInputTask*>>    	one_dimensional_input_handler;

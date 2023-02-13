@@ -24,11 +24,33 @@ void BasicInputManager::processInput() noexcept
 
 	std::set<InputType> pressed_buttons{};
 
+	auto default_constructed_input_type = InputType();
+
 	for (auto x = 0u; x < size; x++)
 	{
 		InputMessage& input_message = *_input_queue.front();
 
 		const auto& input_type = input_message.input_type;
+
+		// Lost focus should clear held keys.
+		if (input_type == default_constructed_input_type) {
+
+			for (auto held_button : _held_buttons)
+			{
+				const auto released_input_type =
+					InputType(held_button.input_device, InputDataType::BUTTON_RELEASED, held_button.input_context, held_button.virtual_key_code);
+
+				const auto released_range = button_input_handler.equal_range(released_input_type);
+
+				for (auto released_it = released_range.first; released_it != released_range.second; ++released_it)
+				{
+					(*released_it->second)();
+				}
+			}
+			_held_buttons.clear();
+			_input_queue.pop();
+			continue;
+		}
 
 		const auto& input_data_type = input_type.input_data_type;
 
@@ -159,12 +181,12 @@ void BasicInputManager::processInput() noexcept
 				}
 			}
 				break;
+
+			case InputDataType::
 		}
 
+		// This causes the smart pointer to release
 		_input_queue.pop();
-
-		// TODO: smart pointer.
-		_message_pool.releaseMemory(&input_message);
 	}
 
 	// Trigger the held buttons.
@@ -184,10 +206,29 @@ void mt::input::BasicInputManager::acceptInput(
 	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
 ) noexcept
 {
-	_input_queue.push(_message_pool.allocate(input_type, std::chrono::steady_clock::now(), data));
+	if (isAcceptingInput()){
+		if (auto pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); pointer)
+		{
+			_input_queue.push(std::move(pointer));
 
-	if (_message_pool.size() == _message_pool.capacity())
-		is_accepting_input.store(false);
+			if (_message_pool.size() == _message_pool.capacity())
+				is_accepting_input.store(false);
+		}
+		else {
+			_engine.crash(mt::error::Error{
+				L"Failed to accept input, message queue is full."sv,
+				mt::error::ErrorCode::UNABLE_TO_ACCEPT_INPUT,
+				__func__, __FILE__, __LINE__
+			});
+		}
+	}
+	else {
+		_engine.crash(mt::error::Error{
+			L"Input Manager is full and not accepting input."sv,
+			mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT,
+			__func__, __FILE__, __LINE__
+		});
+	}
 }
 
 void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
@@ -253,6 +294,12 @@ void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handl
 		}
 			break;
 
-		case InputDataType::NO_DATA_TYPE: break; // TODO: Return Error Here? Crash/Shutdown?
+		case InputDataType::NO_DATA_TYPE:
+			_engine.crash(mt::error::Error{
+				L"Attempted to register InputType with InputDataType::NO_DATA_TYPE which is invalid."sv,
+				mt::error::ErrorCode::INVALID_INPUT_DATA_TYPE,
+				__func__, __FILE__, __LINE__
+			});
+			break;
 	}
 }

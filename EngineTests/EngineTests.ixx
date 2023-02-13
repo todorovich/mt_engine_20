@@ -10,24 +10,28 @@ import <chrono>;
 import <thread>;
 
 import Engine;
+import Game;
+import MakeUnique;
 
 using namespace std::literals::chrono_literals;
 
 TEST_CASE("Start the Engine", "[input]") 
 {
-    auto hwnd = GetModuleHandle(nullptr);
-    auto instance = (HINSTANCE)GetWindowLong((HWND)hwnd, GWLP_HINSTANCE);
+	auto engine = mt::Engine();
 
-    mt::Engine engine = mt::Engine(instance);
-    mt::Game game = mt::Game();
+	auto thread = new std::jthread(
+		[&]() {
+			// returns an expected, which casts to bool.
+			REQUIRE(engine.run(mt::memory::make_unique_nothrow<mt::Game>()));
+		}
+	);
 
-    auto thread = new std::jthread([&]() { 
-        engine.run(game); 
-    });
+	auto time = engine.getTimeManager()->now();
+	const auto frames_to_render = 5;
+	while(
+		engine.getRenderer()->getFramesRendered() <= frames_to_render &&
+		(engine.getTimeManager()->now() - time) < (engine.getTimeManager()->getRenderInterval() * (frames_to_render + 1))
+	) {}
 
-    std::this_thread::sleep_for(2s);
-
-    engine.shutdown();
-
-    REQUIRE(engine.isDestroyed());
+	engine.shutdown();
 }

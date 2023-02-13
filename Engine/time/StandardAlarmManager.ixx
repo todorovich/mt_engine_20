@@ -7,6 +7,7 @@ export import Error;
 export import ObjectPool;
 export import TimeModel;
 
+import <map>;
 import MakeUnique;
 
 using namespace gsl;
@@ -22,9 +23,9 @@ export namespace mt::time
 	{
 		mt::memory::ObjectPool<Alarm, 1024> _alarm_pool;
 
-		std::priority_queue <not_null<Alarm*>, std::vector <not_null<Alarm*>>, AlarmCompare> _alarm_queue;
+		std::priority_queue < Alarm*, std::vector<Alarm*>, AlarmCompare > _alarm_queue;
 
-		std::set <not_null<Alarm*>> _alarms_and_timers;
+		std::map<Alarm*, ObjectPool<Alarm, 1024>::unique_ptr_t> _alarms_and_timers;
 
 	public:
 		StandardAlarmManager(Error& error) noexcept
@@ -47,8 +48,6 @@ export namespace mt::time
 
 				while (alarm->HasTriggered())
 				{
-					_alarm_queue.pop();
-
 					if (alarm->doesAlarmRepeat())
 					{
 						alarm->reset();
@@ -56,12 +55,12 @@ export namespace mt::time
 					}
 					else
 					{
-						// Todo: crash if this doesn't work?
-						//  Or even better, make a deleter for this, use unique_ptr and then make this not necessary.
-						_alarm_pool.releaseMemory(alarm);
+						// This causes the smart pointer to release
 						_alarms_and_timers.erase(alarm);
 					}
 
+					// this will trigger a release, the unique_ptr is popped from the list and  ownership is not transferred.
+					_alarm_queue.pop();
 					alarm = _alarm_queue.top();
 					alarm->tick(current_tick_time);
 				}
@@ -72,7 +71,7 @@ export namespace mt::time
 		{
 			for (auto& alarm: _alarms_and_timers)
 			{
-				alarm->pause(time_paused);
+				alarm.second->pause(time_paused);
 			}
 		}
 
@@ -80,7 +79,7 @@ export namespace mt::time
 		{
 			for (auto& alarm: _alarms_and_timers)
 			{
-				alarm->resume(time_resumed);
+				alarm.second->resume(time_resumed);
 			}
 		}
 
@@ -91,10 +90,9 @@ export namespace mt::time
 			steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
 		) noexcept
 		{
-			Alarm* alarm = _alarm_pool.allocate(time_point, task, repeats, repeat_interval);
-
-			_alarm_queue.push(alarm);
-			_alarms_and_timers.insert(alarm);
+			auto alarm = _alarm_pool.allocate(time_point, task, repeats, repeat_interval);
+			_alarm_queue.push(alarm.get());
+			_alarms_and_timers.insert({alarm.get(), std::move(alarm)});
 		}
 	};
 }

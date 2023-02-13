@@ -2,6 +2,7 @@
 export module ObjectPool;
 
 import <ctime>;
+import <cstddef>;
 import <queue>;
 import <set>;
 import <memory>;
@@ -14,20 +15,58 @@ using namespace mt::error;
 
 export namespace mt::memory
 {
-	// TODO: make pool allocated smart pointer that keeps a reference to the pool and releases its memory in destructor
-	// template <typename T> class PoolAllocated<T>;
-
 	template<typename T, std::size_t pool_capacity>
 	class ObjectPool
 	{
+	public:
+		class Deleter
+		{
+			ObjectPool<T, pool_capacity>& _object_pool;
+
+		public:
+			Deleter(ObjectPool<T, pool_capacity>& object_pool)
+				: _object_pool(object_pool)
+			{}
+
+			void operator()(T const * pointer)
+			{
+				if (pointer) {
+					if (auto expected = _object_pool.releaseMemory(pointer); !expected) return;
+				}
+			}
+		};
+
 	private:
 		// Had to resort to malloc to get uninitialized memory. Not ideal, this is not modern cpp.
 		T*															_data = (T*)malloc(sizeof(T) * pool_capacity);
 		std::priority_queue<int, std::vector<int>, std::greater<>> 	unused_indices;
 		std::set<int>												_used_indices;
 		const std::size_t _capacity = pool_capacity;
+		Deleter deleter {*this};
+
+		[[nodiscard]] bool releaseMemory(T const * returned_memory)
+		{
+			// Check if we actually own this object.
+			int index = static_cast<int>(returned_memory - _data);
+			if (returned_memory == nullptr || index < 0 || index >= _capacity)
+			{
+				return false;
+			}
+			else {
+				returned_memory->~T();
+
+				//if (mt::IS_DEBUG) std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
+
+				_used_indices.erase(index);
+
+				unused_indices.push(index);
+
+				return true;
+			}
+		}
 
 	public:
+		friend ObjectPool::Deleter;
 		friend std::unique_ptr<ObjectPool<T,pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
 
 		ObjectPool(Error& error) noexcept
@@ -65,10 +104,12 @@ export namespace mt::memory
 		[[nodiscard]] std::size_t size() const noexcept { return _used_indices.size(); }
 		[[nodiscard]] constexpr std::size_t capacity() noexcept { return pool_capacity; }
 
+		using unique_ptr_t = std::unique_ptr<T, Deleter>;
+
 		template<class... Types>
-		T* allocate(Types&&... args)
+		unique_ptr_t allocate(Types&&... args)
 		{
-			if (unused_indices.empty()) return nullptr;
+			if (unused_indices.empty()) return unique_ptr_t{nullptr, deleter};
 
 			auto index = unused_indices.top();
 
@@ -76,30 +117,10 @@ export namespace mt::memory
 
 			_used_indices.insert(index);
 
-			return new (&_data[index]) T(std::forward<Types>(args)...);
+			return unique_ptr_t(new (&_data[index]) T(std::forward<Types>(args)...), deleter);
 		}
 
-		[[nodiscard]] bool releaseMemory(T* returned_memory)
-		{
-			// Check if we actually own this object.
-			int index = static_cast<int>(returned_memory - _data);
-			if (index < 0 || index >= _capacity)
-			{
-				return false;
-			}
-			else {
-				returned_memory->~T();
 
-				// zero out the returned memory
-				//std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
-
-				_used_indices.erase(index);
-
-				unused_indices.push(index);
-
-				return true;
-			}
-		}
 	};
 
 	/*namespace factory

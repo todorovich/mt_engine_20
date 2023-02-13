@@ -9,7 +9,6 @@ target_compile_options(
 
 target_sources(EngineTests
 	PRIVATE
-	StopWatchTests.ixx
 	EngineTests.ixx
 	TestMain.ixx
 	MicrosoftTests.ixx

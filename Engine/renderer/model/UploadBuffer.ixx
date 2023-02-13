@@ -24,7 +24,6 @@ export template<typename T> class UploadBuffer
     bool _is_constant_buffer = false;
 
 public:
-	// TODO: make the constructor private, create factory function that reports std::expected
     UploadBuffer(ID3D12Device* device, UINT64 element_count, bool is_constant_buffer, Error& error) noexcept
 		: _is_constant_buffer(is_constant_buffer)
     {

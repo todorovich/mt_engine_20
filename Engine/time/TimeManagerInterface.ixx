@@ -158,6 +158,8 @@ export namespace mt::time
 			return _frame_interval;
 		}
 
+		std::chrono::steady_clock::time_point now() { return std::chrono::steady_clock::now(); }
+
 		[[nodiscard]] bool getShouldUpdate() const { return _should_update; }
 		[[nodiscard]] bool getShouldRender() const { return _should_render; }
 		[[nodiscard]] bool getEndOfFrame() const { return _end_of_frame; }

@@ -85,8 +85,4 @@ export namespace mt
 
 		void crash(mt::error::Error error) noexcept;
 	};
-
-
-
-
 }

@@ -160,7 +160,8 @@ export namespace mt::renderer
 
     public:
         DirectXRenderer(Engine& engine) noexcept
-            : _engine(engine)
+            : RendererInterface(105.0f, engine.getWindowManager()->getWindowAspectRatio())
+			, _engine(engine)
         {}
 
         virtual ~DirectXRenderer() noexcept = default;

@@ -98,9 +98,7 @@ export namespace mt::input::model
 			: input_type(input_type)
 			, time_point(time_point)
 			, data(data)
-		{
-
-		}
+		{}
 
 		InputMessage(const InputMessage& other) noexcept = default;
 
