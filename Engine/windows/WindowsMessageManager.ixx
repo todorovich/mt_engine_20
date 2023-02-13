@@ -31,6 +31,9 @@ export namespace mt::windows
 
 		std::expected<void, mt::error::Error> operator()() noexcept
 		{
+			// This can fail in theory, but I don't want to crash if it does.
+			HRESULT hr = SetThreadDescription(GetCurrentThread(),L"Windows Message Thread");
+
 			MSG msg = { 0 };
 			// If there are Window.ixx messages then process them.
 			while (_engine.getInputManager()->isAcceptingInput() && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
