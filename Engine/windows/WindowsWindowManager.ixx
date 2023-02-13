@@ -76,14 +76,18 @@ export namespace mt::windows
 		WindowsWindowManager(WindowsWindowManager&&) noexcept = default;
 		WindowsWindowManager& operator=(const WindowsWindowManager&) noexcept = default;
 		WindowsWindowManager& operator=(WindowsWindowManager&&) noexcept = default;
-		
-		virtual std::expected<void, mt::error::Error> createMainWindow() noexcept override;
-		virtual std::expected<void, mt::error::Error> destroyMainWindow() noexcept override;
+
+		[[nodiscard]] virtual std::expected<void, mt::error::Error> createMainWindow() noexcept override;
+		[[nodiscard]] virtual std::expected<void, mt::error::Error> destroyMainWindow() noexcept override;
+		[[nodiscard]] virtual std::expected<void, mt::error::Error> runMessageLoop() noexcept override;
+		[[nodiscard]] virtual bool isMessageLoopRunning() noexcept override;
 
 		[[nodiscard]] virtual std::expected<void, mt::error::Error> resize(int width, int height) noexcept override;
 
 		[[nodiscard]] HINSTANCE getInstanceHandle() const noexcept { return _instance_handle; }
 
 		[[nodiscard]] virtual Window* getWindow() const noexcept override { return _window.get(); }
+
+		virtual void toggleShowCursor() noexcept override;
 	};
 }

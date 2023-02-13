@@ -51,6 +51,7 @@ using namespace mt::error;
 
 WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, Error& error)
 	: WindowsMessageManagerInterface(error)
+	, _windows_message_loop_task(engine)
 	, _engine(engine)
 {
 	_message_handler_map.insert(std::make_pair(WM_ACTIVATE, std::make_unique<WM_Activate>(&_engine)));
@@ -91,6 +92,21 @@ WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, Error& error)
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONDOWN, std::make_unique<WM_XButtonDown>(&_engine)));
 	_message_handler_map.insert(std::make_pair(WM_XBUTTONUP, std::make_unique<WM_XButtonUp>(&_engine)));
 	//_message_handler_map.insert(std::make_pair(WM_WINDOWPOSCHANGING, new WM_WindowPositionChanging())); // WTF? Why does it hate this one?
+}
+
+void mt::windows::WindowsMessageManager::destroyMainWindow() noexcept
+{
+	_windows_message_loop_task.destroyMainWindow();
+}
+
+bool mt::windows::WindowsMessageManager::hasReceivedQuit() noexcept
+{
+	return _windows_message_loop_task.hasReceivedQuit();
+}
+
+void mt::windows::WindowsMessageManager::toggleShowCursor() noexcept
+{
+	return _windows_message_loop_task.toggleShowCursor();
 }
 
 LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

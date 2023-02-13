@@ -64,6 +64,10 @@ export namespace mt::windows
 
 		[[nodiscard]] virtual std::expected<void, Error> destroyMainWindow() noexcept = 0;
 
+		[[nodiscard]] virtual std::expected<void, Error> runMessageLoop() noexcept = 0;
+
+		[[nodiscard]] virtual bool isMessageLoopRunning() noexcept = 0;
+
 		[[nodiscard]] virtual Window* getWindow() const noexcept = 0;
 
 		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept
@@ -93,5 +97,7 @@ export namespace mt::windows
 		int getWindowWidth() const noexcept { return _window_width; }
 
 		int getWindowHeight() const noexcept { return _window_height; }
+
+		virtual void toggleShowCursor() noexcept = 0;
 	};
 }

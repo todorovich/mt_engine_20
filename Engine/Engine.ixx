@@ -55,6 +55,7 @@ export namespace mt
 
 		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 		std::atomic<bool> _is_shutting_down = false;
+		std::atomic<bool> _is_shut_down = false;
 
 	protected:	
 		static Engine* _instance;

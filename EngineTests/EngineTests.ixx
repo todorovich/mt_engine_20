@@ -19,7 +19,7 @@ TEST_CASE("Start the Engine", "[input]")
 {
 	auto engine = mt::Engine();
 
-	auto thread = new std::jthread(
+	auto thread = std::jthread(
 		[&]() {
 			// returns an expected, which casts to bool.
 			REQUIRE(engine.run(mt::memory::make_unique_nothrow<mt::Game>()));

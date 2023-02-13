@@ -5,6 +5,7 @@ module;
 #include <windows.h>
 
 #undef RELATIVE
+#undef ABSOLUTE
 
 module BasicInputManager;
 
@@ -32,25 +33,7 @@ void BasicInputManager::processInput() noexcept
 
 		const auto& input_type = input_message.input_type;
 
-		// Lost focus should clear held keys.
-		if (input_type == default_constructed_input_type) {
 
-			for (auto held_button : _held_buttons)
-			{
-				const auto released_input_type =
-					InputType(held_button.input_device, InputDataType::BUTTON_RELEASED, held_button.input_context, held_button.virtual_key_code);
-
-				const auto released_range = button_input_handler.equal_range(released_input_type);
-
-				for (auto released_it = released_range.first; released_it != released_range.second; ++released_it)
-				{
-					(*released_it->second)();
-				}
-			}
-			_held_buttons.clear();
-			_input_queue.pop();
-			continue;
-		}
 
 		const auto& input_data_type = input_type.input_data_type;
 
@@ -182,7 +165,40 @@ void BasicInputManager::processInput() noexcept
 			}
 				break;
 
-			case InputDataType::
+			case InputDataType::NO_DATA_TYPE:
+			{
+				// Lost focus should clear held keys.
+				if (input_type == InputType())
+				{
+
+					for (auto held_button: _held_buttons)
+					{
+						const auto released_input_type =
+							InputType(
+								held_button.input_device, InputDataType::BUTTON_RELEASED, held_button.input_context,
+								held_button.virtual_key_code
+							);
+
+						const auto released_range = button_input_handler.equal_range(released_input_type);
+
+						for (auto released_it = released_range.first; released_it != released_range.second;
+							++released_it)
+						{
+							(*released_it->second)();
+						}
+					}
+					_held_buttons.clear();
+					_input_queue.pop();
+					continue;
+				}
+				else if (input_type == InputType(
+					InputDevice::MOUSE, InputDataType::NO_DATA_TYPE, InputContext::RELATIVE
+				))
+				{
+					toggleIsMouseRelative();
+				}
+			}
+				break;
 		}
 
 		// This causes the smart pointer to release
@@ -231,19 +247,19 @@ void mt::input::BasicInputManager::acceptInput(
 	}
 }
 
-void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
+void mt::input::BasicInputManager::toggleIsMouseRelative() noexcept
 {
 	if (getIsMouseRelative())
 	{
-		setIsMouseRelative(false);
+		_setIsMouseRelative(false);
 
-		ShowCursor(true);
+		_engine.getWindowManager()->toggleShowCursor();
 
 		SetCursorPos(_mouse_return_position.x, _mouse_return_position.y);
 	}
 	else
 	{
-		setIsMouseRelative();
+		_setIsMouseRelative();
 
 		const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
 		const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
@@ -252,7 +268,7 @@ void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 
 		SetCursorPos(half_width, half_height);
 
-		ShowCursor(false);
+		_engine.getWindowManager()->toggleShowCursor();
 	}
 }
 

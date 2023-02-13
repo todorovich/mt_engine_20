@@ -140,49 +140,19 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
-	auto input_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::INPUT_TIME);
 	auto frame_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::FRAME_TIME);
-	auto update_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::UPDATE_TIME);
-	auto render_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RENDER_TIME);
-	auto tick_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::TICK_TIME);
-	auto windows_message_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::WINDOWS_MESSAGE_TIME);
-
 	frame_time->startTask();
-	// TODO: windows messages (input) should be processed on a different thread than the ticks.
-	//  would still require some synchronization.
-	long long last_frame_outputed = 0;
 
-	auto windows_message_loop_task = std::make_unique<mt::windows::WindowsMessageLoopTask>(*this);
-
-	while (!windows_message_loop_task->hasReceivedQuit())
-	{
-		auto now = std::chrono::steady_clock::now();
-
-		auto last_frame_rendered = getRenderer()->getFramesRendered();
-
-		if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
+	// this acts wonky
+	auto tick_thread = std::jthread([&](){
+		HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread");
+		while(getWindowManager()->isMessageLoopRunning())
 		{
-			last_frame_outputed = last_frame_rendered;
-
-			std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
-
-			OutputDebugStringW(
-				(std::to_wstring(getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
-			);
-
-			OutputDebugStringW(
-				(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
-			);
-
-			OutputDebugStringW(
-				(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
-			);
+			_time_manager->tick();
 		}
+	});
 
-		windows_message_time->doTask(windows_message_loop_task.get());
-
-		_time_manager->tick();
-	};
+	auto expected = getWindowManager()->runMessageLoop();
 
 	run_time->finishTask();
 
@@ -239,30 +209,3 @@ void Engine::crash(mt::error::Error error) noexcept
 	if constexpr (IS_DEBUG) OutputDebugStringW(_error->getMessage().data());
 	shutdown();
 };
-
-// TODO: do something with me.
-#pragma pack(push,8)
-struct THREADNAME_INFO
-{
-	DWORD dwType; // Must be 0x1000.
-	LPCSTR szName; // Pointer to _name (in user addr space).
-	DWORD dwThreadID; // Thread ID (-1=caller thread).
-	DWORD dwFlags; // Reserved for future use, must be zero.
-};
-#pragma pack(pop)
-
-void SetThreadName(DWORD dwThreadID, const char* threadName) {
-	THREADNAME_INFO info;
-	info.dwType = 0x1000;
-	info.szName = threadName;
-	info.dwThreadID = dwThreadID;
-	info.dwFlags = 0;
-#pragma warning(push)
-#pragma warning(disable: 6320 6322)
-	__try {
-		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-	}
-#pragma warning(pop)
-}

@@ -17,7 +17,29 @@ using namespace mt::time::model;
 
 export namespace mt::time
 {
-	class StandardTickFunction : public Task
+	class ShutDownTickFunction : public TickFunction
+	{
+		Engine* _engine = nullptr;
+		StopWatch* _input_time = nullptr;
+
+	public:
+		ShutDownTickFunction() = default;
+
+		ShutDownTickFunction(gsl::not_null<Engine*> engine, gsl::not_null<mt::time::model::StopWatch*> input_time)
+			: _engine(engine)
+			, _input_time(input_time)
+		{}
+
+		virtual std::expected<void, Error> operator()() noexcept {
+			// It is necessary to keep processing input in order to receive and process WM_DESTROY
+			_input_time->startTask();
+			_engine->getInputManager()->processInput();
+			_input_time->finishTask();
+			return {};
+		}
+	};
+
+	class StandardTickFunction : public TickFunction
 	{
 		StopWatch* 	_tick_time 		= nullptr;
 		StopWatch* 	_update_time 	= nullptr;
@@ -45,7 +67,7 @@ export namespace mt::time
 			, _engine(engine)
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, mt::error::Error> operator()() noexcept override
 		{
 			_tick_time->startTask();
 
@@ -87,7 +109,7 @@ export namespace mt::time
 
 			_tick_time->finishTask();
 
-			return {};
+			return { };
 		};
 	};
 
@@ -106,14 +128,18 @@ export namespace mt::time
 		mt::time::TimeManagerSetEndOfFrame _set_end_of_frame;
 
 		StandardTickFunction _standardTickFunction;
-
+		ShutDownTickFunction _shutDownTickFunction;
 	public:
 		StandardTimeManager(mt::Engine& engine, Error& _alarm_manager_error) noexcept;
 
 		virtual void resume() noexcept override;		// Call to unpaused.
 		virtual void pause() noexcept override;			// Call to pause.
 		virtual void tick() noexcept override;			// Call every frame.
-		virtual void shutdown() noexcept override;
+
+		virtual void shutdown() noexcept override {
+			pause();
+			_setTickFunction(&_shutDownTickFunction);
+		};
 
 		virtual StopWatch* findStopWatch(std::string_view name) override
 		{

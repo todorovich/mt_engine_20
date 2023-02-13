@@ -17,7 +17,7 @@ export namespace mt::input
         bool _isMouseRelative = false;
 
 	protected:
-		void setIsMouseRelative(bool isMouseRelative = true)
+		void _setIsMouseRelative(bool isMouseRelative = true)
 		{
 			_isMouseRelative = isMouseRelative;
 		}
@@ -46,7 +46,7 @@ export namespace mt::input
 			std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
         ) noexcept = 0;
 
-		virtual void toggleRelativeMouse() noexcept  = 0;
+		virtual void toggleIsMouseRelative() noexcept  = 0;
 
         virtual void registerInputHandler(InputHandler input_handler, InputType input_types) noexcept = 0;
 

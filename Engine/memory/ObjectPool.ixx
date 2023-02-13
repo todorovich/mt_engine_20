@@ -6,6 +6,7 @@ import <cstddef>;
 import <queue>;
 import <set>;
 import <memory>;
+import <mutex>;
 import <string_view>;
 
 import Error;
@@ -43,9 +44,12 @@ export namespace mt::memory
 		std::set<int>												_used_indices;
 		const std::size_t _capacity = pool_capacity;
 		Deleter deleter {*this};
+		std::mutex mutex;
 
 		[[nodiscard]] bool releaseMemory(T const * returned_memory)
 		{
+			std::scoped_lock lock(mutex);
+
 			// Check if we actually own this object.
 			int index = static_cast<int>(returned_memory - _data);
 			if (returned_memory == nullptr || index < 0 || index >= _capacity)
@@ -109,6 +113,8 @@ export namespace mt::memory
 		template<class... Types>
 		unique_ptr_t allocate(Types&&... args)
 		{
+			std::scoped_lock lock(mutex);
+
 			if (unused_indices.empty()) return unique_ptr_t{nullptr, deleter};
 
 			auto index = unused_indices.top();

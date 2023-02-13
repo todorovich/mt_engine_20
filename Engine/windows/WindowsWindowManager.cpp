@@ -35,12 +35,26 @@ std::expected<void, mt::error::Error> WindowsWindowManager::createMainWindow() n
 		return {};
 }
 
+std::expected<void, mt::error::Error> WindowsWindowManager::runMessageLoop() noexcept
+{
+	return (*(_windows_message_manager->getMessageLoopTask()))();
+}
+
 std::expected<void, mt::error::Error> WindowsWindowManager::destroyMainWindow() noexcept
 {
-	if (_window.get() != nullptr)
-		_window.reset();
+	_windows_message_manager->destroyMainWindow();
 
-	return {}; // todo: do we need expected?
+	return {};
+}
+
+bool WindowsWindowManager::isMessageLoopRunning() noexcept
+{
+	return !_windows_message_manager->hasReceivedQuit();
+}
+
+void WindowsWindowManager::toggleShowCursor() noexcept
+{
+	_windows_message_manager->toggleShowCursor();
 }
 
 std::expected<void, mt::error::Error> WindowsWindowManager::resize(int width, int height) noexcept
