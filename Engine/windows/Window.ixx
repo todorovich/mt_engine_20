@@ -53,22 +53,12 @@ export namespace mt::windows
 			SetWindowLongPtrW(static_cast<HWND>(_main_window_handle), GWL_STYLE, 0); //remove all window styles, check MSDN for details
 
 			ShowWindow(static_cast<HWND>(_main_window_handle), SW_SHOWMAXIMIZED); //display window
-
 		}
 
 		[[nodiscard]] mt::memory::Handle getHandle() const noexcept {
 			return _main_window_handle;
 		}
 
-		~Window()
-		{
-			if (_main_window_handle != nullptr)
-				destroyWindow();
-		}
-
-		void destroyWindow()
-		{
-			DestroyWindow(static_cast<HWND>(_main_window_handle));
-		}
+		~Window() = default;
 	};
 }

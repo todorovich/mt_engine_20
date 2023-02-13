@@ -68,7 +68,7 @@ export namespace mt::input
 			std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
 		) noexcept override;
 
-		virtual void toggleRelativeMouse() noexcept override;
+		virtual void toggleIsMouseRelative() noexcept override;
 
 		virtual void registerInputHandler(InputHandler input_handler, InputType input_types) noexcept override;
 	};

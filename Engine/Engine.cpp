@@ -140,49 +140,19 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
-	auto input_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::INPUT_TIME);
 	auto frame_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::FRAME_TIME);
-	auto update_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::UPDATE_TIME);
-	auto render_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RENDER_TIME);
-	auto tick_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::TICK_TIME);
-	auto windows_message_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::WINDOWS_MESSAGE_TIME);
-
 	frame_time->startTask();
-	// TODO: windows messages (input) should be processed on a different thread than the ticks.
-	//  would still require some synchronization.
-	long long last_frame_outputed = 0;
 
-	auto windows_message_loop_task = std::make_unique<mt::windows::WindowsMessageLoopTask>(*this);
-
-	while (!windows_message_loop_task->hasReceivedQuit())
-	{
-		auto now = std::chrono::steady_clock::now();
-
-		auto last_frame_rendered = getRenderer()->getFramesRendered();
-
-		if (last_frame_rendered % 1440 == 0 && last_frame_outputed != last_frame_rendered)
+	// this acts wonky
+	auto tick_thread = std::jthread([&](){
+		HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread");
+		while(getWindowManager()->isMessageLoopRunning())
 		{
-			last_frame_outputed = last_frame_rendered;
-
-			std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
-
-			OutputDebugStringW(
-				(std::to_wstring(getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
-			);
-
-			OutputDebugStringW(
-				(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
-			);
-
-			OutputDebugStringW(
-				(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
-			);
+			_time_manager->tick();
 		}
+	});
 
-		windows_message_time->doTask(windows_message_loop_task.get());
-
-		_time_manager->tick();
-	};
+	auto expected = getWindowManager()->runMessageLoop();
 
 	run_time->finishTask();
 

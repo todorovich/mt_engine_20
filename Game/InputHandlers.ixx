@@ -10,6 +10,8 @@ export import Task;
 import <cmath>;
 import <numbers>;
 
+import InputModel;
+
 using namespace std::literals;
 using namespace std::numbers;
 
@@ -40,7 +42,13 @@ export namespace mt
 
 		virtual std::expected<void, mt::error::Error> operator()() override
 		{
-			_engine.getInputManager()->toggleRelativeMouse();
+			_engine.getInputManager()->acceptInput(
+				mt::input::model::InputType(
+					mt::input::model::InputDevice::MOUSE,
+					mt::input::model::InputDataType::NO_DATA_TYPE,
+					mt::input::model::InputContext::RELATIVE
+				)
+			);
 			return {};
 		};
 	};

@@ -17,6 +17,7 @@ export namespace mt::input::model
 		FUNCTION_KEY	= 0x04, // SENT in Conjuction with ZERO-NINE, A-Z (should stop at B because f12)
 		EXTENDED_KEY	= 0x08, // This is numpad input, use with ZERO-NINE, and ENTER
 		RELATIVE		= 0x10,
+		ABSOLUTE		= 0x11,
 	};
 
 	constexpr InputContext operator|(const InputContext& a, const InputContext& b) noexcept

@@ -19,6 +19,6 @@ LRESULT mt::windows::WM_Destroy::execute(
 
 	// Causes quit message to appear which will end the windows message processing thread.
 	PostQuitMessage(0);
-	
+
 	return 0;
 }

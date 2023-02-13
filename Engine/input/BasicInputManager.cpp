@@ -5,6 +5,7 @@ module;
 #include <windows.h>
 
 #undef RELATIVE
+#undef ABSOLUTE
 
 module BasicInputManager;
 
@@ -167,7 +168,7 @@ void BasicInputManager::processInput() noexcept
 			case InputDataType::NO_DATA_TYPE:
 			{
 				// Lost focus should clear held keys.
-				if (input_type == default_constructed_input_type)
+				if (input_type == InputType())
 				{
 
 					for (auto held_button: _held_buttons)
@@ -189,6 +190,12 @@ void BasicInputManager::processInput() noexcept
 					_held_buttons.clear();
 					_input_queue.pop();
 					continue;
+				}
+				else if (input_type == InputType(
+					InputDevice::MOUSE, InputDataType::NO_DATA_TYPE, InputContext::RELATIVE
+				))
+				{
+					toggleIsMouseRelative();
 				}
 			}
 				break;
@@ -240,19 +247,19 @@ void mt::input::BasicInputManager::acceptInput(
 	}
 }
 
-void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
+void mt::input::BasicInputManager::toggleIsMouseRelative() noexcept
 {
 	if (getIsMouseRelative())
 	{
-		setIsMouseRelative(false);
+		_setIsMouseRelative(false);
 
-		ShowCursor(true);
+		_engine.getWindowManager()->toggleShowCursor();
 
 		SetCursorPos(_mouse_return_position.x, _mouse_return_position.y);
 	}
 	else
 	{
-		setIsMouseRelative();
+		_setIsMouseRelative();
 
 		const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
 		const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
@@ -261,7 +268,7 @@ void mt::input::BasicInputManager::toggleRelativeMouse() noexcept
 
 		SetCursorPos(half_width, half_height);
 
-		ShowCursor(false);
+		_engine.getWindowManager()->toggleShowCursor();
 	}
 }
 

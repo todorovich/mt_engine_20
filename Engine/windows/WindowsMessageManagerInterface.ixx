@@ -9,6 +9,7 @@ export import <memory>;
 export import <stdexcept>;
 
 export import Error;
+export import Task;
 export import WindowsMessage;
 
 using namespace mt::error;
@@ -47,6 +48,13 @@ export namespace mt::windows
 		virtual LRESULT handle_message(
 			const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
 		) = 0;
+
+		virtual void destroyMainWindow() = 0;
+
+		virtual bool hasReceivedQuit() = 0;
+
+		virtual mt::task::Task* getMessageLoopTask() noexcept = 0;
+		virtual void toggleShowCursor() noexcept = 0;
 	};
 
 	class NullWindowsMessageManager : public WindowsMessageManagerInterface
@@ -58,5 +66,13 @@ export namespace mt::windows
 		{
 			return DefWindowProc(hwnd, msg, wParam, lParam);
 		};
+
+		virtual void destroyMainWindow() {}
+
+		virtual bool hasReceivedQuit() { return false; }
+
+		virtual mt::task::Task* getMessageLoopTask() noexcept { return nullptr; };
+
+		virtual void toggleShowCursor() noexcept override {};
 	};
 }

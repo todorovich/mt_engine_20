@@ -32,6 +32,8 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 		tick_time.get(), update_time.get(), render_time.get(), frame_time.get(), input_time.get(), &_engine
 	);
 
+	_shutDownTickFunction = ShutDownTickFunction(&_engine, input_time.get());
+
 	_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::move(run_time)));
 	_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::move(windows_message_time)));
 	_stop_watches.emplace(std::make_pair(DefaultTimers::TICK_TIME,				std::move(tick_time)));
@@ -103,12 +105,6 @@ void StandardTimeManager::pause() noexcept
 	}
 
 	// else do nothing
-}
-
-void StandardTimeManager::shutdown() noexcept
-{
-	pause();
-	_setTickFunction(&_getNullTickFunction());
 }
 
 void StandardTimeManager::_addEngineAlarms() noexcept

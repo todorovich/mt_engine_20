@@ -32,9 +32,10 @@ export namespace mt::time
 		inline static const std::string_view FRAME_TIME = "Frame Time"sv;
 	};
 
-	class NullTickFunction : public Task
+	class TickFunction
 	{
-		virtual std::expected<void, Error> operator()() override { return {}; };
+	public:
+		virtual std::expected<void, Error> operator()() noexcept { return {}; }
 	};
 
 	class TimeManagerInterface
@@ -49,9 +50,9 @@ export namespace mt::time
 
 		std::chrono::steady_clock::duration _tick_delta_time_ns = 0ns;
 
-		NullTickFunction _null_tick_function;
+		TickFunction _do_nothing;
 
-		not_null<Task*> _tick_function = &_null_tick_function;
+		not_null<TickFunction*> _tick_function = &_do_nothing;
 
 		bool _is_paused;
 
@@ -60,10 +61,9 @@ export namespace mt::time
 		bool _end_of_frame = false;
 
 	protected:
-		[[nodiscard]] not_null<Task*> _getTickFunction() noexcept { return _tick_function; }
-		[[nodiscard]] NullTickFunction& _getNullTickFunction() noexcept { return _null_tick_function; }
+		[[nodiscard]] not_null<TickFunction*> _getTickFunction() noexcept { return _tick_function; }
 
-		void _setTickFunction(not_null<Task*> tick_function) noexcept
+		void _setTickFunction(not_null<TickFunction*> tick_function) noexcept
 		{
 			_tick_function = tick_function;
 		}
@@ -164,7 +164,10 @@ export namespace mt::time
 		[[nodiscard]] bool getShouldRender() const { return _should_render; }
 		[[nodiscard]] bool getEndOfFrame() const { return _end_of_frame; }
 
-		virtual void shutdown() noexcept = 0;
+		virtual void shutdown() noexcept {
+			pause();
+			_setTickFunction(&_do_nothing);
+		};
 
 		void updateComplete() noexcept
 		{
