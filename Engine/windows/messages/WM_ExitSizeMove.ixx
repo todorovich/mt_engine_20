@@ -13,7 +13,7 @@ export namespace mt::windows
 {
     class WM_ExitSizeMove : public WindowsMessage
     {
-        mt::Engine* _engine; // TODO: dont hold on to engine.
+        mt::Engine* _engine;
 
         LRESULT execute(const HWND &hwnd, const UINT &msg, const WPARAM &wParam, const LPARAM &lParam);
 

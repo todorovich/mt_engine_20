@@ -14,7 +14,6 @@ LRESULT WM_ExitSizeMove::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, [[maybe_unused]] const WPARAM& wParam, [[maybe_unused]] const LPARAM& lParam
 )
 {
-
 	auto window_manager =_engine->getWindowManager();
 	if (
 		auto expected = window_manager->resize(window_manager->getWindowWidth(), window_manager->getWindowHeight());
