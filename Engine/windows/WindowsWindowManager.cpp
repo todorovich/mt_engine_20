@@ -17,6 +17,7 @@ using namespace mt::windows;
 
 using namespace std::literals;
 // TODO: rename me, createMainWindow? Also an init with a matching shutdown seems like an object to me
+//  This has been started but could be improved.
 std::expected<void, mt::error::Error> WindowsWindowManager::createMainWindow() noexcept
 {
 	Error error;
@@ -34,6 +35,7 @@ std::expected<void, mt::error::Error> WindowsWindowManager::createMainWindow() n
 	else
 		return {};
 }
+
 
 std::expected<void, mt::error::Error> WindowsWindowManager::runMessageLoop() noexcept
 {

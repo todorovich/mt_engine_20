@@ -20,10 +20,10 @@ LRESULT mt::windows::WM_Size::execute(
 	mt::time::TimeManagerInterface& time_manager = *_engine->getTimeManager();
 	WindowManagerInterface& window_manager = *_engine->getWindowManager();
 
-	// TODO: extract these into methods on the window manager
 	if (wParam == SIZE_MINIMIZED)
 	{
 		time_manager.pause();
+		// TODO: extract into method on the window manager, maybe fire an event from the window manager?
 		window_manager.setIsWindowMinimized(true);
 		window_manager.setIsWindowMaximized(false);
 	}
@@ -31,6 +31,7 @@ LRESULT mt::windows::WM_Size::execute(
 	else if (wParam == SIZE_MAXIMIZED)
 	{
 		time_manager.resume();
+		// TODO: extract into method on the window manager, maybe fire an event from the window manager?
 		window_manager.setIsWindowMinimized(false);
 		window_manager.setIsWindowMaximized(true);
 		if (auto expected = window_manager.resize(_window_width, _window_height); !expected)

@@ -48,7 +48,7 @@ export namespace mt::windows
 
 	public:
 		// TODO: this is getting fed information about a screen. It probably wouldn't be a bad a idea to make a data
-		//  structure to represent a monitor, its resolutions and refresh rates,
+		//  structure to represent a monitor, its resolutions and refresh rates, location in the virtual desktop
 		//  also, the virtual desktop, its and it's dimensions
 		WindowManagerInterface(int primary_screen_width, int primary_screen_height) noexcept
 			: _window_width(primary_screen_width)

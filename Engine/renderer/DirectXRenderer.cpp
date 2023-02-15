@@ -837,14 +837,6 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 {
 	namespace fs = std::filesystem;
 
-/*
-	OutputDebugStringW(
-		std::wstring(
-			L"Current Path: " + fs::current_path().wstring() + L'\n' +
-			fs::current_path().parent_path().root_path().wstring() + L'\n'
-		).c_str());
-*/
-
 	// TODO: this is garbage, make this better.
 	fs::path p;
 	for (auto& e: fs::current_path())
@@ -856,10 +848,6 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 			break;
 		}
 	}
-
-/*
-	OutputDebugStringW((L"P = " + p.wstring()).c_str());
-*/
 
 	auto expected_mvs_byte_code =
 		mt::renderer::CompileShader(p.wstring() + L"\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
