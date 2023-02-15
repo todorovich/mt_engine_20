@@ -8,6 +8,7 @@ export import AlarmManager;
 export import gsl;
 export import Engine;
 export import TimeManagerTasks;
+//export import StopWatch;
 
 using namespace gsl;
 using namespace std::literals;
@@ -129,6 +130,30 @@ export namespace mt::time
 
 		StandardTickFunction _standardTickFunction;
 		ShutDownTickFunction _shutDownTickFunction;
+
+		std::map<std::string_view, std::unique_ptr<StopWatch>> _getStopWatches()
+		{
+			std::map<std::string_view, std::unique_ptr<StopWatch>> stop_watch;
+
+			auto run_time = std::make_unique<StopWatch>(DefaultTimers::RUN_TIME);
+			auto windows_message_time = std::make_unique<StopWatch>(DefaultTimers::WINDOWS_MESSAGE_TIME);
+			auto tick_time = std::make_unique<StopWatch>(DefaultTimers::TICK_TIME);
+			auto update_time = std::make_unique<StopWatch>(DefaultTimers::UPDATE_TIME);
+			auto input_time = std::make_unique<StopWatch>(DefaultTimers::INPUT_TIME);
+			auto render_time = std::make_unique<StopWatch>(DefaultTimers::RENDER_TIME);
+			auto frame_time = std::make_unique<StopWatch>(DefaultTimers::FRAME_TIME);
+
+			_stop_watches.emplace(std::make_pair(DefaultTimers::RUN_TIME,				std::move(run_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::WINDOWS_MESSAGE_TIME,	std::move(windows_message_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::TICK_TIME,				std::move(tick_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::UPDATE_TIME,			std::move(update_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::INPUT_TIME,				std::move(input_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::RENDER_TIME,			std::move(render_time)));
+			_stop_watches.emplace(std::make_pair(DefaultTimers::FRAME_TIME,				std::move(frame_time)));
+
+			return stop_watch;
+		}
+
 	public:
 		StandardTimeManager(mt::Engine& engine, Error& _alarm_manager_error) noexcept;
 

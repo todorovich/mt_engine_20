@@ -204,6 +204,8 @@ void Engine::shutdown() noexcept
 void Engine::crash(mt::error::Error error) noexcept
 {
 	// TODO: what if there is already an error?
+	//  This is where special pool of errors comes in handy. Could link list errors as well as allow cause.
+	// 	then link together unique_ptr's that will clean themselves up.
 	(*_error) = std::move(error);
 	if constexpr (IS_DEBUG) OutputDebugStringW(_error->getMessage().data());
 	shutdown();
