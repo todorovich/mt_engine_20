@@ -33,8 +33,6 @@ void BasicInputManager::processInput() noexcept
 
 		const auto& input_type = input_message.input_type;
 
-
-
 		const auto& input_data_type = input_type.input_data_type;
 
 		switch (input_data_type)
