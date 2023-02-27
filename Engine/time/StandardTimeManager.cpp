@@ -18,7 +18,7 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 	, _set_should_update(mt::time::TimeManagerSetShouldUpdate(engine))
 	, _set_should_render(mt::time::TimeManagerSetShouldRender(engine))
 	, _set_end_of_frame(mt::time::TimeManagerSetEndOfFrame(engine))
-	, _standardTickFunction(
+	, _standard_tick_function(
 		findStopWatch(DefaultTimers::TICK_TIME),
 		findStopWatch(DefaultTimers::UPDATE_TIME),
 		findStopWatch(DefaultTimers::RENDER_TIME),
@@ -26,7 +26,8 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 		findStopWatch(DefaultTimers::INPUT_TIME),
 		&engine
 	)
-	, _shutDownTickFunction(&engine, findStopWatch(DefaultTimers::INPUT_TIME))
+	, _shutting_down_tick_function(&engine, findStopWatch(DefaultTimers::INPUT_TIME))
+	, _initiate_shut_down_tick_function(&engine, _shutting_down_tick_function)
 {
 	_addEngineAlarms();
 
@@ -37,7 +38,7 @@ StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manag
 
 	_setIsUpdatePaused(false);
 
-	_setTickFunction(&_standardTickFunction);
+	setTickFunction(&_standard_tick_function);
 }
 
 //constexpr std::map<std::string_view, std::unique_ptr<Stopwatch>> StandardTimeManager::_getStopWatches()

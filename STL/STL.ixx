@@ -21,6 +21,7 @@ import <queue>;
 import <set>;
 import <string>;
 import <stdexcept>;
+import <stdlib.h>;
 import <string_view>;
 import <system_error>;
 import <type_traits>;
