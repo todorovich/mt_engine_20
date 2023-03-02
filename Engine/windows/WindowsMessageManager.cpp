@@ -110,7 +110,9 @@ void mt::windows::WindowsMessageManager::toggleShowCursor() noexcept
 	return _windows_message_loop_task.toggleShowCursor();
 }
 
-LRESULT mt::windows::WindowsMessageManager::handle_message(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+LRESULT mt::windows::WindowsMessageManager::handle_message(
+	const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam
+)
 {
 	auto it = _message_handler_map.find(msg);
 

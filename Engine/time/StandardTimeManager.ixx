@@ -1,3 +1,7 @@
+module;
+
+#include <windows.h>
+
 export module StandardTimeManager;
 
 export import <chrono>;
@@ -18,15 +22,16 @@ using namespace mt::time::model;
 
 export namespace mt::time
 {
-	class ShutDownTickFunction : public TickFunction
+
+	class ShuttingDownTickFunction : public TickFunction
 	{
 		Engine* _engine = nullptr;
 		StopWatch* _input_time = nullptr;
 
 	public:
-		ShutDownTickFunction() = default;
+		ShuttingDownTickFunction() = default;
 
-		ShutDownTickFunction(gsl::not_null<Engine*> engine, gsl::not_null<mt::time::model::StopWatch*> input_time)
+		ShuttingDownTickFunction(gsl::not_null<Engine*> engine, gsl::not_null<mt::time::model::StopWatch*> input_time)
 			: _engine(engine)
 			, _input_time(input_time)
 		{}
@@ -36,6 +41,58 @@ export namespace mt::time
 			_input_time->startTask();
 			_engine->getInputManager()->processInput();
 			_input_time->finishTask();
+			return {};
+		}
+	};
+
+	/**
+	 * have to flush commands on gpu before destroying the window,
+	 * destroying the windows causes PostQuitMessage via WM_Destroy
+	 * The quit message terminates the windows message loop.
+	 * would like to use raii and handle most of this shutdown stuff in the destructor.
+	 * the problem is we won't get WM_Destroy, unless we destroy the window.
+	 * We can't destroy the window while the renderer is using it.
+	 *
+	 * If we destroy in the destructor then we will never receive the WM_Destroy and therefore never PostQuitMessage
+	 *
+	 *  If we just delay quiting the message loop, then it'll eventually call to an non-existant WindowMessageManager
+	 *
+	 */
+	class InitiateShutDownTickFunction : public TickFunction
+	{
+		Engine* _engine = nullptr;
+		ShuttingDownTickFunction _shutting_down_tick_function;
+
+	public:
+		InitiateShutDownTickFunction() = default;
+
+		InitiateShutDownTickFunction(
+			gsl::not_null<Engine*> engine,
+			ShuttingDownTickFunction& shutting_down_tick_function
+		)
+			: _engine(engine)
+			, _shutting_down_tick_function(shutting_down_tick_function)
+		{}
+
+		virtual std::expected<void, Error> operator()() noexcept
+		{
+			_engine->setIsShuttingDown();
+
+			if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
+
+			// This can fail... but we're shutting down either way right?
+			//ExitProcess(0); // may need exit process if this fails
+			auto expected1 = _engine->getRenderer()->shutdown();
+			// Destroy the windows.
+
+			auto expected2 = _engine->getWindowManager()->destroyMainWindow();
+
+			// This will eventually be called by WM_Destroy after it receives the message from windows that the window was
+			// destroyed.
+			//PostQuitMessage(0);
+
+			_engine->getTimeManager()->setTickFunction(&_shutting_down_tick_function);
+
 			return {};
 		}
 	};
@@ -110,7 +167,12 @@ export namespace mt::time
 
 			_tick_time->finishTask();
 
-			return { };
+			if (_engine->shouldShutDown())
+			{
+				_engine->getTimeManager()->shutdown();
+			}
+
+			return {};
 		};
 	};
 
@@ -128,8 +190,9 @@ export namespace mt::time
 		mt::time::TimeManagerSetShouldRender _set_should_render;
 		mt::time::TimeManagerSetEndOfFrame _set_end_of_frame;
 
-		StandardTickFunction _standardTickFunction;
-		ShutDownTickFunction _shutDownTickFunction;
+		StandardTickFunction _standard_tick_function;
+		ShuttingDownTickFunction _shutting_down_tick_function;
+		InitiateShutDownTickFunction _initiate_shut_down_tick_function;
 
 		std::map<std::string_view, std::unique_ptr<StopWatch>> _getStopWatches()
 		{
@@ -163,7 +226,7 @@ export namespace mt::time
 
 		virtual void shutdown() noexcept override {
 			pause();
-			_setTickFunction(&_shutDownTickFunction);
+			setTickFunction(&_initiate_shut_down_tick_function);
 		};
 
 		virtual StopWatch* findStopWatch(std::string_view name) override

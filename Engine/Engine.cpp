@@ -99,18 +99,6 @@ Engine::Engine() noexcept
 
 		return;
 	}
-
-	if (auto expected = getWindowManager()->createMainWindow(); !expected)
-	{
-		(*_error) = std::move(expected.error());
-		return;
-	}
-
-	if (auto expected = getRenderer()->initialize(); !expected)
-	{
-		(*_error) = std::move(expected.error());
-		return;
-	}
 }
 
 Engine::~Engine() noexcept
@@ -137,6 +125,18 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 
 	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected(std::move(_error));
 
+	if (auto expected = getWindowManager()->createMainWindow(); !expected)
+	{
+		(*_error) = std::move(expected.error());
+		return std::unexpected{std::move(_error)};
+	}
+
+	if (auto expected = getRenderer()->initialize(); !expected)
+	{
+		(*_error) = std::move(expected.error());
+		return std::unexpected{std::move(_error)};
+	}
+
 	auto run_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::RUN_TIME);
 	run_time->startTask();
 
@@ -159,46 +159,6 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 		return std::unexpected{ std::move(_error) };
 	else
 		return {};
-}
-
-/**
- * have to flush commands on gpu before destroying the window,
- * destroying the windows causes PostQuitMessage via WM_Destroy
- * The quit message terminates the windows message loop.
- * would like to use raii and handle most of this shutdown stuff in the destructor.
- * the problem is we won't get WM_Destroy, unless we destroy the window.
- * We can't destroy the window while the renderer is using it.
- *
- * If we destroy in the destructor then we will never receive the WM_Destroy and therefore never PostQuitMessage
- *
- *  If we just delay quiting the message loop, then it'll eventually call to an non-existant WindowMessageManager
- *
- */
-void Engine::shutdown() noexcept
-{
-	if (!isShuttingDown())
-	{
-		_is_shutting_down.store(true);
-
-		getTimeManager()->shutdown();
-
-		if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
-
-		// This can fail... but we're shutting down either way right?
-		//ExitProcess(0); // may need exit process if this fails
-		auto expected1 = getRenderer()->shutdown();
-		// Destroy the windows.
-
-		auto expected2 = getWindowManager()->destroyMainWindow();
-
-		// This will eventually be called by WM_Destroy after it receives the message from windows that the window was
-		// destroyed.
-		//PostQuitMessage(0);
-	}
-	else
-	{
-		OutputDebugStringW(L"Engine Shutdown Already Initiated\n");
-	}
 }
 
 void Engine::crash(mt::error::Error error) noexcept

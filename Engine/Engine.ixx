@@ -55,12 +55,14 @@ export namespace mt
 
 		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
 		std::atomic<bool> _is_shutting_down = false;
-		std::atomic<bool> _is_shut_down = false;
+		std::atomic<bool> _should_shut_down = false;
 
 	protected:	
 		static Engine* _instance;
 
 	public:
+		friend TimeManagerInterface;
+
 		Engine() noexcept;
 		~Engine() noexcept;
 		Engine(const Engine& other) noexcept = default;
@@ -77,12 +79,16 @@ export namespace mt
 
 		[[nodiscard]] static bool isDestroyed() noexcept { return _instance == nullptr; };
 		[[nodiscard]] bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
+		[[nodiscard]] bool shouldShutDown() const noexcept { return _should_shut_down.load(); }
 		// MUTATOR
 
 		[[nodiscard]] std::expected<void, std::unique_ptr<Error>> run(std::unique_ptr<Game> game) noexcept;
 
 		// Called to begin orderly shutdown.
-		void shutdown() noexcept;
+		void shutdown() noexcept { _should_shut_down = true; }
+
+		// Called by the shutdown tick function to notify that shutdown has begun.
+		void setIsShuttingDown() { _is_shutting_down = true; }
 
 		void crash(mt::error::Error error) noexcept;
 	};

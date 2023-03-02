@@ -63,10 +63,7 @@ export namespace mt::time
 	protected:
 		[[nodiscard]] not_null<TickFunction*> _getTickFunction() noexcept { return _tick_function; }
 
-		void _setTickFunction(not_null<TickFunction*> tick_function) noexcept
-		{
-			_tick_function = tick_function;
-		}
+
 
 		void _setShouldUpdate() noexcept
 		{
@@ -164,9 +161,14 @@ export namespace mt::time
 		[[nodiscard]] bool getShouldRender() const { return _should_render; }
 		[[nodiscard]] bool getEndOfFrame() const { return _end_of_frame; }
 
+		void setTickFunction(not_null<TickFunction*> tick_function) noexcept
+		{
+			_tick_function = tick_function;
+		}
+
 		virtual void shutdown() noexcept {
 			pause();
-			_setTickFunction(&_do_nothing);
+			setTickFunction(&_do_nothing);
 		};
 
 		void updateComplete() noexcept

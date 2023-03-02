@@ -40,6 +40,9 @@ export namespace mt::windows
 			auto windows_message_time =
 				_engine.getTimeManager()->findStopWatch(mt::time::DefaultTimers::WINDOWS_MESSAGE_TIME);
 
+			// This can fail in theory, but I don't want to crash if it does.
+			HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Windows Message Thread");
+
 			while (!received_quit)
 			{
 				auto last_frame_rendered = _engine.getRenderer()->getFramesRendered();
@@ -65,9 +68,6 @@ export namespace mt::windows
 
 				windows_message_time->startTask();
 
-				// This can fail in theory, but I don't want to crash if it does.
-				HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Windows Message Thread");
-
 				MSG msg = { 0 };
 				// If there are Window.ixx messages then process them.
 				while (_engine.getInputManager()->isAcceptingInput() && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -89,8 +89,15 @@ export namespace mt::windows
 					handle && should_destroy_window.load()
 				)
 				{
-					// This has to be done on the windows message thread. hence the design.
-					DestroyWindow(static_cast<HWND>(handle));
+					// This has to be done on the same thread that created the window. hence the design.
+					if (auto result = DestroyWindow(static_cast<HWND>(handle)); result != 0) {
+						should_destroy_window.store(false);
+					}
+					else
+					{
+						// TODO: do something...?
+						auto error = GetLastError();
+					}
 				}
 
 				if (should_toggle_cursor)
