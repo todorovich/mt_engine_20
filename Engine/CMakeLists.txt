@@ -31,6 +31,7 @@ message("CMAKE_CXX_FLAGS_MINSIZEREL is ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory("error")
+add_subdirectory("event")
 add_subdirectory("font")
 add_subdirectory("geometry")
 add_subdirectory("input")
