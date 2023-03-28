@@ -25,7 +25,7 @@ export namespace mt
 			: _engine(engine)
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, std::error_condition> operator()() override
 		{
 			_engine.shutdown();
 			return {};
@@ -40,7 +40,7 @@ export namespace mt
 			: _engine(engine)
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, std::error_condition> operator()() override
 		{
 			_engine.getInputManager()->acceptInput(
 				mt::input::model::InputType(
@@ -63,7 +63,7 @@ export namespace mt
 			, _adjusted_walk_speed(walk_speed / (1s / delta_time))
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, std::error_condition> operator()() override
 		{
 			_engine.getRenderer()->getCurrentCamera().walk(_adjusted_walk_speed);
 			return {};
@@ -88,7 +88,7 @@ export namespace mt
 			, _adjusted_walk_speed(walk_speed / (1s / delta_time))
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, std::error_condition> operator()() override
 		{
 			_engine.getRenderer()->getCurrentCamera().strafe(_adjusted_walk_speed);
 			return {};
@@ -113,7 +113,7 @@ export namespace mt
 			, _adjusted_walk_speed(fly_speed / (1s / delta_time))
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() override
+		virtual std::expected<void, std::error_condition> operator()() override
 		{
 			_engine.getRenderer()->getCurrentCamera().fly(_adjusted_walk_speed);
 			return {};
@@ -137,7 +137,7 @@ export namespace mt
 		{}
 
 		//
-		virtual std::expected<void, mt::error::Error> operator()(int x, int y) override
+		virtual std::expected<void, std::error_condition> operator()(int x, int y) override
 		{
 			auto width = _engine.getWindowManager()->getWindowWidth();
 			auto height = _engine.getWindowManager()->getWindowHeight();

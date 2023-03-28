@@ -32,7 +32,7 @@ export namespace mt::time::model
 		bool _is_paused;
 
 		static class DoNothing : public mt::task::Task {
-			std::expected<void, mt::error::Error> operator()(){}
+			std::expected<void, std::error_condition> operator()(){}
 		} doNothing;
 
 	public:

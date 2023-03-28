@@ -13,6 +13,7 @@ import Engine;
 import InputModel;
 
 using namespace gsl;
+using namespace mt::error;
 using namespace mt::input;
 using namespace mt::input::model;
 using namespace mt::task;
@@ -229,19 +230,11 @@ void mt::input::BasicInputManager::acceptInput(
 				is_accepting_input.store(false);
 		}
 		else {
-			_engine.crash(mt::error::Error{
-				L"Failed to accept input, message queue is full."sv,
-				mt::error::ErrorCode::UNABLE_TO_ACCEPT_INPUT,
-				__func__, __FILE__, __LINE__
-			});
+			_engine.crash(MakeErrorCondition(ErrorCode::UNABLE_TO_ACCEPT_INPUT));
 		}
 	}
 	else {
-		_engine.crash(mt::error::Error{
-			L"Input Manager is full and not accepting input."sv,
-			mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT,
-			__func__, __FILE__, __LINE__
-		});
+		_engine.crash(MakeErrorCondition(mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT));
 	}
 }
 
@@ -309,11 +302,7 @@ void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handl
 			break;
 
 		case InputDataType::NO_DATA_TYPE:
-			_engine.crash(mt::error::Error{
-				L"Attempted to register InputType with InputDataType::NO_DATA_TYPE which is invalid."sv,
-				mt::error::ErrorCode::INVALID_INPUT_DATA_TYPE,
-				__func__, __FILE__, __LINE__
-			});
+			_engine.crash(MakeErrorCondition(mt::error::ErrorCode::INVALID_INPUT_DATA_TYPE));
 			break;
 	}
 }

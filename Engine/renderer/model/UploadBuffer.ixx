@@ -24,7 +24,9 @@ export template<typename T> class UploadBuffer
     bool _is_constant_buffer = false;
 
 public:
-    UploadBuffer(ID3D12Device* device, UINT64 element_count, bool is_constant_buffer, Error& error) noexcept
+    UploadBuffer(
+		ID3D12Device* device, UINT64 element_count, bool is_constant_buffer, std::error_condition& error
+	) noexcept
 		: _is_constant_buffer(is_constant_buffer)
     {
         element_byte_size = sizeof(T);
@@ -50,21 +52,13 @@ public:
 			IID_PPV_ARGS(&_upload_buffer)
 		)))
 		{
-			error = Error(
-				L"Unable to create committed resource for upload buffer."sv,
-				mt::error::ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED,
-				__func__, __FILE__, __LINE__
-			);
+			Assign(error, mt::error::ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED);
 			return;
 		}
 
 		if (FAILED(_upload_buffer->Map(0, nullptr, reinterpret_cast<void**>(&_mapped_data))))
 		{
-			error = Error(
-				L"unable to map the upload buffer."sv,
-				mt::error::ErrorCode::MAPPING_RESOURCE_FAILED,
-				__func__, __FILE__, __LINE__
-			);
+			Assign(error, mt::error::ErrorCode::MAPPING_RESOURCE_FAILED);
 			return;
 		}
 

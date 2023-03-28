@@ -3,6 +3,7 @@ module;
 
 #include <wrl.h>
 #include <d3d12.h>
+#include <expected>
 
 export module MeshGeometry;
 
@@ -91,7 +92,7 @@ export namespace mt::renderer
 			};
 		}
 
-		[[nodiscard]] const std::string_view getName()
+		[[nodiscard]] std::string_view getName() const
 		{
 			return _name;
 		}
@@ -107,7 +108,7 @@ export namespace mt::renderer
 
 export namespace mt::memory::factory
 {
-	std::expected<std::unique_ptr<mt::renderer::MeshGeometry>, Error> MeshGeometry(
+	std::expected<std::unique_ptr<mt::renderer::MeshGeometry>, std::error_condition> MeshGeometry(
 		std::string&& name
 	) noexcept
 	{
@@ -119,13 +120,7 @@ export namespace mt::memory::factory
 		}
 		else
 		{
-			return std::unexpected(
-				Error{
-					L"Unable to allocate the mesh geometry"sv,
-					mt::error::ErrorCode::BAD_ALLOCATION,
-					__func__, __FILE__, __LINE__
-				}
-			);
+			return std::unexpected(MakeErrorCondition(mt::error::ErrorCode::BAD_ALLOCATION));
 		}
 	}
 };

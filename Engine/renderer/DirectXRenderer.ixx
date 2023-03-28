@@ -126,33 +126,33 @@ export namespace mt::renderer
 
         // Mutators
 
-		[[nodiscard]] std::expected<void, Error> _flushCommandQueue() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _flushCommandQueue() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createCommandList() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createCommandList() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createDxCommandObjects() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createDxCommandObjects() noexcept;
 
 		void _drawRenderItems(
 			ID3D12GraphicsCommandList* command_list, const std::vector<std::unique_ptr<RenderItem>>& render_items
 		) noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createSwapChain() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createSwapChain() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createDescriptorHeaps() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createDescriptorHeaps() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createRootSignature() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createRootSignature() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createShadersAndInputLayout() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createShadersAndInputLayout() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createGeometry() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createGeometry() noexcept;
 
 		void _createRenderItems() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createFrameResources() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createFrameResources() noexcept;
 
         void _createConstantBufferViews() noexcept;
 
-		[[nodiscard]] std::expected<void, Error> _createPipelineStateObject() noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> _createPipelineStateObject() noexcept;
 
 		void _updateObjectConstants() noexcept;
 
@@ -172,7 +172,7 @@ export namespace mt::renderer
 
         // Accessors
 
-		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept override
+		[[nodiscard]] virtual std::expected<void, std::error_condition> shutdown() noexcept override
 		{
 			if constexpr (mt::IS_DEBUG) OutputDebugStringW(L"Renderer::shutdown()\n");
 			return _flushCommandQueue();
@@ -182,14 +182,14 @@ export namespace mt::renderer
 
 		// Mutators
 
-		[[nodiscard]] std::expected<void, Error> set4xMsaaState(bool value) noexcept override;
+		[[nodiscard]] std::expected<void, std::error_condition> set4xMsaaState(bool value) noexcept override;
 
-		[[nodiscard]] std::expected<void, Error> onResize() noexcept override;
+		[[nodiscard]] std::expected<void, std::error_condition> onResize() noexcept override;
 
-		[[nodiscard]] std::expected<void, Error> render() noexcept override;
+		[[nodiscard]] std::expected<void, std::error_condition> render() noexcept override;
 
-		[[nodiscard]] std::expected<void, Error> update() noexcept override;
+		[[nodiscard]] std::expected<void, std::error_condition> update() noexcept override;
 
-		[[nodiscard]] std::expected<void, Error> initialize() noexcept override;
+		[[nodiscard]] std::expected<void, std::error_condition> initialize() noexcept override;
     };
 }

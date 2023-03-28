@@ -73,15 +73,11 @@ export namespace mt::memory
 		friend ObjectPool::Deleter;
 		friend std::unique_ptr<ObjectPool<T,pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
 
-		ObjectPool(Error& error) noexcept
+		ObjectPool(std::error_condition& error) noexcept
 		{
 			if (_data == nullptr)
 			{
-				error = Error(
-					std::wstring_view(L"Unable to allocate memory for the object pool."),
-					mt::error::ErrorCode::BAD_ALLOCATION,
-					__func__, __FILE__, __LINE__
-				);
+				Assign(error, mt::error::ErrorCode::BAD_ALLOCATION);
 			}
 			else
 			{

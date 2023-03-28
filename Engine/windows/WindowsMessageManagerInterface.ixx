@@ -33,7 +33,7 @@ export namespace mt::windows
 			return _instance->handle_message(hwnd, msg, wParam, lParam);
 		}
 
-		WindowsMessageManagerInterface(Error& error) noexcept;
+		WindowsMessageManagerInterface(std::error_condition& error) noexcept;
 
 		virtual ~WindowsMessageManagerInterface() noexcept
 		{

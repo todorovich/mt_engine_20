@@ -11,7 +11,7 @@ using namespace mt::error;
 using namespace mt::time;
 using namespace mt::time::model;
 
-StandardTimeManager::StandardTimeManager(mt::Engine& engine, Error& _alarm_manager_error) noexcept
+StandardTimeManager::StandardTimeManager(mt::Engine& engine, std::error_condition& _alarm_manager_error) noexcept
 	: _alarm_manager(std::make_unique<StandardAlarmManager>(_alarm_manager_error))
 	, _stop_watches(_getStopWatches())
 	, _engine(engine)
