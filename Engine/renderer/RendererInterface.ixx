@@ -71,16 +71,16 @@ export namespace mt::renderer
 		static constexpr unsigned int getSwapChainBufferCount() { return _swap_chain_buffer_count; };
 
 
-		[[nodiscard]] virtual std::expected<void, Error> set4xMsaaState(bool value) noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> set4xMsaaState(bool value) noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> onResize() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> onResize() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> render() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> render() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> initialize() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> initialize() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> shutdown() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> shutdown() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> update() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> update() noexcept = 0;
 	};
 }

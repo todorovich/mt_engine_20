@@ -1,7 +1,9 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-export module Task;
+module;
 
-export import <expected>;
+#include <expected>
+
+export module Task;
 
 export import Error;
 
@@ -17,7 +19,7 @@ export namespace mt::task
 		Task& operator=(const Task&) noexcept = default;
 		Task& operator=(Task&&) noexcept = default;
 		
-		virtual std::expected<void, mt::error::Error> operator()() = 0;
+		virtual std::expected<void, std::error_condition> operator()() = 0;
 	};
 
 	class OneDimensionalInputTask
@@ -30,7 +32,7 @@ export namespace mt::task
 		OneDimensionalInputTask& operator=(const OneDimensionalInputTask&) noexcept = default;
 		OneDimensionalInputTask& operator=(OneDimensionalInputTask&&) noexcept = default;
 
-		virtual std::expected<void, mt::error::Error> operator()(int) = 0;
+		virtual std::expected<void, std::error_condition> operator()(int) = 0;
 	};
 
 	class TwoDimensionalInputTask
@@ -43,7 +45,7 @@ export namespace mt::task
 		TwoDimensionalInputTask& operator=(const TwoDimensionalInputTask&) noexcept = default;
 		TwoDimensionalInputTask& operator=(TwoDimensionalInputTask&&) noexcept = default;
 		
-		virtual std::expected<void, mt::error::Error> operator()(int, int) = 0;
+		virtual std::expected<void, std::error_condition> operator()(int, int) = 0;
 	};
 
 	class ThreeDimensionalInputTask
@@ -56,6 +58,6 @@ export namespace mt::task
 		ThreeDimensionalInputTask& operator=(const ThreeDimensionalInputTask&) noexcept = default;
 		ThreeDimensionalInputTask& operator=(ThreeDimensionalInputTask&&) noexcept = default;
 
-		virtual std::expected<void, mt::error::Error> operator()(int, int, int) = 0;
+		virtual std::expected<void, std::error_condition> operator()(int, int, int) = 0;
 	};
 }

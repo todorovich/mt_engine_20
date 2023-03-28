@@ -2,7 +2,7 @@
 module;
 
 #include <catch.hpp>
-#include <windows.h>
+#include <Windows.h>
 
 export module EngineTest;
 

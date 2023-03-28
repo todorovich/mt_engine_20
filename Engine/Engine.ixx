@@ -5,6 +5,8 @@ module;
 
 #undef min
 
+#include <expected>
+
 export module Engine;
 
 export import <array>;
@@ -45,7 +47,12 @@ export namespace mt
 {
 	class Engine
 	{
-		std::unique_ptr<Error> _error = make_unique_nothrow<Error>();
+		std::unique_ptr<std::error_condition> _error = std::unique_ptr<std::error_condition>(
+			new (std::nothrow) std::error_condition(
+				static_cast<int>(ErrorCode::ERROR_UNINITIALIZED),
+				engineErrorCategory()
+			)
+		);
 
 		unique_ptr<InputManagerInterface>	_input_manager 	= nullptr;
 		unique_ptr<TimeManagerInterface>	_time_manager 	= nullptr;
@@ -82,7 +89,7 @@ export namespace mt
 		[[nodiscard]] bool shouldShutDown() const noexcept { return _should_shut_down.load(); }
 		// MUTATOR
 
-		[[nodiscard]] std::expected<void, std::unique_ptr<Error>> run(std::unique_ptr<Game> game) noexcept;
+		[[nodiscard]] std::expected<void, std::unique_ptr<std::error_condition>> run(std::unique_ptr<Game> game) noexcept;
 
 		// Called to begin orderly shutdown.
 		void shutdown() noexcept { _should_shut_down = true; }
@@ -90,6 +97,6 @@ export namespace mt
 		// Called by the shutdown tick function to notify that shutdown has begun.
 		void setIsShuttingDown() { _is_shutting_down = true; }
 
-		void crash(mt::error::Error error) noexcept;
+		void crash(std::error_condition error) noexcept;
 	};
 }

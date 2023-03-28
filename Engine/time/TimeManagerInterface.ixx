@@ -1,12 +1,17 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
+module;
+
+#include <expected>
+
 export module TimeManagerInterface;
 
 export import <map>;
 export import <string_view>;
 export import <chrono>;
-export import <expected>;
+
 
 export import gsl;
+export import Error;
 export import TimeModel;
 
 using namespace gsl;
@@ -35,7 +40,7 @@ export namespace mt::time
 	class TickFunction
 	{
 	public:
-		virtual std::expected<void, Error> operator()() noexcept { return {}; }
+		virtual std::expected<void, std::error_condition> operator()() noexcept { return {}; }
 	};
 
 	class TimeManagerInterface

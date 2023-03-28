@@ -35,178 +35,140 @@ using namespace std::numbers;
 
 using Microsoft::WRL::ComPtr;
 
-std::expected<void, Error> DirectXRenderer::onResize() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::onResize() noexcept
 {
-	if (_dx_device)
+	if (!_dx_device)
+		return std::unexpected(MakeErrorCondition(ErrorCode::RESIZE_BEFORE_INITIALIZED));
+
+	auto width = _engine.getWindowManager()->getWindowWidth();
+	auto height = _engine.getWindowManager()->getWindowHeight();
+
+	assert(_dx_swap_chain);
+	assert(_dx_command_list_allocator.Get());
+
+	// Flush before changing any resources.
+	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
+
+	// TODO: better error condition
+	if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
 	{
-		auto width = _engine.getWindowManager()->getWindowWidth();
-		auto height = _engine.getWindowManager()->getWindowHeight();
-
-		assert(_dx_swap_chain);
-		assert(_dx_command_list_allocator.Get());
-
-		// Flush before changing any resources.
-		if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
-
-		if (FAILED(_dx_command_list->Reset(_getCurrentFrameResource()->command_list_allocator.Get(), nullptr)))
-		{
-			return std::unexpected(
-				mt::error::Error{
-					L"Unable to reset the command list allocator."sv,
-					mt::error::ErrorCode::GRAPHICS_FAILURE,
-					__func__, __FILE__, __LINE__
-				}
-			);
-		}
-
-		// Release the previous resources we will be recreating.
-		for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
-		{
-			_swap_chain_buffer[i].Reset();
-		}
-		_depth_stencil_buffer.Reset();
-
-		// Resize the swap chain.
-		if (FAILED(_dx_swap_chain->ResizeBuffers(
-			getSwapChainBufferCount(),
-			width, height,
-			_back_buffer_format,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
-		)))
-		{
-			return std::unexpected(
-				mt::error::Error{
-					L"Unable to reset the swap chain."sv,
-					mt::error::ErrorCode::GRAPHICS_FAILURE,
-					__func__, __FILE__, __LINE__
-				}
-			);
-		}
-
-		_current_back_buffer = 0;
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < getSwapChainBufferCount(); i++)
-		{
-			if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
-			{
-				return std::unexpected(
-					mt::error::Error{
-						L"Unable to retrieve the swap chain buffer."sv,
-						mt::error::ErrorCode::GRAPHICS_FAILURE,
-						__func__, __FILE__, __LINE__
-					}
-				);
-			}
-
-			_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
-			rtvHeapHandle.Offset(1, _rtv_descriptor_size);
-		}
-
-		// Create the depth/stencil buffer and view.
-		D3D12_RESOURCE_DESC depthStencilDesc;
-		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		depthStencilDesc.Alignment = 0;
-		depthStencilDesc.Width = width;
-		depthStencilDesc.Height = height;
-		depthStencilDesc.DepthOrArraySize = 1;
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.Format = _depth_stencil_format;
-		depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
-		depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
-		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-		D3D12_CLEAR_VALUE optClear;
-		optClear.Format = _depth_stencil_format;
-		optClear.DepthStencil.Depth = 1.0f;
-		optClear.DepthStencil.Stencil = 0;
-
-		auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-
-		if (FAILED(_dx_device->CreateCommittedResource(
-			&heap_properties,
-			D3D12_HEAP_FLAG_NONE,
-			&depthStencilDesc,
-			D3D12_RESOURCE_STATE_COMMON,
-			&optClear,
-			IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
-		)))
-		{
-			return std::unexpected(
-				mt::error::Error{
-					L"Unable to create committed depth stencil buffer resource."sv,
-					mt::error::ErrorCode::GRAPHICS_FAILURE,
-					__func__, __FILE__, __LINE__
-				}
-			);
-		}
-
-		// Create descriptor to mip level 0 of entire resource using the format of the resource.
-		_dx_device->CreateDepthStencilView(_depth_stencil_buffer.Get(), nullptr, _getDepthStencilView());
-
-
-		auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			_depth_stencil_buffer.Get(),
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE
-		);
-
-		// Transition the resource from its initial state to be used as a depth buffer.
-		_dx_command_list->ResourceBarrier(1, &resource_barrier);
-
-		// Execute the Resize commands.
-		if (FAILED(_dx_command_list->Close()))
-		{
-			return std::unexpected(
-				mt::error::Error{
-					L"Unable to close the command list."sv,
-					mt::error::ErrorCode::GRAPHICS_FAILURE,
-					__func__, __FILE__, __LINE__
-				}
-			);
-		}
-
-		ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
-		_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
-
-		// Wait until Resize is complete.
-		if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
-
-		// Update the viewport transform to cover the client area.
-		_screen_viewport.TopLeftX = 0;
-		_screen_viewport.TopLeftY = 0;
-		_screen_viewport.Width = static_cast<float>(width);
-		_screen_viewport.Height = static_cast<float>(height);
-		_screen_viewport.MinDepth = 0.0f;
-		_screen_viewport.MaxDepth = 1.0f;
-
-		_scissor_rectangle = { 0, 0, width, height };
-
-		// The window resized, so update the aspect ratio and recompute the projection matrix.
-		getCurrentCamera().setLens(
-			_engine.getRenderer()->getCurrentCamera().getFovX(),
-			_engine.getWindowManager()->getWindowAspectRatio(),
-			_engine.getRenderer()->getCurrentCamera().getNearZ(),
-			_engine.getRenderer()->getCurrentCamera().getFarZ()
-		);
-
-		return {};
+		return std::unexpected(MakeErrorCondition(ErrorCode::RESET_COMMAND_LIST_ALLOCATOR_FAILED));
 	}
-	else
+
+	// Release the previous resources we will be recreating.
+	for (unsigned int i = 0; i < getSwapChainBufferCount(); ++i)
 	{
-		return std::unexpected(
-			mt::error::Error{
-				L"The renderer may not be resized before it is initialized."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			}
-		);
+		_swap_chain_buffer[i].Reset();
 	}
+	_depth_stencil_buffer.Reset();
+
+	// Resize the swap chain.
+	if (FAILED(_dx_swap_chain->ResizeBuffers(
+		getSwapChainBufferCount(),
+		width, height,
+		_back_buffer_format,
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+	)))
+	{
+		// TODO: better error condition
+		return std::unexpected(MakeErrorCondition(ErrorCode::GRAPHICS_FAILURE));
+	}
+
+	_current_back_buffer = 0;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(_dx_rtv_heap->GetCPUDescriptorHandleForHeapStart());
+	for (UINT i = 0; i < getSwapChainBufferCount(); i++)
+	{
+		if (FAILED(_dx_swap_chain->GetBuffer(i, IID_PPV_ARGS(&_swap_chain_buffer[i]))))
+		{
+			return std::unexpected(MakeErrorCondition(ErrorCode::GRAPHICS_FAILURE));
+		}
+
+		_dx_device->CreateRenderTargetView(_swap_chain_buffer[i].Get(), nullptr, rtvHeapHandle);
+		rtvHeapHandle.Offset(1, _rtv_descriptor_size);
+	}
+
+	// Create the depth/stencil buffer and view.
+	D3D12_RESOURCE_DESC depthStencilDesc;
+	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Alignment = 0;
+	depthStencilDesc.Width = width;
+	depthStencilDesc.Height = height;
+	depthStencilDesc.DepthOrArraySize = 1;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.Format = _depth_stencil_format;
+	depthStencilDesc.SampleDesc.Count = get4xMsaaState() ? 4 : 1;
+	depthStencilDesc.SampleDesc.Quality = get4xMsaaState() ? (_4x_msaa_quality - 1) : 0;
+	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE optClear;
+	optClear.Format = _depth_stencil_format;
+	optClear.DepthStencil.Depth = 1.0f;
+	optClear.DepthStencil.Stencil = 0;
+
+	auto heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+	if (FAILED(_dx_device->CreateCommittedResource(
+		&heap_properties,
+		D3D12_HEAP_FLAG_NONE,
+		&depthStencilDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		&optClear,
+		IID_PPV_ARGS(_depth_stencil_buffer.GetAddressOf())
+	)))
+	{
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED));
+	}
+
+	// Create descriptor to mip level 0 of entire resource using the format of the resource.
+	_dx_device->CreateDepthStencilView(_depth_stencil_buffer.Get(), nullptr, _getDepthStencilView());
+
+
+	auto resource_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		_depth_stencil_buffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	);
+
+	// Transition the resource from its initial state to be used as a depth buffer.
+	_dx_command_list->ResourceBarrier(1, &resource_barrier);
+
+	// Execute the Resize commands.
+	if (FAILED(_dx_command_list->Close()))
+	{
+		return std::unexpected(MakeErrorCondition(ErrorCode::CLOSE_COMMAND_LIST_FAILED));
+	}
+
+	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
+	_dx_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
+
+	// Wait until Resize is complete.
+	if (auto expected = _flushCommandQueue(); !expected) return std::unexpected(expected.error());
+
+	// Update the viewport transform to cover the client area.
+	_screen_viewport.TopLeftX = 0;
+	_screen_viewport.TopLeftY = 0;
+	_screen_viewport.Width = static_cast<float>(width);
+	_screen_viewport.Height = static_cast<float>(height);
+	_screen_viewport.MinDepth = 0.0f;
+	_screen_viewport.MaxDepth = 1.0f;
+
+	_scissor_rectangle = { 0, 0, width, height };
+
+	// The window resized, so update the aspect ratio and recompute the projection matrix.
+	getCurrentCamera().setLens(
+		_engine.getRenderer()->getCurrentCamera().getFovX(),
+		_engine.getWindowManager()->getWindowAspectRatio(),
+		_engine.getRenderer()->getCurrentCamera().getNearZ(),
+		_engine.getRenderer()->getCurrentCamera().getFarZ()
+	);
+
+	return {};
 
 }
 
-std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
+std::expected<void, std::error_condition> DirectXRenderer::set4xMsaaState(bool value) noexcept
 {
 	if (get4xMsaaState() != value)
 	{
@@ -222,7 +184,7 @@ std::expected<void, Error> DirectXRenderer::set4xMsaaState(bool value) noexcept
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::update() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::update() noexcept
 {
 	getCurrentCamera().updateViewMatrix();
 
@@ -234,11 +196,7 @@ std::expected<void, Error> DirectXRenderer::update() noexcept
 		// Fire event when GPU hits current fence.
 		if (FAILED(_fence->SetEventOnCompletion(_getCurrentFrameResource()->fence, eventHandle)))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to set the completion event for the fence."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_WAIT_FOR_FENCE));
 		}
 
 		// Wait until the GPU hits current fence event is fired.
@@ -311,7 +269,7 @@ void DirectXRenderer::_updatePassConstants() noexcept
 	current_upload_buffer->CopyData(0, pass_constants);
 }
 
-std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
+std::expected<void, std::error_condition> mt::renderer::DirectXRenderer::render() noexcept
 {
 	_setIsRendering();
 
@@ -324,11 +282,7 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 	// swap the back and front buffers_
 	if (FAILED(_dx_swap_chain->Present(0, 0)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to present the swap chain (swap front/back buffers)."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_PRESENT_SWAP_CHAIN));
 	}
 
 	_current_back_buffer = (_current_back_buffer + 1) % getSwapChainBufferCount();
@@ -346,15 +300,11 @@ std::expected<void, Error> mt::renderer::DirectXRenderer::render() noexcept
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createCommandList() noexcept
 {
 	if (FAILED(_getCurrentFrameResource()->command_list_allocator->Reset()))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to reset the command list allocator."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::RESET_COMMAND_LIST_ALLOCATOR_FAILED));
 	}
 
 	if (FAILED(
@@ -364,11 +314,7 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 		)
 	))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to reset the command list."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::RESET_COMMAND_LIST_FAILED));
 	}
 
 	_dx_command_list->RSSetViewports(1, &_screen_viewport);
@@ -417,11 +363,7 @@ std::expected<void, Error> DirectXRenderer::_createCommandList() noexcept
 	// Done recording commands.
 	if (FAILED(_dx_command_list->Close()))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to close the command list."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CLOSE_COMMAND_LIST_FAILED));
 	}
 
 	return {};
@@ -462,7 +404,7 @@ void DirectXRenderer::_drawRenderItems(
 
 // INITIALIZATION CODE
 
-std::expected<void, Error> DirectXRenderer::initialize() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::initialize() noexcept
 {
 	_main_window_handle = static_cast<HWND>(_engine.getWindowManager()->getWindow()->getHandle());
 
@@ -473,11 +415,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 
 		if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to retrieve the dx12 debug interface."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::RETRIEVE_DEBUG_INTERFACE_FAILED));
 		};
 
 		debugController->EnableDebugLayer();
@@ -486,11 +424,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	// Create DirectX Graphics Infrastructure 1.1 factory that you can use to generate other DXGI objects
 	if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG , IID_PPV_ARGS(&_dx_dxgi_factory))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the dxgi factory 2."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_CREATE_DXGI_FACTORY_2));
 	}
 
 	// If we failed to create the D3D12 Device then try to fall back to Windows Advanced Rasterization Platform
@@ -504,31 +438,19 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 		ComPtr<IDXGIAdapter> pWarpAdapter;
 		if (FAILED(_dx_dxgi_factory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter))))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to retrieve the warp adapter."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_RETRIEVE_WARP_ADAPTER));
 		}
 
 		if (FAILED(D3D12CreateDevice(pWarpAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_dx_device))))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to create a directx device from the warp adapter."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_CREATE_DX_DEVICE_FROM_WARP_ADAPTER));
 		}
 	}
 
 	// create a fence
 	if (FAILED(_dx_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the fence."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_CREATE_FENCE));
 	}
 
 	_rtv_descriptor_size = _dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -552,11 +474,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 		sizeof(msQualityLevels)
 	)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to confirm feature support for multi-sampling quality levels."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_GET_MSAA_QUALITY_LEVELS));
 	}
 
 	_4x_msaa_quality = msQualityLevels.NumQualityLevels;
@@ -570,11 +488,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	// Reset the command list to prep for initialization commands.
 	if (FAILED(_dx_command_list->Reset(_dx_command_list_allocator.Get(), nullptr)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to reset the command list."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::RESET_COMMAND_LIST_FAILED));
 	}
 
 	if (auto expected = _createRootSignature(); !expected) return std::unexpected(expected.error());
@@ -596,11 +510,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	// Execute the initialization commands.
 	if (FAILED(_dx_command_list->Close()))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to close the command list."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CLOSE_COMMAND_LIST_FAILED));
 	}
 
 	ID3D12CommandList* command_lists[] = { _dx_command_list.Get() };
@@ -617,7 +527,7 @@ std::expected<void, Error> DirectXRenderer::initialize() noexcept
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_flushCommandQueue() noexcept
 {
 	// Advance the fence value to mark commands up to this fence point.
 	++_fence_index;
@@ -627,11 +537,7 @@ std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 	// processing all the commands prior to this Signal().
 	if (FAILED(_dx_command_queue->Signal(_fence.Get(), _fence_index)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to single the command queue to set a new fence"sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_SIGNAL_COMMAND_QUEUE_TO_WAIT_FOR_FENCE));
 	}
 
 	// Wait until the GPU has completed commands up to this fence point.
@@ -643,11 +549,7 @@ std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 		// Fire event when GPU hits current fence.
 		if (FAILED(_fence->SetEventOnCompletion(_fence_index, eventHandle)))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to set the event to wait on the fence the."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::FAILED_TO_WAIT_FOR_FENCE));
 		}
 
 		// Wait until the GPU hits current fence event is fired.
@@ -659,7 +561,7 @@ std::expected<void, Error> DirectXRenderer::_flushCommandQueue() noexcept
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createDxCommandObjects() noexcept
 {
 	D3D12_COMMAND_QUEUE_DESC command_queue_description = {};
 	command_queue_description.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -668,13 +570,8 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 	// Create a command queue
 	if (FAILED(_dx_device->CreateCommandQueue(&command_queue_description, IID_PPV_ARGS(&_dx_command_queue))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the command queue."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMAND_QUEUE_FAILED));
 	}
-
 
 	// Create a command allocator
 	if (FAILED(
@@ -684,11 +581,7 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 		)
 	))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the command allocator."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMAND_ALLOCATOR_FAILED));
 	}
 
 	// Create a command list
@@ -702,24 +595,23 @@ std::expected<void, Error> DirectXRenderer::_createDxCommandObjects() noexcept
 		)
 	))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the command list."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMAND_LIST_FAILED));
 	}
-
-
 
 	// Start off in a closed state.  This is because the first time we refer
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
-	_dx_command_list->Close();
+
+	HRESULT hr = _dx_command_list->Close();
+	/*if (FAILED(hr)
+	{
+		return std::unexpected(MakeErrorCondition(ErrorCode::CLOSE_COMMAND_LIST_FAILED));
+	}*/
 
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createSwapChain() noexcept
 {
 	// Releases all references for the pointer to the interface that is associated with this ComPtr.
 	// Release the previous swapchain we will be recreating.
@@ -749,17 +641,13 @@ std::expected<void, Error> DirectXRenderer::_createSwapChain() noexcept
 		_dx_swap_chain.GetAddressOf()
 	)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the swap chain."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_SWAP_CHAIN_FAILED));
 	}
 
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createRootSignature() noexcept
 {
 	// Shader programs typically require resources as input (constant buffers,
 	// textures, samplers).  The root signature defines the resources the shader
@@ -809,11 +697,7 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 			::OutputDebugStringA((char*) errorBlob->GetBufferPointer());
 		}
 
-		return std::unexpected(mt::error::Error{
-			L"Unable to serialize root signature."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::SERIALIZE_ROOT_SIGNATURE_FAILED));
 	}
 
 	if (FAILED(_dx_device->CreateRootSignature(
@@ -823,17 +707,13 @@ std::expected<void, Error> DirectXRenderer::_createRootSignature() noexcept
 		IID_PPV_ARGS(&_dx_root_signature)
 	)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create root signature."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_ROOT_SIGNATURE_FAILED));
 	}
 
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createShadersAndInputLayout() noexcept
 {
 	namespace fs = std::filesystem;
 
@@ -878,7 +758,7 @@ std::expected<void, Error> DirectXRenderer::_createShadersAndInputLayout() noexc
 }
 
 // TODO: look over example with multiple objects in the vertex buffer.
-std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createGeometry() noexcept
 {
 	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
 
@@ -899,21 +779,13 @@ std::expected<void, Error> DirectXRenderer::_createGeometry() noexcept
 
 	if (FAILED(D3DCreateBlob(vbByteSize, &_box_mesh_geometry->vertex_buffer_cpu)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create blob for geometry's vertex buffer."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_BLOB_FAILED));
 	}
 	memcpy(_box_mesh_geometry->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
 	if (FAILED(D3DCreateBlob(ibByteSize, &_box_mesh_geometry->index_buffer_cpu)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create blob for geometry's index buffer."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_BLOB_FAILED));
 	}
 	memcpy(_box_mesh_geometry->index_buffer_cpu->GetBufferPointer(), box.indices.data(), ibByteSize);
 
@@ -1026,21 +898,23 @@ void DirectXRenderer::_createRenderItems() noexcept
 	}
 }
 
-[[nodiscard]] std::expected<void, Error> DirectXRenderer::_createFrameResources() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createFrameResources() noexcept
 {
 	for (std::size_t index = 0; index < _frame_resources.size(); ++index)
 	{
-		Error error;
+		std::error_condition error;
 		_frame_resources[index] = std::make_unique<FrameResource>(
 			_dx_device.Get(), 1, static_cast<std::uint32_t>(_render_items.size()), error
 		);
-		if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected{error};
+
+		if (error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
+			return std::unexpected{error};
 	}
 
 	return {};
 }
 
-std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createDescriptorHeaps() noexcept
 {
 	// Create the Render-Target-View (RTV) Descriptor-Heap Description
 	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_description;
@@ -1052,11 +926,7 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 	// Create the Render-Target-View (RTV) Descriptor-Heap from the provided description
 	if (FAILED(_dx_device->CreateDescriptorHeap(&rtv_heap_description, IID_PPV_ARGS(_dx_rtv_heap.GetAddressOf()))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the render target view descriptor heap."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_DESCRIPTOR_HEAP_FAILED));
 	}
 
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap Description
@@ -1069,11 +939,7 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 	// Create the Depth-Stencil-View (DSV) Descriptor-Heap from the provided description
 	if (FAILED(_dx_device->CreateDescriptorHeap(&dsv_heap_description, IID_PPV_ARGS(_dx_dsv_heap.GetAddressOf()))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the depth stencil view descriptor heap."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_DESCRIPTOR_HEAP_FAILED));
 	}
 
 	const auto number_of_pass_constant_buffers = 1;
@@ -1095,11 +961,7 @@ std::expected<void, Error> DirectXRenderer::_createDescriptorHeaps() noexcept
 	// Create other CBV/SRV/UAV Descriptor-Heap from the descriptor
 	if (FAILED(_dx_device->CreateDescriptorHeap(&cbv_heap_description, IID_PPV_ARGS(&_dx_cbv_heap))))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the constant buffer view descriptor heap."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_DESCRIPTOR_HEAP_FAILED));
 	}
 
 	return {};
@@ -1156,7 +1018,7 @@ void DirectXRenderer::_createConstantBufferViews() noexcept
 	}
 }
 
-std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcept
+std::expected<void, std::error_condition> DirectXRenderer::_createPipelineStateObject() noexcept
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC standard_pipeline_state_object;
 	ZeroMemory(&standard_pipeline_state_object, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -1185,13 +1047,8 @@ std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcep
 		&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[0])
 	)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to standard pipeline state object."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_PIPELINE_STATE_OBJECT_FAILED));
 	}
-
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC wireframe_pipeline_state_object = standard_pipeline_state_object;
 	wireframe_pipeline_state_object.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
@@ -1200,11 +1057,7 @@ std::expected<void, Error> DirectXRenderer::_createPipelineStateObject() noexcep
 		&standard_pipeline_state_object, IID_PPV_ARGS(&_pipeline_state_objects[1])
 	)))
 	{
-		return std::unexpected(mt::error::Error{
-			L"Unable to wireframe pipeline state object."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_PIPELINE_STATE_OBJECT_FAILED));
 	}
 
 	return {};

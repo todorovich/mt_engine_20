@@ -2,6 +2,7 @@
 module;
 
 #include <windows.h>
+#include <expected>
 
 export module WindowManagerInterface;
 
@@ -60,17 +61,17 @@ export namespace mt::windows
 
 		virtual ~WindowManagerInterface() noexcept = default;
 
-		[[nodiscard]] virtual std::expected<void, Error> createMainWindow() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> createMainWindow() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> destroyMainWindow() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> destroyMainWindow() noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> runMessageLoop() noexcept = 0;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> runMessageLoop() noexcept = 0;
 
 		[[nodiscard]] virtual bool isMessageLoopRunning() noexcept = 0;
 
 		[[nodiscard]] virtual Window* getWindow() const noexcept = 0;
 
-		[[nodiscard]] virtual std::expected<void, Error> resize(int width, int height) noexcept
+		[[nodiscard]] virtual std::expected<void, std::error_condition> resize(int width, int height) noexcept
 		{
 			_window_width = width;
 			_window_height = height;

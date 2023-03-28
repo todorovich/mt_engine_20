@@ -36,7 +36,7 @@ export namespace mt::time
 			, _input_time(input_time)
 		{}
 
-		virtual std::expected<void, Error> operator()() noexcept {
+		virtual std::expected<void, std::error_condition> operator()() noexcept {
 			// It is necessary to keep processing input in order to receive and process WM_DESTROY
 			_input_time->startTask();
 			_engine->getInputManager()->processInput();
@@ -74,7 +74,7 @@ export namespace mt::time
 			, _shutting_down_tick_function(shutting_down_tick_function)
 		{}
 
-		virtual std::expected<void, Error> operator()() noexcept
+		virtual std::expected<void, std::error_condition> operator()() noexcept
 		{
 			_engine->setIsShuttingDown();
 
@@ -125,7 +125,7 @@ export namespace mt::time
 			, _engine(engine)
 		{}
 
-		virtual std::expected<void, mt::error::Error> operator()() noexcept override
+		virtual std::expected<void, std::error_condition> operator()() noexcept override
 		{
 			_tick_time->startTask();
 
@@ -218,7 +218,7 @@ export namespace mt::time
 		}
 
 	public:
-		StandardTimeManager(mt::Engine& engine, Error& _alarm_manager_error) noexcept;
+		StandardTimeManager(mt::Engine& engine, std::error_condition& _alarm_manager_error) noexcept;
 
 		virtual void resume() noexcept override;		// Call to unpaused.
 		virtual void pause() noexcept override;			// Call to pause.

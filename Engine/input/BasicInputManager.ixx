@@ -32,9 +32,9 @@ export namespace mt::input
 
 		// Windows will only send the last key pressed as being held, so if you press A, B, C and hold them all down,
 		// you will only get held messages for C. The engine should be propagating held messages each frame for A,B and C though.
-		std::set<InputType> _held_buttons;
+		std::set<InputType> _held_buttons{};
 
-		POINT _mouse_return_position;
+		POINT _mouse_return_position{};
 
 		std::atomic<bool> is_accepting_input = true;
 	protected:
@@ -43,10 +43,12 @@ export namespace mt::input
 		virtual void processInput() noexcept override;
 
 	public:
-		BasicInputManager(mt::Engine& engine, Error& error) noexcept
+		BasicInputManager(mt::Engine& engine, std::error_condition& error) noexcept
 			: _engine(engine)
 			, _message_pool(mt::memory::ObjectPool<InputMessage, POOL_SIZE>(error))
-		{};
+		{
+
+		};
 
 		virtual ~BasicInputManager() noexcept = default;
 

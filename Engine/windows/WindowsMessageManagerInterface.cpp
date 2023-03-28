@@ -12,14 +12,10 @@ std::unique_ptr<WindowsMessageManagerInterface> WindowsMessageManagerInterface::
 
 WindowsMessageManagerInterface* WindowsMessageManagerInterface::_instance = _defaultWindowsMessageHandler.get();
 
-WindowsMessageManagerInterface::WindowsMessageManagerInterface(Error& error) noexcept
+WindowsMessageManagerInterface::WindowsMessageManagerInterface(std::error_condition& error) noexcept
 {
 	if (_instance == _defaultWindowsMessageHandler.get())
 		_instance = this;
 	else
-		error = mt::error::Error{
-			L"Only one WindowsMessageManagerInterface may exist at a time."sv,
-			mt::error::ErrorCode::GRAPHICS_FAILURE,
-			__func__, __FILE__, __LINE__
-		};
+		Assign(error, ErrorCode::ONE_WINDOWS_MESSAGE_MANAGER_RULE);
 }

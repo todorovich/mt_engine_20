@@ -95,5 +95,5 @@ int WINAPI WinMain(
 		return 0;
 	else
 		// TODO: do something with the errors returned. Also make that a better data structure.
-		return static_cast<int>(expected.error()->getErrorCode());
+		return static_cast<int>(expected.error()->value());
 }

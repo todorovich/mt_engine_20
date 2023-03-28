@@ -28,7 +28,7 @@ export namespace mt::time
 		std::map<Alarm*, ObjectPool<Alarm, 1024>::unique_ptr_t> _alarms_and_timers;
 
 	public:
-		StandardAlarmManager(Error& error) noexcept
+		StandardAlarmManager(std::error_condition& error) noexcept
 			: _alarm_pool(error)
 		{}
 
@@ -38,7 +38,7 @@ export namespace mt::time
 		StandardAlarmManager& operator=(const StandardAlarmManager& other) noexcept = delete;
 		StandardAlarmManager& operator=(StandardAlarmManager&& other) noexcept = delete;
 		
-		virtual void tick(steady_clock::time_point current_tick_time) noexcept override
+		void tick(steady_clock::time_point current_tick_time) noexcept override
 		{
 			if (!_alarm_queue.empty())
 			{
@@ -67,7 +67,7 @@ export namespace mt::time
 			}
 		}
 
-		virtual void pause(steady_clock::time_point time_paused = steady_clock::now()) noexcept override
+		void pause(steady_clock::time_point time_paused = steady_clock::now()) noexcept override
 		{
 			for (auto& alarm: _alarms_and_timers)
 			{
@@ -75,7 +75,7 @@ export namespace mt::time
 			}
 		}
 
-		virtual void resume(steady_clock::time_point time_resumed = steady_clock::now()) noexcept override
+		void resume(steady_clock::time_point time_resumed = steady_clock::now()) noexcept override
 		{
 			for (auto& alarm: _alarms_and_timers)
 			{

@@ -1,10 +1,10 @@
 module;
 
 #include <windows.h>
+#include <expected>
 
 export module Window;
 
-export import <expected>;
 export import <memory>;
 
 export import Error;
@@ -22,7 +22,7 @@ export namespace mt::windows
 		mt::memory::Handle _main_window_handle = nullptr;
 	public:
 
-		Window(Error& error, int width, int height, HINSTANCE instance_handle)
+		Window(std::error_condition& error, int width, int height, HINSTANCE instance_handle)
 		{
 			// Compute window rectangle dimensions based on requested client area dimensions.
 			RECT rectangle = { 0, 0, width, height };
@@ -43,11 +43,7 @@ export namespace mt::windows
 
 			if (!_main_window_handle)
 			{
-				error = Error{
-					L"Unable to create the window."sv,
-					mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
-					__func__, __FILE__, __LINE__
-				};
+				Assign(error, mt::error::ErrorCode::WINDOW_MANAGER_FAILURE);
 			}
 
 			SetWindowLongPtrW(static_cast<HWND>(_main_window_handle), GWL_STYLE, 0); //remove all window styles, check MSDN for details

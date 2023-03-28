@@ -63,7 +63,12 @@ export namespace mt::renderer
 
     struct FrameResource 
     {
-        FrameResource(not_null<ID3D12Device*> device, std::uint32_t passCount, std::uint32_t objectCount, Error& error);
+        FrameResource(
+			not_null<ID3D12Device*> device,
+			std::uint32_t passCount,
+			std::uint32_t objectCount,
+			std::error_condition& error
+		);
         FrameResource(const FrameResource& frameResource) = delete;
         FrameResource(FrameResource&& frameResource) = delete;
         FrameResource& operator=(const FrameResource& frameResource) = delete;
@@ -90,7 +95,7 @@ export namespace mt::renderer
 module :private;
 
 mt::renderer::FrameResource::FrameResource(
-	not_null<ID3D12Device*> dx_device, std::uint32_t pass_count, std::uint32_t object_count, Error& error
+	not_null<ID3D12Device*> dx_device, std::uint32_t pass_count, std::uint32_t object_count, std::error_condition& error
 )
 {
 	if (FAILED(dx_device->CreateCommandAllocator(
@@ -98,16 +103,12 @@ mt::renderer::FrameResource::FrameResource(
 		IID_PPV_ARGS(command_list_allocator.GetAddressOf())
 	)))
 	{
-		error = Error(
-			L"Unable to present the swap chain (swap front/back buffers)."sv,
-			mt::error::ErrorCode::CREATE_COMMAND_ALLOCATOR_FAILED,
-			__func__, __FILE__, __LINE__
-		);
-
+		Assign(error, mt::error::ErrorCode::CREATE_COMMAND_ALLOCATOR_FAILED);
+		return;
 	}
-
     pass_constants_upload_buffer = std::make_unique<UploadBuffer<PassConstants>>(dx_device, pass_count, true, error);
-	if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return;
+
+	if (error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)) return;
 
     object_constants_upload_buffer = std::make_unique<UploadBuffer<ObjectConstants>>(dx_device, object_count, true, error);
 }

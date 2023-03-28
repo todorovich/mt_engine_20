@@ -2,9 +2,9 @@
 module;
 
 #include <windows.h>
+#include <expected>
 
 export module WindowsWindowManager;
-
 
 export import Engine;
 export import MakeUnique;
@@ -33,13 +33,13 @@ export namespace mt::windows
 
 		bool _registered = false;
 	public:
-		WindowsWindowManager(mt::Engine& engine, Error& error, int primary_screen_width, int primary_screen_height) noexcept
+		WindowsWindowManager(mt::Engine& engine, std::error_condition& error, int primary_screen_width, int primary_screen_height) noexcept
 			: WindowManagerInterface(primary_screen_width, primary_screen_height)
 			, _windows_message_manager(std::make_unique<WindowsMessageManager>(engine, error))
 			, _engine(engine)
 			, _instance_handle(GetModuleHandle(nullptr))
 		{
-			if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return;
+			if (error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)) return;
 
 			_window_class.style = CS_HREDRAW | CS_VREDRAW;
 			_window_class.lpfnWndProc = WindowsMessageManagerInterface::MainWndProc;
@@ -54,11 +54,7 @@ export namespace mt::windows
 
 			if (!RegisterClass(&_window_class))
 			{
-				error = mt::error::Error{
-					L"Unable to register the class with windows."sv,
-					mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
-					__func__, __FILE__, __LINE__
-				};
+				Assign(error, ErrorCode::WINDOW_MANAGER_FAILURE);
 			}
 			else _registered = true;
 		}
@@ -77,12 +73,12 @@ export namespace mt::windows
 		WindowsWindowManager& operator=(const WindowsWindowManager&) noexcept = default;
 		WindowsWindowManager& operator=(WindowsWindowManager&&) noexcept = default;
 
-		[[nodiscard]] virtual std::expected<void, mt::error::Error> createMainWindow() noexcept override;
-		[[nodiscard]] virtual std::expected<void, mt::error::Error> destroyMainWindow() noexcept override;
-		[[nodiscard]] virtual std::expected<void, mt::error::Error> runMessageLoop() noexcept override;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> createMainWindow() noexcept override;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> destroyMainWindow() noexcept override;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> runMessageLoop() noexcept override;
 		[[nodiscard]] virtual bool isMessageLoopRunning() noexcept override;
 
-		[[nodiscard]] virtual std::expected<void, mt::error::Error> resize(int width, int height) noexcept override;
+		[[nodiscard]] virtual std::expected<void, std::error_condition> resize(int width, int height) noexcept override;
 
 		[[nodiscard]] HINSTANCE getInstanceHandle() const noexcept { return _instance_handle; }
 

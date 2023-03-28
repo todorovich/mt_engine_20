@@ -32,7 +32,7 @@ export namespace mt::windows
 			: _engine(engine)
 		{}
 
-		std::expected<void, mt::error::Error> operator()() noexcept
+		std::expected<void, std::error_condition> operator()() noexcept
 		{
 			long long last_frame_outputed = 0;
 
@@ -126,7 +126,7 @@ export namespace mt::windows
 		mt::windows::WindowsMessageLoopTask _windows_message_loop_task;
 
 	public:
-		WindowsMessageManager(Engine& engine, Error& error);
+		WindowsMessageManager(Engine& engine, std::error_condition& error);
 		~WindowsMessageManager() = default;
 		WindowsMessageManager(const WindowsMessageManager&) noexcept = default;
 		WindowsMessageManager(WindowsMessageManager&&) noexcept = default;

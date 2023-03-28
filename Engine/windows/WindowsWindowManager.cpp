@@ -2,6 +2,7 @@
 module;
 
 #include <windows.h>
+#include <expected>
 
 module WindowsWindowManager;
 
@@ -17,31 +18,25 @@ using namespace mt::windows;
 
 using namespace std::literals;
 // TODO: init with a matching shutdown seems like an object to me
-std::expected<void, mt::error::Error> WindowsWindowManager::createMainWindow() noexcept
+std::expected<void, std::error_condition> WindowsWindowManager::createMainWindow() noexcept
 {
-	Error error;
+	std::error_condition error;
 	_window = make_unique_nothrow<Window>(error, getWindowWidth(), getWindowHeight(), _instance_handle);
 
 	if (_window.get() == nullptr)
-		return std::unexpected(mt::error::Error{
-			L"Unable to create the main window."sv,
-			mt::error::ErrorCode::WINDOW_MANAGER_FAILURE,
-			__func__, __FILE__, __LINE__
-		});
-
-	if (error.getErrorCode() != ErrorCode::ERROR_UNINITIALIZED)
+		return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_MAIN_WINDOW_FAILED));
+	else if (error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
 		return std::unexpected{error};
 	else
 		return {};
 }
 
-
-std::expected<void, mt::error::Error> WindowsWindowManager::runMessageLoop() noexcept
+std::expected<void, std::error_condition> WindowsWindowManager::runMessageLoop() noexcept
 {
 	return (*(_windows_message_manager->getMessageLoopTask()))();
 }
 
-std::expected<void, mt::error::Error> WindowsWindowManager::destroyMainWindow() noexcept
+std::expected<void, std::error_condition> WindowsWindowManager::destroyMainWindow() noexcept
 {
 	_windows_message_manager->destroyMainWindow();
 
@@ -58,7 +53,7 @@ void WindowsWindowManager::toggleShowCursor() noexcept
 	_windows_message_manager->toggleShowCursor();
 }
 
-std::expected<void, mt::error::Error> WindowsWindowManager::resize(int width, int height) noexcept
+std::expected<void, std::error_condition> WindowsWindowManager::resize(int width, int height) noexcept
 {
 	if (auto expected = mt::windows::WindowManagerInterface::resize(width, height); !expected)
 		return std::unexpected(expected.error());

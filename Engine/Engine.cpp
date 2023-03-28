@@ -2,6 +2,7 @@
 module;
 
 #include <windows.h>
+#include <expected>
 
 module Engine;
 
@@ -32,11 +33,7 @@ Engine::Engine() noexcept
 {
 	if (_instance != nullptr)
 	{
-		(*_error) = Error(
-			L"Only one instance of the engine may exist at a time"sv,
-			mt::error::ErrorCode::ONE_ENGINE_RULE_VIOLATED,
-			__func__, __FILE__, __LINE__
-		);
+		Assign(*_error, mt::error::ErrorCode::ONE_ENGINE_RULE_VIOLATED);
 
 		return;
 	}
@@ -49,24 +46,18 @@ Engine::Engine() noexcept
 		_input_manager.get() == nullptr
 	)
 	{
-		if (_input_manager.get() == nullptr) (*_error) = Error(
-			L"Unable to allocate the input manager."sv,
-			mt::error::ErrorCode::BAD_ALLOCATION,
-			__func__, __FILE__, __LINE__
-		);
+		if (_input_manager.get() == nullptr)
+			Assign(*_error, mt::error::ErrorCode::BAD_ALLOCATION);
 
 		return;
 	}
 
 	if (_time_manager = make_unique_nothrow<time::StandardTimeManager>(*this, *_error);
-		_time_manager.get() == nullptr || _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
+		_time_manager.get() == nullptr || _error->value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
 	)
 	{
-		if (_time_manager.get() == nullptr) (*_error) = Error(
-			L"Unable to allocate the time manager."sv,
-			mt::error::ErrorCode::BAD_ALLOCATION,
-			__func__, __FILE__, __LINE__
-		);
+		if (_time_manager.get() == nullptr)
+			Assign(*_error, mt::error::ErrorCode::BAD_ALLOCATION);
 
 		return;
 	}
@@ -74,14 +65,10 @@ Engine::Engine() noexcept
 	if (_window_manager = make_unique_nothrow<windows::WindowsWindowManager>(
 			*this, *_error, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)
 		);
-		_window_manager.get() == nullptr || _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
+		_window_manager.get() == nullptr || _error->value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
 	)
 	{
-		if (_window_manager.get() == nullptr) (*_error) = Error(
-			L"Unable to allocate the window manager."sv,
-			mt::error::ErrorCode::BAD_ALLOCATION,
-			__func__, __FILE__, __LINE__
-		);
+		if (_window_manager.get() == nullptr) Assign(*_error, mt::error::ErrorCode::BAD_ALLOCATION);
 
 		return;
 	}
@@ -91,11 +78,7 @@ Engine::Engine() noexcept
 		_renderer.get() == nullptr //|| _error->getErrorCode() != mt::error::ErrorCode::ERROR_UNINITIALIZED
 	)
 	{
-		(*_error) = Error(
-			L"Unable to allocate the renderer."sv,
-			mt::error::ErrorCode::BAD_ALLOCATION,
-			__func__, __FILE__, __LINE__
-		);
+		Assign(*_error, mt::error::ErrorCode::BAD_ALLOCATION);
 
 		return;
 	}
@@ -108,22 +91,19 @@ Engine::~Engine() noexcept
 	OutputDebugStringW(L"Engine Shutdown\n");
 }
 
-std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> game) noexcept
+std::expected<void, std::unique_ptr<std::error_condition>> Engine::run(std::unique_ptr<Game> game) noexcept
 {
 	if (_error == nullptr) return std::unexpected(std::move(_error));
 
 	if (!game) {
-		(*_error) = Error(
-			L"The game provided to Engine::run must not be null"sv,
-			mt::error::ErrorCode::INVALID_GAME_PROVIDED,
-			__func__, __FILE__, __LINE__
-		);
+		Assign(*_error, ErrorCode::INVALID_GAME_PROVIDED);
 		return std::unexpected{std::move(_error)};
 	}
 	else
 		_game = std::move(game);
 
-	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED) return std::unexpected(std::move(_error));
+	if (_error->value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
+		return std::unexpected(std::move(_error));
 
 	if (auto expected = getWindowManager()->createMainWindow(); !expected)
 	{
@@ -144,7 +124,9 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 	frame_time->startTask();
 
 	auto tick_thread = std::jthread([&](){
-		HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread");
+		if (FAILED(SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread")))
+			OutputDebugStringW(L"failed to set engine tick thread name.");
+
 		while(getWindowManager()->isMessageLoopRunning())
 		{
 			_time_manager->tick();
@@ -155,18 +137,19 @@ std::expected<void, std::unique_ptr<Error>> Engine::run(std::unique_ptr<Game> ga
 
 	run_time->finishTask();
 
-	if (_error->getErrorCode() != ErrorCode::ERROR_UNINITIALIZED)
+	if (_error->value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
 		return std::unexpected{ std::move(_error) };
 	else
 		return {};
 }
 
-void Engine::crash(mt::error::Error error) noexcept
+void Engine::crash(std::error_condition error) noexcept
 {
 	// TODO: what if there is already an error?
 	//  This is where special pool of errors comes in handy. Could link list errors as well as allow cause.
 	// 	then link together unique_ptr's that will clean themselves up.
 	(*_error) = std::move(error);
-	if constexpr (IS_DEBUG) OutputDebugStringW(_error->getMessage().data());
+	//if constexpr (IS_DEBUG) OutputDebugString(_error->message().data());
+	// TODO: make this print the message? or log it at least.
 	shutdown();
 };

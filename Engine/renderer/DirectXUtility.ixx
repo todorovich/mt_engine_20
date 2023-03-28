@@ -8,13 +8,14 @@ module;
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include "d3dx12.h"
+#include <expected>
 
 export module DirectXUtility;
 
-export import <expected>;
-
 export import Constants;
 export import Error;
+
+using namespace mt::error;
 
 export namespace mt::renderer
 {
@@ -34,14 +35,14 @@ export namespace mt::renderer
 		return (byteSize + 255) & ~255;
 	}
 
-	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::error::Error> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, std::error_condition> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
 		const std::string& target
 	) noexcept;
 
-	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::error::Error> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, std::error_condition> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const void* initData,
@@ -56,7 +57,7 @@ module : private;
 
 namespace mt::renderer
 {
-	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, mt::error::Error> CompileShader(
+	std::expected<Microsoft::WRL::ComPtr<ID3DBlob>, std::error_condition> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
@@ -85,17 +86,13 @@ namespace mt::renderer
 			if (errors != nullptr)
 				OutputDebugStringA((char*)errors->GetBufferPointer());
 
-			return std::unexpected(mt::error::Error{
-				L"Unable to compile shader."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::COMPILE_SHADER_FAILED));
 		}
 
 		return byteCode;
 	}
 
-	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, mt::error::Error> createDefaultBuffer(
+	std::expected<Microsoft::WRL::ComPtr<ID3D12Resource>, std::error_condition> createDefaultBuffer(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* command_lists,
 		const void* initialization_data,
@@ -118,11 +115,7 @@ namespace mt::renderer
 			IID_PPV_ARGS(default_buffer.GetAddressOf())
 		)))
 		{
-			return std::unexpected(mt::error::Error {
-				L"Unable to create a committed default buffer resource."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED));
 		}
 
 		auto heap_properties_2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -139,11 +132,7 @@ namespace mt::renderer
 			IID_PPV_ARGS(upload_buffer.GetAddressOf())
 		)))
 		{
-			return std::unexpected(mt::error::Error{
-				L"Unable to create a committed upload buffer resource."sv,
-				mt::error::ErrorCode::GRAPHICS_FAILURE,
-				__func__, __FILE__, __LINE__
-			});
+			return std::unexpected(MakeErrorCondition(ErrorCode::CREATE_COMMITTED_RESOURCE_FAILED));
 		}
 
 		// Describe the data we want to copy into the default buffer.
@@ -176,5 +165,4 @@ namespace mt::renderer
 
 		return default_buffer;
 	}
-
 }
