@@ -2,8 +2,6 @@
 module;
 
 #include <wrl.h>
-#include <windowsx.h>
-#include <windows.h>
 
 #include <d3d12.h>
 #include <dxgi.h>
@@ -13,9 +11,10 @@ module;
 
 export module Adapters;
 
-import <string>;
-import <vector>;
+import std;
+import Windows;
 
+using namespace windows;
 using Microsoft::WRL::ComPtr;
 
 export namespace mt::renderer 

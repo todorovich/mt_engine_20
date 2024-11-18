@@ -1,20 +1,22 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <windows.h>
 #include <wrl.h>
 #include <comdef.h>
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include "d3dx12.h"
-#include <expected>
 
 export module DirectXUtility;
+
+import std;
+import Windows;
 
 export import Constants;
 export import Error;
 
+using namespace windows;
 using namespace mt::error;
 
 export namespace mt::renderer

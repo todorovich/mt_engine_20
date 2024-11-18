@@ -1,27 +1,23 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <windows.h>
 #include <wrl.h>
 #include <DirectXMath.h>
 #include <d3d12.h>
 
 export module FrameResource;
 
-import <cstdint>;
-import <ctime>;
-import <format>;
-import <memory>;
-import <stdexcept>;
-import <string>;
+import std;
 
 export import gsl;
 export import Error;
 export import MathUtility;
 export import UploadBuffer;
 
-using namespace std::literals;
+import Windows;
 
+using namespace windows;
+using namespace std::literals;
 using namespace gsl;
 using namespace mt::error;
 

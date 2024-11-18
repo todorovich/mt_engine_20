@@ -1,19 +1,17 @@
-module;
-
-#include <windows.h>
-
 export module StandardTimeManager;
 
-export import <chrono>;
-export import <memory>;
+import std;
 
 export import AlarmManager;
 
 export import gsl;
 export import Engine;
 export import TimeManagerTasks;
-//export import StopWatch;
 
+import StopWatch;
+import Windows;
+
+using namespace windows;
 using namespace gsl;
 using namespace std::literals;
 using namespace mt::error;
@@ -78,7 +76,7 @@ export namespace mt::time
 		{
 			_engine->setIsShuttingDown();
 
-			if constexpr (IS_DEBUG) OutputDebugStringW(L"Engine Shutdown Initiated\n");
+			if constexpr (IS_DEBUG) OutputDebugString(L"Engine Shutdown Initiated\n");
 
 			// This can fail... but we're shutting down either way right?
 			//ExitProcess(0); // may need exit process if this fails

@@ -1,14 +1,6 @@
-module;
-
-#include <expected>
-
 export module Event;
 
-export import <system_error>;
-
-import <mutex>;
-import <set>;
-import <tuple>;
+import std;
 
 import EventQueue;
 import EventPackageInterface;

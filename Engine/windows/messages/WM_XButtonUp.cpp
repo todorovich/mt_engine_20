@@ -1,13 +1,12 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module;
-
-#include <windows.h>
-#include <windowsx.h>
 
 module WindowsMessages.XButtonUp;
 
 import InputModel;
+import Windows;
 
+using namespace windows;
 using namespace mt::input::model;
 
 LRESULT mt::windows::WM_XButtonUp::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

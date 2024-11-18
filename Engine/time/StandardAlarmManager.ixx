@@ -1,5 +1,7 @@
 export module StandardAlarmManager;
 
+import std;
+
 export import AlarmManager;
 
 export import gsl;
@@ -7,7 +9,6 @@ export import Error;
 export import ObjectPool;
 export import TimeModel;
 
-import <map>;
 import MakeUnique;
 
 using namespace gsl;

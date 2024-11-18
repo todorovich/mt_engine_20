@@ -2,16 +2,19 @@
 module;
 
 #include <DirectXMath.h>
-#include <windows.h>
+
 
 #undef RELATIVE
 #undef ABSOLUTE
 
 module BasicInputManager;
 
+import std;
 import Engine;
 import InputModel;
+import Windows;
 
+using namespace windows;
 using namespace gsl;
 using namespace mt::error;
 using namespace mt::input;

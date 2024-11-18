@@ -1,8 +1,6 @@
-module;
-
 export module EventPackageInterface;
 
-export import <cstdlib>;
+import std;
 
 export namespace mt::event
 {

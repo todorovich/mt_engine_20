@@ -1,8 +1,6 @@
 export module AlarmManager;
 
-export import <set>;
-export import <queue>;
-export import <chrono>;
+import std;
 
 export import gsl;
 export import Task;

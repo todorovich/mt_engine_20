@@ -1,8 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module InputType;
 
-export import <compare>;
-export import <string>;
+import std;
 
 export import InputContext;
 export import InputDataType;

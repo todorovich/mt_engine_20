@@ -1,8 +1,6 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <windows.h>
-#include <windowsx.h>
 #include <wrl.h>
 #include <combaseapi.h>
 #include <assert.h>
@@ -19,15 +17,14 @@ module;
 
 module DirectXRenderer;
 
-import <array>;
-import <filesystem>;
-import <numbers>;
-import <memory>;
+import std;
 
 import Engine;
 import FrameResource;
 import MeshGeometry;
+import Windows;
 
+using namespace windows;
 using namespace mt::error;
 using namespace mt::renderer;
 using namespace std::literals;
@@ -603,11 +600,11 @@ std::expected<void, std::error_condition> DirectXRenderer::_createDxCommandObjec
 	// calling Reset.
 
 	HRESULT hr = _dx_command_list->Close();
-	/*if (FAILED(hr)
+	if (FAILED(hr))
 	{
 		return std::unexpected(MakeErrorCondition(ErrorCode::CLOSE_COMMAND_LIST_FAILED));
-	}*/
-
+	}
+	
 	return {};
 }
 

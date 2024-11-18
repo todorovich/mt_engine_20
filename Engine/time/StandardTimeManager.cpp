@@ -1,6 +1,6 @@
 module StandardTimeManager;
 
-import <chrono>;
+import std;
 
 import Error;
 import StandardAlarmManager;

@@ -1,17 +1,10 @@
-module;
-
-#include <expected>
-
 export module EventManagerInterface;
 
-export import <system_error>;
-export import <memory>;
+import std;
 
 export import Error;
 export import EventQueue;
 export import Name;
-
-import <map>;
 
 using namespace mt::utility;
 using namespace mt::error;

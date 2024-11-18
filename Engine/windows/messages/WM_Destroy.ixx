@@ -1,12 +1,11 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
-
-module;
-
-#include <windows.h>
-
 export module WindowsMessages.destroy;
 
 export import WindowsMessage;
+
+import Windows;
+
+using namespace windows;
 
 export namespace mt::windows
 {

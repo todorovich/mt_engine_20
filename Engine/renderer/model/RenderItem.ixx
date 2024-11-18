@@ -6,7 +6,7 @@ module;
 
 export module RenderItem;
 
-import <cstdint>;
+import std;
 
 import MathUtility;
 import MeshGeometry;

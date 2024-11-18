@@ -5,10 +5,7 @@ module;
 
 export module TimeManagerInterface;
 
-export import <map>;
-export import <string_view>;
-export import <chrono>;
-
+import std;
 
 export import gsl;
 export import Error;

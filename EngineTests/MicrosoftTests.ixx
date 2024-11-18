@@ -2,13 +2,14 @@
 module;
 
 #include <catch.hpp>
-#include <windows.h>
 
 export module MicrosoftTests;
 
-import <cstdint>;
-
+import std;
 import Handle;
+import Windows;
+
+using namespace windows;
 
 TEST_CASE("UNIT is a uint32_t", "[Aliases]")
 {

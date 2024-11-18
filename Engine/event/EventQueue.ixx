@@ -1,13 +1,6 @@
-module;
-
-// TODO: importing breaks intellisense, recursively
-#include <expected>
-
 export module EventQueue;
 
-import <cstdlib>;
-import <memory>;
-import <mutex>;
+import std.compat;
 
 import EventPackageInterface;
 
@@ -78,7 +71,7 @@ export namespace mt::event
 
 			_back = static_cast<std::byte*>(aligned) + sizeof(EventPackageType);
 
-			memcpy_s(aligned, _end - reinterpret_cast<std::byte*>(aligned), &event_package , sizeof(EventPackageType));
+			::memcpy_s(aligned, _end - reinterpret_cast<std::byte*>(aligned), &event_package , sizeof(EventPackageType));
 
 			return {};
 		}

@@ -3,21 +3,15 @@ module;
 
 #include <wrl.h>
 #include <d3d12.h>
-#include <expected>
 
 export module MeshGeometry;
 
-export import <memory>;
-export import <string>;
-export import <string_view>;
-export import <unordered_map>;
+import std;
 
 export import gsl;
 export import Error;
 export import SubmeshGeometry;
 export import MakeUnique;
-
-import <cstdint>;
 
 using namespace gsl;
 
@@ -92,7 +86,7 @@ export namespace mt::renderer
 			};
 		}
 
-		[[nodiscard]] std::string_view getName() const
+		[[nodiscard]] std::string_view getName() const noexcept
 		{
 			return _name;
 		}
@@ -104,7 +98,7 @@ export namespace mt::renderer
 			index_buffer_uploader = Microsoft::WRL::ComPtr<ID3D12Resource>{};
 		}
 	};
-}
+};
 
 export namespace mt::memory::factory
 {

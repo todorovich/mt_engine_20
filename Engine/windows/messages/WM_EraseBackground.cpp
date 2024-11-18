@@ -1,11 +1,11 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
 module WindowsMessages.EraseBackground;
 
 import Engine;
+
+import Windows;
+
+using namespace windows;
 
 using namespace mt::windows;
 

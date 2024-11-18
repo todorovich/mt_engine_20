@@ -1,5 +1,6 @@
 target_sources(
 	Engine PRIVATE
+	BaseWindowsMessage.ixx
 	WindowsWindowManager.cpp
 	WindowsWindowManager.ixx
 	WindowsMessageManager.cpp
@@ -9,6 +10,7 @@ target_sources(
 	WindowsMessageManagerInterface.cpp
 	WindowsMessageManagerInterface.ixx
 	Window.ixx
+	Windows.ixx
 )
 
 add_subdirectory(messages)

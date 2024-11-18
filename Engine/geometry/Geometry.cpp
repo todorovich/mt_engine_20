@@ -1,12 +1,11 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
+ // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <DirectXMath.h>
 
 module Geometry;
 
-import <vector>;
-import <cstdint>;
+import std;
 
 namespace mt::geometry
 {

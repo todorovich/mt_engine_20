@@ -1,17 +1,15 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
 export module WindowsMessageManagerInterface;
 
-export import <memory>;
-export import <stdexcept>;
+import std;
 
 export import Error;
 export import Task;
 export import WindowsMessage;
 
+import Windows;
+
+using namespace windows;
 using namespace mt::error;
 
 export namespace mt::windows
@@ -26,7 +24,7 @@ export namespace mt::windows
 		// For use by the null message manager. Should not be used by any other message manager.
 		WindowsMessageManagerInterface() noexcept = default;
 	public:
-		static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+		static LRESULT __stdcall MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			// Forward hwnd on because we can get messages (e.g., WM_CREATE)
 			// before CreateWindow returns, and thus before mhMainWnd is valid.

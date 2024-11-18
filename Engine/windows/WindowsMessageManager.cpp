@@ -1,8 +1,4 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
 module WindowsMessageManager;
 
 import WindowsMessages.Activate;
@@ -45,7 +41,9 @@ import WindowsMessages.XButtonUp;
 //import WindowsMessages.WindowPositionChanging;
 
 import Engine;
+import Windows;
 
+using namespace windows;
 using namespace mt::windows;
 using namespace mt::error;
 

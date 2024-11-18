@@ -2,12 +2,10 @@
 module;
 
 #include <catch.hpp>
-#include <Windows.h>
 
 export module EngineTest;
 
-import <chrono>;
-import <thread>;
+import std;
 
 import Engine;
 import Game;

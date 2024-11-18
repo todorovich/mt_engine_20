@@ -7,7 +7,7 @@ module;
 
 export module UploadBuffer;
 
-export import <string_view>;
+import std;
 
 export import DirectXUtility;
 

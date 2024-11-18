@@ -6,9 +6,7 @@ module;
 
 module Camera;
 
-import <string>;
-import <mutex>;
-import <numbers>;
+import std;
 
 using namespace mt::renderer::model;
 using namespace DirectX;

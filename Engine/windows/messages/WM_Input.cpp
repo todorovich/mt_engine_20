@@ -1,13 +1,16 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
 module;
 
-#include <windows.h>
+#include <wchar.h>
 
 module WindowsMessages.Input;
 
+import std.compat;
+import Windows;
+
 import Engine;
 
-import <string>;
+using namespace windows;
 
 LRESULT mt::windows::WM_Input::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
 {
@@ -16,17 +19,16 @@ LRESULT mt::windows::WM_Input::execute(const HWND& hwnd, const UINT& msg, const 
 	// NOT BEING DELETED
 	static LPBYTE lpb = new BYTE[dwSize];
 
-	GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
-		sizeof(RAWINPUTHEADER));
+	GetRawInputData((HRAWINPUT)lParam, RID_INPUT_VALUE, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
 
 	if (lpb == nullptr)
 	{
 		return 0;
 	}
 
-	if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize,
+	if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT_VALUE, lpb, &dwSize,
 		sizeof(RAWINPUTHEADER)) != dwSize)
-		OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
+		OutputDebugString(L"GetRawInputData does not return correct size !\n");
 
 	RAWINPUT* raw = (RAWINPUT*)lpb;
 
@@ -36,7 +38,7 @@ LRESULT mt::windows::WM_Input::execute(const HWND& hwnd, const UINT& msg, const 
 
 	static int result;
 
-	if (raw->header.dwType == RIM_TYPEKEYBOARD)
+	if (raw->header.dwType == RIM_TYPEKEYBOARD_VALUE)
 	{
 		result = swprintf_s(string_buffer, string_buffer_size, L" Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
 			raw->data.keyboard.MakeCode,

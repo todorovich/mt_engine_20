@@ -1,12 +1,11 @@
-
-module;
-
-#include <windows.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module WindowsMessages.SystemKeyUp;
 
 import Engine;
 import InputModel;
+import Windows;
+
+using namespace windows;
 
 using namespace mt::input::model;
 

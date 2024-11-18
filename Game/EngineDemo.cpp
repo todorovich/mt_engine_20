@@ -1,15 +1,7 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-#include <DirectXMath.h>
-#include <Windows.h>
-// Fuck macros. This wasted like 30 minutes of my time.
-#undef RELATIVE
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module EngineDemo;
 
-import <chrono>;
-import <functional>; // std::hash
-
+import std;
 import gsl;
 
 using namespace mt;

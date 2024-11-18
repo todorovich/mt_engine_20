@@ -1,10 +1,10 @@
 module;
 
 #include <DirectXMath.h>
-#include <cstdlib>
+#include <cstdlib> // RAND_MAX
 
 export module MathUtility;
-
+ 
 export namespace mt::math
 {
 	constexpr DirectX::XMFLOAT4X4 Identity4x4() noexcept

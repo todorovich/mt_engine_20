@@ -13,7 +13,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_CXX_FLAGS": "/DWIN32 /D_WINDOWS /W3"
+        "CMAKE_CXX_FLAGS": "/DWIN32 /D_WINDOWS /W3 /EHsc",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake"
       },
       "condition": {
         "type": "equals",

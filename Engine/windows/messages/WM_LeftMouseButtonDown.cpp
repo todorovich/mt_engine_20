@@ -1,13 +1,10 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-#include <windowsx.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module WindowsMessages.LeftMouseButtonDown;
 
 import Engine;
+import Windows;
 
+using namespace windows;
 using namespace mt::input::model;
 
 LRESULT mt::windows::WM_LeftMouseButtonDown::execute(

@@ -1,11 +1,11 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module WindowsMessages.KeyDown;
 
 import InputModel;
+
+import Windows;
+
+using namespace windows;
 
 using namespace mt::input::model;
 

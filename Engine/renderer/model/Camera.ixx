@@ -5,7 +5,7 @@ module;
 
 export module Camera;
 
-import <mutex>;
+import std;
 
 export import MathUtility;
 

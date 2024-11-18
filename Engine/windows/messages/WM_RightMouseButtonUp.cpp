@@ -1,14 +1,11 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-#include <windowsx.h>
-
 module WindowsMessages.RightMouseButtonUp;
 
 import Engine;
 import InputModel;
+import Windows;
 
+using namespace windows;
 using namespace mt::input::model;
 
 LRESULT mt::windows::WM_RightMouseButtonUp::execute(

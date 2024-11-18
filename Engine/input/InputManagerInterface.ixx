@@ -1,10 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module InputManagerInterface;
 
-export import <utility>;
-export import <map>;
-export import <set>;
-export import <variant>;
+import std;
 
 export import InputModel;
 

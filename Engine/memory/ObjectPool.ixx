@@ -1,13 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module ObjectPool;
 
-import <ctime>;
-import <cstddef>;
-import <queue>;
-import <set>;
-import <memory>;
-import <mutex>;
-import <string_view>;
+import std.compat;
 
 import Error;
 import MakeUnique;
@@ -39,7 +33,7 @@ export namespace mt::memory
 
 	private:
 		// Had to resort to malloc to get uninitialized memory. Not ideal, this is not modern cpp.
-		T*															_data = (T*)malloc(sizeof(T) * pool_capacity);
+		T*															_data = (T*)::malloc(sizeof(T) * pool_capacity);
 		std::priority_queue<int, std::vector<int>, std::greater<>> 	unused_indices;
 		std::set<int>												_used_indices;
 		const std::size_t _capacity = pool_capacity;

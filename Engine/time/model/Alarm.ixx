@@ -1,6 +1,6 @@
 export module Alarm;
 
-import <chrono>;
+import std;
 
 export import gsl;
 export import Task;

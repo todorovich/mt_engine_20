@@ -2,8 +2,6 @@
 module;
 
 #include <wrl.h>
-#include <windowsx.h>
-#include <windows.h>
 
 #include <d3d12.h>
 #include <DirectXMath.h>
@@ -23,7 +21,8 @@ module;
 
 export module DirectXRenderer;
 
-import <ctime>;
+import std;
+import Windows;
 
 export import Engine;
 export import FrameResource;
@@ -34,6 +33,8 @@ export import RenderItem;
 export import renderer.Vertex;
 
 using Microsoft::WRL::ComPtr;
+
+using namespace windows;
 using namespace std;
 using namespace DirectX;
 

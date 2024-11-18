@@ -2,6 +2,8 @@ module WindowsMessageManagerInterface;
 
 import Error;
 
+import std; 
+
 using namespace mt::error;
 using namespace mt::windows;
 

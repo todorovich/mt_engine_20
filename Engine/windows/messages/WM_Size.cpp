@@ -1,13 +1,12 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module WindowsMessages.Size;
 
 import Engine;
 import WindowManagerInterface;
 import Camera;
+import Windows;
+
+using namespace windows;
 
 LRESULT mt::windows::WM_Size::execute(
 	[[maybe_unused]] const HWND& hwnd, [[maybe_unused]] const UINT& msg, const WPARAM& wParam, const LPARAM& lParam

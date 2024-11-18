@@ -1,19 +1,15 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 export module WindowsMessageManager;
 
-export import <expected>;
+import std;
 
 export import Engine;
 export import WindowsMessageManagerInterface;
 export import WindowsMessage;
 
-import <map>;
-import <memory>;
+import Windows;
 
+using namespace windows;
 using namespace mt::error;
 
 export namespace mt::windows
@@ -42,6 +38,7 @@ export namespace mt::windows
 
 			// This can fail in theory, but I don't want to crash if it does.
 			HRESULT hr = SetThreadDescription(GetCurrentThread(),L"mt::Engine Windows Message Thread");
+			// TODO Check this result and do something
 
 			while (!received_quit)
 			{
@@ -53,15 +50,15 @@ export namespace mt::windows
 
 					std::chrono::steady_clock::duration average = frame_time->getAverageTaskInterval();
 
-					OutputDebugStringW(
+					OutputDebugString(
 						(std::to_wstring(_engine.getRenderer()->getFramesRendered()) + L" frame number : ").c_str()
 					);
 
-					OutputDebugStringW(
+					OutputDebugString(
 						(std::to_wstring(static_cast<long double>(average.count() / 1'000'000.0)) + L" ns : ").c_str()
 					);
 
-					OutputDebugStringW(
+					OutputDebugString(
 						(std::to_wstring(1'000'000'000.0 / static_cast<double>(average.count())) + L" FPS\n").c_str()
 					);
 				}

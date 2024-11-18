@@ -10,3 +10,4 @@ out/*
 /cmake-build-release-visual-studio/
 /cmake-build-relwithdebinfo-visual-studio/
 /.idea/**
+/cmake-build-debug

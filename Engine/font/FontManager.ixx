@@ -7,9 +7,7 @@ module;
 
 export module FontManager;
 
-import <string>;
-import <stdexcept>;
-import <format>;
+import std;
 
 namespace mt::font
 {

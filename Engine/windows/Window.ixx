@@ -1,15 +1,13 @@
-module;
-
-#include <windows.h>
-#include <expected>
-
 export module Window;
 
-export import <memory>;
+import std;
 
 export import Error;
 export import Handle;
 
+import Windows;
+
+using namespace windows;
 using namespace mt::error;
 using namespace std::literals;
 

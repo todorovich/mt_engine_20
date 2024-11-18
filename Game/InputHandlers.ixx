@@ -4,11 +4,10 @@ module;
 
 export module InputHandlers;
 
+import std;
+
 export import Engine;
 export import Task;
-
-import <cmath>;
-import <numbers>;
 
 import InputModel;
 

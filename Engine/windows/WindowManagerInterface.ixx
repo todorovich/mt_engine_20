@@ -1,18 +1,16 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-#include <expected>
-
 export module WindowManagerInterface;
 
-export import <string>;
+import std;
 
 export import Error;
 export import Window;
 
 using mt::error::Error;
 
+import Windows;
+
+using namespace windows;
 using namespace mt::windows;
 
 export namespace mt::windows 

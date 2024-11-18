@@ -1,9 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module InputContext;
 
-export import <string_view>;
-
-import <vector>;
+import std;
 
 using namespace std::literals;
 

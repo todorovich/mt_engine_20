@@ -1,13 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <Windows.h>
-
 export module InputModel;
 
-export import <string>;
-export import <variant>;
-export import <chrono>;
+import std;
 
 export import gsl;
 export import InputContext;
@@ -18,16 +12,17 @@ export import MicrosoftVirtualKeyCode;
 export import VirtualKeyCode;
 export import Task;
 
+import Windows;
+
 export using namespace std::literals;
 
+using namespace windows;
 using namespace gsl;
 using namespace mt::input;
 using namespace mt::task;
 
 export namespace mt::input::model
 {
-
-
 	using InputHandler = std::variant<
 		not_null<Task*>,
 		not_null<OneDimensionalInputTask*>,

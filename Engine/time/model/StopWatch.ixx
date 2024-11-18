@@ -1,8 +1,6 @@
 export module StopWatch;
 
-export import <chrono>;
-export import <string_view>;
-export import <vector>;
+import std;
 
 export import Task;
 

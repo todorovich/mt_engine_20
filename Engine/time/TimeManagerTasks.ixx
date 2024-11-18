@@ -1,6 +1,6 @@
 export module TimeManagerTasks;
 
-export import <expected>;
+import std;
 
 export import Engine;
 export import gsl;

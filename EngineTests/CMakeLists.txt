@@ -2,7 +2,6 @@
   
 target_compile_options(
 	EngineTests PRIVATE 
-	/experimental:module
 	/wd4005
 	/wd5106
 )

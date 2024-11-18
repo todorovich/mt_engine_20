@@ -1,17 +1,16 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
 export module WindowsMessages.MouseWheel;
 
-export import WindowsMessage;
+export import BaseWindowsMessage;
 
-export import Engine;
+import Engine;
+import Windows;
+
+using namespace windows;
 
 export namespace mt::windows
 {
-    class WM_MouseWheel : public WindowsMessage
+    class WM_MouseWheel : public BaseWindowsMessage
     {
 		mt::Engine* _engine;
 
@@ -20,7 +19,7 @@ export namespace mt::windows
     public:
 
         WM_MouseWheel(mt::Engine* engine)
-            : _engine(engine)
+            : BaseWindowsMessage(engine)
         {}
     };
 }

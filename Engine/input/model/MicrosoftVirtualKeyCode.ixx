@@ -1,13 +1,10 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include "windows.h"
-
 export module MicrosoftVirtualKeyCode;
 
-export import <string>;
+import std;
+import Windows;
 
-import <format>;
+using namespace windows;
 
 export namespace mt::input::model
 {
@@ -296,7 +293,7 @@ export namespace mt::input::model
 		case MicrosoftVirtualKeyCode::APOSTROPHE: return L"'";
 
 		default:
-			OutputDebugStringW(std::format(L"{:#x}", static_cast<unsigned int>(key)).c_str());
+			OutputDebugString(std::format(L"{:#x}", static_cast<unsigned int>(key)).c_str());
 			return L"UNKNOWN INPUT BUTTON";
 		}
 	}

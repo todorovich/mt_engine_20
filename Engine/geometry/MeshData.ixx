@@ -5,8 +5,7 @@ module;
 
 export module MeshData;
 
-export import <cstdint>;
-export import <vector>;
+import std;
 
 export import MeshGeometry;
 
@@ -20,7 +19,7 @@ export namespace mt::geometry
 		DirectX::XMFLOAT3 right;
 		DirectX::XMFLOAT2 texture_coordinate;
 
-		Vertex() noexcept {}
+		Vertex() noexcept = default;
 
 		Vertex(
 			const DirectX::XMFLOAT3& position,

@@ -1,11 +1,11 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 export module WindowsMessages.SetText;
 
 export import WindowsMessage;
+
+import Windows;
+
+using namespace windows;
 
 export namespace mt::windows
 {

@@ -2,18 +2,18 @@
 module;
 
 #include <catch2/catch_test_macros.hpp>
-#include <Windows.h>
-#include <expected>
 
 export module EventTests;
 
-import <cstddef>;
-import <list>;
+import std;
+import Windows;
+
 import Event;
 import EventQueue;
 import EventHandlerInterface;
 
 using namespace mt::event;
+using namespace windows;
 
 struct EventHandler1 : public EventHandler<>
 {
@@ -27,7 +27,7 @@ public:
 	void operator()() noexcept override
 	{
 		executedEvents->push_back(1);
-		OutputDebugStringW(L"Event Handler 1 called\n");
+		OutputDebugString(L"Event Handler 1 called\n");
 	}
 };
 
@@ -42,9 +42,9 @@ struct EventHandler2 : public EventHandler<int>
 	void operator()(int i) noexcept override
 	{
 		executedEvents->push_back(2);
-		OutputDebugStringW(L"Event Handler 2 called with: ");
-		OutputDebugStringW(std::to_wstring(i).c_str());
-		OutputDebugStringW(L"\n");
+		OutputDebugString(L"Event Handler 2 called with: ");
+		OutputDebugString(std::to_wstring(i).c_str());
+		OutputDebugString(L"\n");
 	}
 };
 
@@ -61,7 +61,7 @@ public:
 	void operator()(int x, int y) noexcept override
 	{
 		executedEvents->push_back(3);
-		OutputDebugStringW(L"Event Handler 3 called\n");
+		OutputDebugString(L"Event Handler 3 called\n");
 	}
 };
 

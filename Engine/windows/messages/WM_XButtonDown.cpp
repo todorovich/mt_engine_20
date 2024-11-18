@@ -1,13 +1,11 @@
-module;
-
-#include <windows.h>
-#include <windowsx.h>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module WindowsMessages.XButtonDown;
 
 import Engine;
 import InputModel;
+import Windows;
 
+using namespace windows;
 using namespace mt::input::model;
 
 LRESULT mt::windows::WM_XButtonDown::execute(const HWND& hwnd, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)

@@ -1,12 +1,9 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <expected>
-
 export module Error;
 
-export import <system_error>;
-export import <string_view>;
+import std;
 
 using namespace std::literals;
 

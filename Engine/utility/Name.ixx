@@ -4,8 +4,7 @@ module;
 
 export module Name;
 
-export import <string>;
-export import <string_view>;
+import std;
 
 export namespace mt::utility
 {

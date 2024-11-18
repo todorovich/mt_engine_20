@@ -1,9 +1,4 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-#include <expected>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 export module WindowsWindowManager;
 
 export import Engine;
@@ -12,6 +7,10 @@ export import WindowManagerInterface;
 export import Window;
 export import WindowsMessageManager;
 
+import std;
+import Windows;
+
+using namespace windows;
 using namespace mt::error;
 using namespace mt::windows;
 using namespace mt::memory;

@@ -1,6 +1,6 @@
 export module MakeUnique;
 
-export import <memory>;
+import std;
 
 export namespace mt::memory
 {

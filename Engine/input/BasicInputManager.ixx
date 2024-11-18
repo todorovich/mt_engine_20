@@ -1,15 +1,12 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
-// Copyright 2023 Micho Todorovich, all rights reserved.
 export module BasicInputManager;
 
-export import Engine;
-
+import std;
+import Engine;
 import ObjectPool;
+import Windows;
 
+using namespace windows;
 using namespace gsl;
 using namespace mt::error;
 using namespace mt::input::model;

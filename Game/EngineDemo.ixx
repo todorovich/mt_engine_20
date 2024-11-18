@@ -8,7 +8,7 @@ module;
 
 export module EngineDemo;
 
-export import <map>;
+import std;
 
 export import Game;
 export import DirectXUtility;

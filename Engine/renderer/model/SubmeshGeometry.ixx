@@ -5,7 +5,7 @@ module;
 
 export module SubmeshGeometry;
 
-import <cstdint>;
+import std;
 
 namespace mt::renderer
 {

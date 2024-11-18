@@ -1,13 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-#include <expected>
-
 module Engine;
 
-import <string_view>;
-import <chrono>;
+import std;
 
 import DirectXRenderer;
 import BasicInputManager;
@@ -18,7 +12,9 @@ import WindowsMessageManager;
 import Camera;
 import StopWatch;
 import MakeUnique;
+import Windows;
 
+using namespace ::windows;
 using namespace std::literals;
 
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
@@ -88,7 +84,7 @@ Engine::~Engine() noexcept
 {
 	_instance = nullptr;
 
-	OutputDebugStringW(L"Engine Shutdown\n");
+	OutputDebugString(L"Engine Shutdown\n");
 }
 
 std::expected<void, std::unique_ptr<std::error_condition>> Engine::run(std::unique_ptr<Game> game) noexcept
@@ -125,7 +121,7 @@ std::expected<void, std::unique_ptr<std::error_condition>> Engine::run(std::uniq
 
 	auto tick_thread = std::jthread([&](){
 		if (FAILED(SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread")))
-			OutputDebugStringW(L"failed to set engine tick thread name.");
+			OutputDebugString(L"failed to set engine tick thread name.");
 
 		while(getWindowManager()->isMessageLoopRunning())
 		{

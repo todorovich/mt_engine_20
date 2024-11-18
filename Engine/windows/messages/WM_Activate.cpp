@@ -1,9 +1,9 @@
 // Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <windows.h>
-
 module WindowsMessages.Activate;
+
+import Windows;
+
+using namespace windows;
 
 using namespace mt::input::model;
 
