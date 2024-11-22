@@ -6,8 +6,6 @@ module;
 #include <d3d12.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
-#include <DirectXMath.h>
-//#include <DirectXCollision.h>
 
 export module Adapters;
 

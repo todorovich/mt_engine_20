@@ -1,4 +1,4 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module;
 
 #include <wrl.h>

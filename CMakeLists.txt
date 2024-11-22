@@ -15,13 +15,17 @@ set(CXX_SCAN_FOR_MODULES 1)
 find_package(freetype CONFIG REQUIRED)
 find_package(xxHash CONFIG REQUIRED)
 
-add_library (STL STATIC "")
-target_compile_definitions(STL PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+add_library (STD STATIC "")
+target_compile_definitions(STD PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+
+add_library (DirectX STATIC "")
+target_compile_definitions(DirectX PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 
 add_library (Engine STATIC "")
 target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 
-target_link_libraries(Engine PUBLIC STL)
+target_link_libraries(Engine PUBLIC STD)
+target_link_libraries(Engine PUBLIC DirectX)
 target_link_libraries(Engine PRIVATE Freetype::Freetype)
 target_link_libraries(Engine PRIVATE xxHash::xxhash)
 
@@ -38,10 +42,11 @@ target_compile_definitions(Game PRIVATE -DUNICODE -D_UNICODE -DWIN32)
 
 target_link_libraries(Game PRIVATE Engine)
 
+add_subdirectory ("DirectX")
 add_subdirectory ("Engine")
-add_subdirectory ("STD")
 add_subdirectory ("EngineTests")
 add_subdirectory ("Game")
+add_subdirectory ("STD")
 
 include(CMakePrintHelpers)
 cmake_print_variables(

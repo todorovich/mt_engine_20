@@ -1,6 +1,4 @@
 // Copyright 2024 Micho Todorovich, all rights reserved.
-module;
-
 module WindowsMessages.XButtonUp;
 
 import InputModel;

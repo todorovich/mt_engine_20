@@ -1,8 +1,4 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
-#include <expected>
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 export module TimeManagerInterface;
 
 import std;

@@ -3,6 +3,7 @@
 ## External Dependencies:
 - truetype
 - catch2
+- freetype
 
 ### Naming Conventions
 ```

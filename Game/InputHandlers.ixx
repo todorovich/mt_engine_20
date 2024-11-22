@@ -146,15 +146,15 @@ export namespace mt
 			auto& camera = _engine.getRenderer()->getCurrentCamera();
 
 			auto half_h_fov = 0.5f * camera.getFovX();
-			auto x_tangent = tanf(half_h_fov);
+			auto x_tangent = std::tanf(half_h_fov);
 			const float x_base = (2.0f * x * x_tangent) / (width / 2.0f);
 
 			auto half_v_fov = 0.5f * camera.getFovY();
-			auto y_tangent = tanf(half_v_fov);
+			auto y_tangent = std::tanf(half_v_fov);
 			const float y_base = (2.0f * y * y_tangent) / (height / 2.0f);
 
-			float dx = atanf(x_base);
-			float dy = atanf(y_base);
+			float dx = std::atanf(x_base);
+			float dy = std::atanf(y_base);
 
 			camera.pitch(dy);
 			camera.rotateY(dx);

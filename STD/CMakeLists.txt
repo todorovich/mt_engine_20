@@ -1,15 +1,15 @@
-set_property(TARGET STL PROPERTY CXX_STANDARD 23)
+set_property(TARGET STD PROPERTY CXX_STANDARD 23)
 
 target_compile_options(
-	STL PRIVATE 
+	STD PRIVATE 
 	/W1
 	"$<$<CONFIG:Debug>:/ZI>"
 )
 
-target_sources(STL
+target_sources(STD
 	PRIVATE
 		std.ixx
 		std.compat.ixx
 )
 
-target_include_directories(STL PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(STD PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

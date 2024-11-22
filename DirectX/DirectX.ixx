@@ -1,0 +1,495 @@
+module;
+
+#include <DirectXMath.h>
+#include <DirectXColors.h>
+#include <DirectXCollision.h>
+
+#include <d3d12.h>
+#include <dxgi.h>
+#include <dxgi1_4.h>
+
+#include "d3dx12.h"
+#include <dxgidebug.h>
+#include <d3dcompiler.h>
+
+export module DirectX;
+
+template <typename T>
+constexpr int _IID_PPV_ARGS(Microsoft::WRL::ComPtr<T> comPointer)
+{
+	return IID_PPV_ARGS(comPointer);
+}
+
+export
+{
+	using ::D3D12_INPUT_ELEMENT_DESC;
+	using ::D3D12_VIEWPORT;
+	using ::D3D12_RECT;
+	using ::HWND;
+	using ::IDXGIFactory4;
+	using ::IDXGISwapChain;
+	using ::ID3D12Device;
+	using ::ID3D12Fence;
+	using ::ID3D12CommandQueue;
+	using ::ID3D12Device;
+	using ::ID3D12CommandAllocator;
+	using ::ID3D12GraphicsCommandList;
+	using ::ID3D12DescriptorHeap;
+	using ::ID3D12RootSignature;
+	using ::ID3D12PipelineState;
+	using ::D3D12_CPU_DESCRIPTOR_HANDLE;
+	using ::ID3D12GraphicsCommandList;
+	using ::ID3DBlob;
+	using ::ID3D12Resource;
+	using ::DXGI_FORMAT;
+	using ::CD3DX12_CPU_DESCRIPTOR_HANDLE;
+	using ::CD3DX12_HEAP_PROPERTIES;
+	using ::CD3DX12_RESOURCE_BARRIER;
+	using ::CD3DX12_GPU_DESCRIPTOR_HANDLE;
+	using ::ID3D12Debug;
+	using ::DXGI_SWAP_CHAIN_FLAG;
+	using ::D3D_FEATURE_LEVEL;
+	using ::D3D12_CLEAR_FLAGS;
+	using ::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS;
+	using ::D3D12_MULTISAMPLE_QUALITY_LEVEL_FLAGS;
+	using ::D3D12_FEATURE;
+	using ::CD3DX12_ROOT_PARAMETER;
+	using ::CD3DX12_DESCRIPTOR_RANGE;
+	using ::CD3DX12_ROOT_SIGNATURE_DESC;
+	using ::D3D_ROOT_SIGNATURE_VERSION;
+	using ::D3D12_INPUT_CLASSIFICATION;
+	using ::CD3DX12_RASTERIZER_DESC;
+	using ::CD3DX12_BLEND_DESC;
+	using ::CD3DX12_DEPTH_STENCIL_DESC;
+
+	using ::D3D12_DEFAULT;
+	
+	using ::D3DCreateBlob;
+	using ::D3D12SerializeRootSignature;
+	using ::CreateDXGIFactory2;
+	using ::D3D12GetDebugInterface;
+	using ::D3D12CreateDevice;
+
+	constexpr auto DXGI_USAGE_RENDER_TARGET_OUTPUT_VALUE = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+#undef DXGI_USAGE_RENDER_TARGET_OUTPUT
+	constexpr auto DXGI_USAGE_RENDER_TARGET_OUTPUT = DXGI_USAGE_RENDER_TARGET_OUTPUT_VALUE;
+
+	constexpr auto DXGI_CREATE_FACTORY_DEBUG_VALUE = DXGI_CREATE_FACTORY_DEBUG;
+#undef DXGI_CREATE_FACTORY_DEBUG
+	constexpr auto DXGI_CREATE_FACTORY_DEBUG = DXGI_CREATE_FACTORY_DEBUG_VALUE;
+
+#undef IID_PPV_ARGS
+	template <typename T>
+	constexpr int IID_PPV_ARGS(Microsoft::WRL::ComPtr<T> comPointer)
+	{
+		return _IID_PPV_ARGS(comPointer);
+	}
+};
+
+
+export namespace DirectX
+{
+	using DirectX::CXMMATRIX;
+	using DirectX::CXMVECTOR;
+	using DirectX::FXMMATRIX;
+	using DirectX::FXMVECTOR;
+	using DirectX::GXMVECTOR;
+	using DirectX::HXMVECTOR;
+	using DirectX::XMMATRIX;
+
+	using DirectX::XMVECTOR;
+	using DirectX::XMVECTORF32;
+	using DirectX::XMVECTORI32;
+	using DirectX::XMVECTORU32;
+	using DirectX::XMVECTORU8;
+
+	using DirectX::XMFLOAT2;
+	using DirectX::XMFLOAT2A;
+	using DirectX::XMFLOAT3;
+	using DirectX::XMFLOAT3A;
+	using DirectX::XMFLOAT3X3;
+	using DirectX::XMFLOAT3X4;
+	using DirectX::XMFLOAT3X4A;
+	using DirectX::XMFLOAT4;
+	using DirectX::XMFLOAT4A;
+	using DirectX::XMFLOAT4X3;
+	using DirectX::XMFLOAT4X3A;
+	using DirectX::XMFLOAT4X4;
+	using DirectX::XMFLOAT4X4A;
+	using DirectX::XMINT2;
+	using DirectX::XMINT3;
+	using DirectX::XMINT4;
+	using DirectX::XMUINT2;
+	using DirectX::XMUINT3;
+	using DirectX::XMUINT4;
+
+	using DirectX::BoundingBox;
+
+	using DirectX::operator*;
+	using DirectX::operator*=;
+	using DirectX::operator+;
+	using DirectX::operator+=;
+	using DirectX::operator-;
+	using DirectX::operator-=;
+	using DirectX::operator/;
+	using DirectX::operator/=;
+	
+	
+	using DirectX::XMStoreFloat2;
+	using DirectX::XMStoreFloat2A;
+	using DirectX::XMStoreFloat3;
+	using DirectX::XMStoreFloat3A;
+	using DirectX::XMStoreFloat3x3;
+	using DirectX::XMStoreFloat3x4;
+	using DirectX::XMStoreFloat3x4A;
+	using DirectX::XMStoreFloat4;
+	using DirectX::XMStoreFloat4A;
+	using DirectX::XMStoreFloat4x3;
+	using DirectX::XMStoreFloat4x3A;
+	using DirectX::XMStoreFloat4x4;
+	using DirectX::XMStoreFloat4x4A;
+	using DirectX::XMStoreInt2;
+	using DirectX::XMStoreInt2A;
+	using DirectX::XMStoreInt3;
+	using DirectX::XMStoreInt3A;
+	using DirectX::XMStoreInt4;
+	using DirectX::XMStoreInt4A;
+	using DirectX::XMStoreUInt2;
+	using DirectX::XMStoreUInt3;
+	using DirectX::XMStoreUInt4;
+	using DirectX::XMStoreSInt2;
+	using DirectX::XMStoreSInt3;
+	using DirectX::XMStoreSInt4;
+	
+	using DirectX::XMLoadFloat2;
+	using DirectX::XMLoadFloat2A;
+	using DirectX::XMLoadFloat3;
+	using DirectX::XMLoadFloat3A;
+	using DirectX::XMLoadFloat3x3;
+	using DirectX::XMLoadFloat3x4;
+	using DirectX::XMLoadFloat3x4A;
+	using DirectX::XMLoadFloat4;
+	using DirectX::XMLoadFloat4A;
+	using DirectX::XMLoadFloat4x3;
+	using DirectX::XMLoadFloat4x3A;
+	using DirectX::XMLoadFloat4x4;
+	using DirectX::XMLoadFloat4x4A;
+	using DirectX::XMLoadInt2;
+	using DirectX::XMLoadInt2A;
+	using DirectX::XMLoadInt3;
+	using DirectX::XMLoadInt3A;
+	using DirectX::XMLoadInt4;
+	using DirectX::XMLoadInt4A;
+	using DirectX::XMLoadUInt2;
+	using DirectX::XMLoadUInt3;
+	using DirectX::XMLoadUInt4;
+	using DirectX::XMLoadSInt2;
+	using DirectX::XMLoadSInt3;
+	using DirectX::XMLoadSInt4;
+
+	using DirectX::XMMatrixPerspectiveFovLH;
+	using DirectX::XMVector3Normalize;
+	using DirectX::XMVectorSubtract;
+	using DirectX::XMVector3Cross;
+	using DirectX::XMVectorReplicate;
+	using DirectX::XMVectorMultiplyAdd;
+	using DirectX::XMMatrixRotationAxis;
+	using DirectX::XMVector3TransformNormal;
+	using DirectX::XMMatrixRotationY;
+	using DirectX::XMVector3Dot;
+	using DirectX::XMVectorGetX;
+	using DirectX::XMMatrixTranspose;
+	using DirectX::XMMatrixInverse;
+	using DirectX::XMMatrixScaling;
+	using DirectX::XMMatrixTranslation;
+
+	namespace Colors
+	{
+		using DirectX::Colors::AliceBlue;
+		using DirectX::Colors::AntiqueWhite;
+		using DirectX::Colors::Aqua;
+		using DirectX::Colors::Aquamarine;
+		using DirectX::Colors::Azure;
+		using DirectX::Colors::Beige;
+		using DirectX::Colors::Bisque;
+		using DirectX::Colors::Black;
+		using DirectX::Colors::BlanchedAlmond;
+		using DirectX::Colors::Blue;
+		using DirectX::Colors::BlueViolet;
+		using DirectX::Colors::Brown;
+		using DirectX::Colors::BurlyWood;
+		using DirectX::Colors::CadetBlue;
+		using DirectX::Colors::Chartreuse;
+		using DirectX::Colors::Chocolate;
+		using DirectX::Colors::Coral;
+		using DirectX::Colors::CornflowerBlue;
+		using DirectX::Colors::Cornsilk;
+		using DirectX::Colors::Crimson;
+		using DirectX::Colors::Cyan;
+		using DirectX::Colors::DarkBlue;
+		using DirectX::Colors::DarkCyan;
+		using DirectX::Colors::DarkGoldenrod;
+		using DirectX::Colors::DarkGray;
+		using DirectX::Colors::DarkGreen;
+		using DirectX::Colors::DarkKhaki;
+		using DirectX::Colors::DarkMagenta;
+		using DirectX::Colors::DarkOliveGreen;
+		using DirectX::Colors::DarkOrange;
+		using DirectX::Colors::DarkOrchid;
+		using DirectX::Colors::DarkRed;
+		using DirectX::Colors::DarkSalmon;
+		using DirectX::Colors::DarkSeaGreen;
+		using DirectX::Colors::DarkSlateBlue;
+		using DirectX::Colors::DarkSlateGray;
+		using DirectX::Colors::DarkTurquoise;
+		using DirectX::Colors::DarkViolet;
+		using DirectX::Colors::DeepPink;
+		using DirectX::Colors::DeepSkyBlue;
+		using DirectX::Colors::DimGray;
+		using DirectX::Colors::DodgerBlue;
+		using DirectX::Colors::Firebrick;
+		using DirectX::Colors::FloralWhite;
+		using DirectX::Colors::ForestGreen;
+		using DirectX::Colors::Fuchsia;
+		using DirectX::Colors::Gainsboro;
+		using DirectX::Colors::GhostWhite;
+		using DirectX::Colors::Gold;
+		using DirectX::Colors::Goldenrod;
+		using DirectX::Colors::Gray;
+		using DirectX::Colors::Green;
+		using DirectX::Colors::GreenYellow;
+		using DirectX::Colors::Honeydew;
+		using DirectX::Colors::HotPink;
+		using DirectX::Colors::IndianRed;
+		using DirectX::Colors::Indigo;
+		using DirectX::Colors::Ivory;
+		using DirectX::Colors::Khaki;
+		using DirectX::Colors::Lavender;
+		using DirectX::Colors::LavenderBlush;
+		using DirectX::Colors::LawnGreen;
+		using DirectX::Colors::LemonChiffon;
+		using DirectX::Colors::LightBlue;
+		using DirectX::Colors::LightCoral;
+		using DirectX::Colors::LightCyan;
+		using DirectX::Colors::LightGoldenrodYellow;
+		using DirectX::Colors::LightGray;
+		using DirectX::Colors::LightGreen;
+		using DirectX::Colors::LightPink;
+		using DirectX::Colors::LightSalmon;
+		using DirectX::Colors::LightSeaGreen;
+		using DirectX::Colors::LightSkyBlue;
+		using DirectX::Colors::LightSlateGray;
+		using DirectX::Colors::LightSteelBlue;
+		using DirectX::Colors::LightYellow;
+		using DirectX::Colors::Lime;
+		using DirectX::Colors::LimeGreen;
+		using DirectX::Colors::Linen;
+		using DirectX::Colors::Magenta;
+		using DirectX::Colors::Maroon;
+		using DirectX::Colors::MediumAquamarine;
+		using DirectX::Colors::MediumBlue;
+		using DirectX::Colors::MediumOrchid;
+		using DirectX::Colors::MediumPurple;
+		using DirectX::Colors::MediumSeaGreen;
+		using DirectX::Colors::MediumSlateBlue;
+		using DirectX::Colors::MediumSpringGreen;
+		using DirectX::Colors::MediumTurquoise;
+		using DirectX::Colors::MediumVioletRed;
+		using DirectX::Colors::MidnightBlue;
+		using DirectX::Colors::MintCream;
+		using DirectX::Colors::MistyRose;
+		using DirectX::Colors::Moccasin;
+		using DirectX::Colors::NavajoWhite;
+		using DirectX::Colors::Navy;
+		using DirectX::Colors::OldLace;
+		using DirectX::Colors::Olive;
+		using DirectX::Colors::OliveDrab;
+		using DirectX::Colors::Orange;
+		using DirectX::Colors::OrangeRed;
+		using DirectX::Colors::Orchid;
+		using DirectX::Colors::PaleGoldenrod;
+		using DirectX::Colors::PaleGreen;
+		using DirectX::Colors::PaleTurquoise;
+		using DirectX::Colors::PaleVioletRed;
+		using DirectX::Colors::PapayaWhip;
+		using DirectX::Colors::PeachPuff;
+		using DirectX::Colors::Peru;
+		using DirectX::Colors::Pink;
+		using DirectX::Colors::Plum;
+		using DirectX::Colors::PowderBlue;
+		using DirectX::Colors::Purple;
+		using DirectX::Colors::Red;
+		using DirectX::Colors::RosyBrown;
+		using DirectX::Colors::RoyalBlue;
+		using DirectX::Colors::SaddleBrown;
+		using DirectX::Colors::Salmon;
+		using DirectX::Colors::SandyBrown;
+		using DirectX::Colors::SeaGreen;
+		using DirectX::Colors::SeaShell;
+		using DirectX::Colors::Sienna;
+		using DirectX::Colors::Silver;
+		using DirectX::Colors::SkyBlue;
+		using DirectX::Colors::SlateBlue;
+		using DirectX::Colors::SlateGray;
+		using DirectX::Colors::Snow;
+		using DirectX::Colors::SpringGreen;
+		using DirectX::Colors::SteelBlue;
+		using DirectX::Colors::Tan;
+		using DirectX::Colors::Teal;
+		using DirectX::Colors::Thistle;
+		using DirectX::Colors::Tomato;
+		using DirectX::Colors::Transparent;
+		using DirectX::Colors::Turquoise;
+		using DirectX::Colors::Violet;
+		using DirectX::Colors::Wheat;
+		using DirectX::Colors::White;
+		using DirectX::Colors::WhiteSmoke;
+		using DirectX::Colors::Yellow;
+		using DirectX::Colors::YellowGreen;
+	}
+
+	namespace LinearColors
+	{
+		using DirectX::ColorsLinear::AliceBlue;
+		using DirectX::ColorsLinear::AntiqueWhite;
+		using DirectX::ColorsLinear::Aqua;
+		using DirectX::ColorsLinear::Aquamarine;
+		using DirectX::ColorsLinear::Azure;
+		using DirectX::ColorsLinear::Beige;
+		using DirectX::ColorsLinear::Bisque;
+		using DirectX::ColorsLinear::Black;
+		using DirectX::ColorsLinear::BlanchedAlmond;
+		using DirectX::ColorsLinear::Blue;
+		using DirectX::ColorsLinear::BlueViolet;
+		using DirectX::ColorsLinear::Brown;
+		using DirectX::ColorsLinear::BurlyWood;
+		using DirectX::ColorsLinear::CadetBlue;
+		using DirectX::ColorsLinear::Chartreuse;
+		using DirectX::ColorsLinear::Chocolate;
+		using DirectX::ColorsLinear::Coral;
+		using DirectX::ColorsLinear::CornflowerBlue;
+		using DirectX::ColorsLinear::Cornsilk;
+		using DirectX::ColorsLinear::Crimson;
+		using DirectX::ColorsLinear::Cyan;
+		using DirectX::ColorsLinear::DarkBlue;
+		using DirectX::ColorsLinear::DarkCyan;
+		using DirectX::ColorsLinear::DarkGoldenrod;
+		using DirectX::ColorsLinear::DarkGray;
+		using DirectX::ColorsLinear::DarkGreen;
+		using DirectX::ColorsLinear::DarkKhaki;
+		using DirectX::ColorsLinear::DarkMagenta;
+		using DirectX::ColorsLinear::DarkOliveGreen;
+		using DirectX::ColorsLinear::DarkOrange;
+		using DirectX::ColorsLinear::DarkOrchid;
+		using DirectX::ColorsLinear::DarkRed;
+		using DirectX::ColorsLinear::DarkSalmon;
+		using DirectX::ColorsLinear::DarkSeaGreen;
+		using DirectX::ColorsLinear::DarkSlateBlue;
+		using DirectX::ColorsLinear::DarkSlateGray;
+		using DirectX::ColorsLinear::DarkTurquoise;
+		using DirectX::ColorsLinear::DarkViolet;
+		using DirectX::ColorsLinear::DeepPink;
+		using DirectX::ColorsLinear::DeepSkyBlue;
+		using DirectX::ColorsLinear::DimGray;
+		using DirectX::ColorsLinear::DodgerBlue;
+		using DirectX::ColorsLinear::Firebrick;
+		using DirectX::ColorsLinear::FloralWhite;
+		using DirectX::ColorsLinear::ForestGreen;
+		using DirectX::ColorsLinear::Fuchsia;
+		using DirectX::ColorsLinear::Gainsboro;
+		using DirectX::ColorsLinear::GhostWhite;
+		using DirectX::ColorsLinear::Gold;
+		using DirectX::ColorsLinear::Goldenrod;
+		using DirectX::ColorsLinear::Gray;
+		using DirectX::ColorsLinear::Green;
+		using DirectX::ColorsLinear::GreenYellow;
+		using DirectX::ColorsLinear::Honeydew;
+		using DirectX::ColorsLinear::HotPink;
+		using DirectX::ColorsLinear::IndianRed;
+		using DirectX::ColorsLinear::Indigo;
+		using DirectX::ColorsLinear::Ivory;
+		using DirectX::ColorsLinear::Khaki;
+		using DirectX::ColorsLinear::Lavender;
+		using DirectX::ColorsLinear::LavenderBlush;
+		using DirectX::ColorsLinear::LawnGreen;
+		using DirectX::ColorsLinear::LemonChiffon;
+		using DirectX::ColorsLinear::LightBlue;
+		using DirectX::ColorsLinear::LightCoral;
+		using DirectX::ColorsLinear::LightCyan;
+		using DirectX::ColorsLinear::LightGoldenrodYellow;
+		using DirectX::ColorsLinear::LightGray;
+		using DirectX::ColorsLinear::LightGreen;
+		using DirectX::ColorsLinear::LightPink;
+		using DirectX::ColorsLinear::LightSalmon;
+		using DirectX::ColorsLinear::LightSeaGreen;
+		using DirectX::ColorsLinear::LightSkyBlue;
+		using DirectX::ColorsLinear::LightSlateGray;
+		using DirectX::ColorsLinear::LightSteelBlue;
+		using DirectX::ColorsLinear::LightYellow;
+		using DirectX::ColorsLinear::Lime;
+		using DirectX::ColorsLinear::LimeGreen;
+		using DirectX::ColorsLinear::Linen;
+		using DirectX::ColorsLinear::Magenta;
+		using DirectX::ColorsLinear::Maroon;
+		using DirectX::ColorsLinear::MediumAquamarine;
+		using DirectX::ColorsLinear::MediumBlue;
+		using DirectX::ColorsLinear::MediumOrchid;
+		using DirectX::ColorsLinear::MediumPurple;
+		using DirectX::ColorsLinear::MediumSeaGreen;
+		using DirectX::ColorsLinear::MediumSlateBlue;
+		using DirectX::ColorsLinear::MediumSpringGreen;
+		using DirectX::ColorsLinear::MediumTurquoise;
+		using DirectX::ColorsLinear::MediumVioletRed;
+		using DirectX::ColorsLinear::MidnightBlue;
+		using DirectX::ColorsLinear::MintCream;
+		using DirectX::ColorsLinear::MistyRose;
+		using DirectX::ColorsLinear::Moccasin;
+		using DirectX::ColorsLinear::NavajoWhite;
+		using DirectX::ColorsLinear::Navy;
+		using DirectX::ColorsLinear::OldLace;
+		using DirectX::ColorsLinear::Olive;
+		using DirectX::ColorsLinear::OliveDrab;
+		using DirectX::ColorsLinear::Orange;
+		using DirectX::ColorsLinear::OrangeRed;
+		using DirectX::ColorsLinear::Orchid;
+		using DirectX::ColorsLinear::PaleGoldenrod;
+		using DirectX::ColorsLinear::PaleGreen;
+		using DirectX::ColorsLinear::PaleTurquoise;
+		using DirectX::ColorsLinear::PaleVioletRed;
+		using DirectX::ColorsLinear::PapayaWhip;
+		using DirectX::ColorsLinear::PeachPuff;
+		using DirectX::ColorsLinear::Peru;
+		using DirectX::ColorsLinear::Pink;
+		using DirectX::ColorsLinear::Plum;
+		using DirectX::ColorsLinear::PowderBlue;
+		using DirectX::ColorsLinear::Purple;
+		using DirectX::ColorsLinear::Red;
+		using DirectX::ColorsLinear::RosyBrown;
+		using DirectX::ColorsLinear::RoyalBlue;
+		using DirectX::ColorsLinear::SaddleBrown;
+		using DirectX::ColorsLinear::Salmon;
+		using DirectX::ColorsLinear::SandyBrown;
+		using DirectX::ColorsLinear::SeaGreen;
+		using DirectX::ColorsLinear::SeaShell;
+		using DirectX::ColorsLinear::Sienna;
+		using DirectX::ColorsLinear::Silver;
+		using DirectX::ColorsLinear::SkyBlue;
+		using DirectX::ColorsLinear::SlateBlue;
+		using DirectX::ColorsLinear::SlateGray;
+		using DirectX::ColorsLinear::Snow;
+		using DirectX::ColorsLinear::SpringGreen;
+		using DirectX::ColorsLinear::SteelBlue;
+		using DirectX::ColorsLinear::Tan;
+		using DirectX::ColorsLinear::Teal;
+		using DirectX::ColorsLinear::Thistle;
+		using DirectX::ColorsLinear::Tomato;
+		using DirectX::ColorsLinear::Transparent;
+		using DirectX::ColorsLinear::Turquoise;
+		using DirectX::ColorsLinear::Violet;
+		using DirectX::ColorsLinear::Wheat;
+		using DirectX::ColorsLinear::White;
+		using DirectX::ColorsLinear::WhiteSmoke;
+		using DirectX::ColorsLinear::Yellow;
+		using DirectX::ColorsLinear::YellowGreen;
+	}
+}

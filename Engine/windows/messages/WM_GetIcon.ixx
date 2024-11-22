@@ -1,6 +1,4 @@
-// Copyright 2022 Micho Todorovich, all rights reserved.
-module;
-
+// Copyright 2024 Micho Todorovich, all rights reserved.
 export module WindowsMessages.GetIcon;
 
 export import WindowsMessage;
