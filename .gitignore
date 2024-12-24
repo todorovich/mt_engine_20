@@ -11,3 +11,6 @@ out/*
 /cmake-build-relwithdebinfo-visual-studio/
 /.idea/**
 /cmake-build-debug
+/cmake-build-default
+/cmake-build-minsizerel
+/cmake-build-relwithdebinfo

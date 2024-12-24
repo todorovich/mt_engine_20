@@ -1,4 +1,8 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
+module;
+
+#include <new>
+
 export module Engine;
 
 export import std;
@@ -38,11 +42,14 @@ export namespace mt
 {
 	class Engine
 	{
-		std::unique_ptr<std::error_condition> _error = std::unique_ptr<std::error_condition>(
-			new (std::nothrow) std::error_condition(
-				static_cast<int>(ErrorCode::ERROR_UNINITIALIZED),
-				engineErrorCategory()
-			)
+		static Engine* _instance;
+		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
+		static std::atomic<bool> _is_shutting_down;
+		static std::atomic<bool> _should_shut_down;
+
+		std::error_condition _error = std::error_condition(
+			static_cast<int>(ErrorCode::ERROR_UNINITIALIZED),
+			engineErrorCategory()
 		);
 
 		unique_ptr<InputManagerInterface>	_input_manager 	= nullptr;
@@ -50,13 +57,6 @@ export namespace mt
 		unique_ptr<WindowManagerInterface>	_window_manager = nullptr;
 		unique_ptr<RendererInterface>		_renderer		= nullptr;
 		unique_ptr<Game>					_game 			= nullptr;
-
-		// Shutdown is checked to see if Tick should keep ticking, on true ticking stops and Tick() returns
-		std::atomic<bool> _is_shutting_down = false;
-		std::atomic<bool> _should_shut_down = false;
-
-	protected:	
-		static Engine* _instance;
 
 	public:
 		friend TimeManagerInterface;
@@ -78,9 +78,10 @@ export namespace mt
 		[[nodiscard]] static bool isDestroyed() noexcept { return _instance == nullptr; };
 		[[nodiscard]] bool isShuttingDown() const noexcept { return _is_shutting_down.load(); }
 		[[nodiscard]] bool shouldShutDown() const noexcept { return _should_shut_down.load(); }
+		[[nodiscard]] std::error_condition getError() const noexcept { return _error; }
 		// MUTATOR
 
-		[[nodiscard]] std::expected<void, std::unique_ptr<std::error_condition>> run(std::unique_ptr<Game> game) noexcept;
+		[[nodiscard]] std::expected<void, std::error_condition> run(std::unique_ptr<Game> game) noexcept;
 
 		// Called to begin orderly shutdown.
 		void shutdown() noexcept { _should_shut_down = true; }

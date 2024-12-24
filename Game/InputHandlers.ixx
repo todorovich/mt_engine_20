@@ -1,7 +1,3 @@
-module;
-
-#include "DirectXMath.h"
-
 export module InputHandlers;
 
 import std;

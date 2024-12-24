@@ -1,6 +1,19 @@
 module;
-// This tells Catch to provide a main() - only do this in one cpp file:
-#define CATCH_CONFIG_MAIN  
+
 #include "catch.hpp"
 
 export module TestMain;
+
+export int main(int argc, char* argv[]) 
+{
+	Catch::Session session;
+	
+	// Set the verbosity level to high 
+	session.configData().showSuccessfulTests = true; 
+	
+	int returnCode = session.applyCommandLine( argc, argv );
+	
+	if( returnCode != 0 ) { return returnCode; } 
+	
+	return session.run();
+}

@@ -7,7 +7,16 @@ using namespace std::literals;
 
 export namespace mt::error
 {
-	enum struct ErrorCode : std::uint32_t
+	/*********************************************************************
+	* 0000 General
+	* 1000 Memory 
+	* 2000 Graphics
+	* 3000 Windows Manager
+	* 4000 Input Manager
+	* 5000 Event Manager
+	**********************************************************************/
+
+	constexpr enum struct ErrorCode : std::uint32_t
 	{
 		ERROR_UNINITIALIZED = 0,
 		FAILED = 1,
@@ -16,7 +25,9 @@ export namespace mt::error
 
 		MEMORY_FAILURE = 1000, // MEMORY
 		BAD_ALLOCATION,
+		BAD_DEALLOCATION,
 		OUT_OF_MEMORY,
+		NO_SUCH_ELEMENT,
 
 		GRAPHICS_FAILURE = 2000,  // GRAPHICS
 		CREATE_COMMITTED_RESOURCE_FAILED,

@@ -757,7 +757,7 @@ std::expected<void, std::error_condition> DirectXRenderer::_createShadersAndInpu
 // TODO: look over example with multiple objects in the vertex buffer.
 std::expected<void, std::error_condition> DirectXRenderer::_createGeometry() noexcept
 {
-	auto box = mt::geometry::createBoxGeometry(1.0f, 1.0f, 1.0f);
+	auto box = mt::geometry::box(1.0f, 1.0f, 1.0f);
 
 	std::vector<mt::renderer::Vertex> vertices(box.vertices.size());
 	for (std::size_t index = 0; index < box.vertices.size(); ++index)

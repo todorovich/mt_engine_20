@@ -42,7 +42,7 @@ export namespace mt::input
 	public:
 		BasicInputManager(mt::Engine& engine, std::error_condition& error) noexcept
 			: _engine(engine)
-			, _message_pool(mt::memory::ObjectPool<InputMessage, POOL_SIZE>(error))
+			, _message_pool(mt::memory::ObjectPool<InputMessage, POOL_SIZE>(_engine, error))
 		{
 
 		};

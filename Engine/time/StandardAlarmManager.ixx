@@ -29,8 +29,8 @@ export namespace mt::time
 		std::map<Alarm*, ObjectPool<Alarm, 1024>::unique_ptr_t> _alarms_and_timers;
 
 	public:
-		StandardAlarmManager(std::error_condition& error) noexcept
-			: _alarm_pool(error)
+		StandardAlarmManager(mt::Engine& engine, std::error_condition& error) noexcept
+			: _alarm_pool(engine, error)
 		{}
 
 		virtual ~StandardAlarmManager() noexcept = default;
@@ -91,9 +91,13 @@ export namespace mt::time
 			steady_clock::duration repeat_interval = std::chrono::steady_clock::duration::min()
 		) noexcept
 		{
-			auto alarm = _alarm_pool.allocate(time_point, task, repeats, repeat_interval);
-			_alarm_queue.push(alarm.get());
-			_alarms_and_timers.insert({alarm.get(), std::move(alarm)});
+			// TODO: propogate error
+			if (auto expected_alarm = _alarm_pool.allocate(time_point, task, repeats, repeat_interval); expected_alarm)
+			{
+				auto&& alarm = expected_alarm.value();
+				_alarm_queue.push(alarm.get());
+				_alarms_and_timers.insert({ alarm.get(), std::move(alarm) });
+			}
 		}
 	};
 }

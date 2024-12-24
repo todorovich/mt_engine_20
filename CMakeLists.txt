@@ -35,7 +35,7 @@ add_executable (EngineTests "")
 target_compile_definitions(EngineTests PRIVATE UNICODE _UNICODE WIN32)
 
 target_link_libraries(EngineTests PRIVATE Engine)
-target_link_libraries(EngineTests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+target_link_libraries(EngineTests PRIVATE Catch2::Catch2 Catch2::Catch2)
 
 add_executable (Game WIN32 "")
 target_compile_definitions(Game PRIVATE -DUNICODE -D_UNICODE -DWIN32)

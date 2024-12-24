@@ -9,8 +9,10 @@ target_compile_options(
 
 target_sources(DirectX
 	PRIVATE
-		DirectX.ixx
-		d3dx12.h
+		#DirectX.ixx
+		DirectXMath.ixx
+		#DirectXCollision.h
+		#DirectXColors.h
 )
 
 target_include_directories(DirectX PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -3,147 +3,154 @@ export module ObjectPool;
 
 import std.compat;
 
+import Engine;
 import Error;
+import PriorityQueue;
 import MakeUnique;
 
 using namespace mt::error;
 
 export namespace mt::memory
 {
-	template<typename T, std::size_t pool_capacity>
-	class ObjectPool
-	{
-	public:
-		class Deleter
-		{
-			ObjectPool<T, pool_capacity>& _object_pool;
+    template<typename T, std::size_t pool_capacity>
+    class ObjectPool
+    {
+    public:
+        class Deleter
+        {
+            ObjectPool<T, pool_capacity>& _object_pool;
+			mt::Engine& _engine;
 
-		public:
-			Deleter(ObjectPool<T, pool_capacity>& object_pool)
-				: _object_pool(object_pool)
-			{}
+        public:
+            Deleter(mt::Engine& engine, ObjectPool<T, pool_capacity>& object_pool)
+                : _engine(engine)
+				, _object_pool(object_pool)
+            {
+            }
 
-			void operator()(T const * pointer)
-			{
-				if (pointer) {
-					if (auto expected = _object_pool.releaseMemory(pointer); !expected) return;
-				}
-			}
-		};
+            void operator()(T const* pointer)
+            {
+                if (pointer) {
+                    if (auto released = _object_pool.releaseMemory(pointer); !released) {
+						_engine.crash(MakeErrorCondition(ErrorCode::BAD_ALLOCATION));
+                    }
+                }
+            }
+        };
 
-	private:
-		// Had to resort to malloc to get uninitialized memory. Not ideal, this is not modern cpp.
-		T*															_data = (T*)::malloc(sizeof(T) * pool_capacity);
-		std::priority_queue<int, std::vector<int>, std::greater<>> 	unused_indices;
-		std::set<int>												_used_indices;
-		const std::size_t _capacity = pool_capacity;
-		Deleter deleter {*this};
-		std::mutex mutex;
+    private:
+        T* _data = static_cast<T*>(operator new[](pool_capacity * sizeof(T)));
+        mt::queue::MinPriorityQueue<pool_capacity> _unused_indices{};
+        std::set<int> _used_indices;
+        const std::size_t _capacity = pool_capacity;
+        Deleter _deleter{ _engine, *this };
+        std::mutex _mutex;
+        mt::Engine& _engine;
 
-		[[nodiscard]] bool releaseMemory(T const * returned_memory)
-		{
-			std::scoped_lock lock(mutex);
+        [[nodiscard]] bool releaseMemory(T const* returned_memory)
+        {
+            std::scoped_lock lock(_mutex);
 
-			// Check if we actually own this object.
-			int index = static_cast<int>(returned_memory - _data);
-			if (returned_memory == nullptr || index < 0 || index >= _capacity)
-			{
-				return false;
-			}
-			else {
-				returned_memory->~T();
+            // Check if we actually own this object.
+            int index = static_cast<int>(returned_memory - _data);
+            if (returned_memory == nullptr || index < 0 || index >= _capacity)
+            {
+                return false;
+            }
+            else {
+                returned_memory->~T();
 
-				//if (mt::IS_DEBUG) std::memset_s(returned_memory, sizeof(T), 0, sizeof(T));
+                _used_indices.erase(index);
+                _unused_indices.push(index);
 
-				_used_indices.erase(index);
+                return true;
+            }
+        }
 
-				unused_indices.push(index);
+    public:
+        friend ObjectPool::Deleter;
+        friend std::unique_ptr<ObjectPool<T, pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
 
-				return true;
-			}
-		}
+        ObjectPool(mt::Engine& engine, std::error_condition& error) noexcept
+            : _engine(engine) 
+        {
+            if (_data == nullptr)
+            {
+                Assign(error, mt::error::ErrorCode::BAD_ALLOCATION);
+				_engine.crash(error);
+            }
+            else
+            {
+                for (auto i = 0; i < _capacity; i++)
+                {
+                    _unused_indices.push(i);
+                }
+            }
+        }
 
-	public:
-		friend ObjectPool::Deleter;
-		friend std::unique_ptr<ObjectPool<T,pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
+        ~ObjectPool() noexcept
+        {
+            for (int index : _used_indices)
+            {
+                _data[index].~T();
+            }
 
-		ObjectPool(std::error_condition& error) noexcept
-		{
-			if (_data == nullptr)
-			{
-				Assign(error, mt::error::ErrorCode::BAD_ALLOCATION);
-			}
-			else
-			{
-				for (auto i = 0; i < _capacity; i++)
-				{
-					unused_indices.push(i);
-				}
-			}
-		}
+            while (!_unused_indices.empty())
+            {
+                if (auto expected_index = _unused_indices.top(); expected_index)
+                {
+                    auto index = expected_index.value();
+                    _unused_indices.pop();
+                    _data[index].~T();
+                }
+            }
 
-		~ObjectPool() noexcept
-		{
-			for (auto index = unused_indices.top(); !unused_indices.empty(); unused_indices.pop())
-			{
-				_data[index].~T();
-			}
-		};
+            operator delete[](_data);
+        };
 
-		ObjectPool(const ObjectPool& other) noexcept = delete;
-		ObjectPool(ObjectPool&& other) noexcept = default;
-		ObjectPool& operator=(const ObjectPool& other) noexcept = delete;
-		ObjectPool& operator=(ObjectPool&& other) noexcept = default;
+        ObjectPool(const ObjectPool& other) noexcept = delete;
+        ObjectPool(ObjectPool&& other) noexcept = default;
+        ObjectPool& operator=(const ObjectPool& other) noexcept = delete;
+        ObjectPool& operator=(ObjectPool&& other) noexcept = default;
 
-		[[nodiscard]] std::size_t size() const noexcept { return _used_indices.size(); }
-		[[nodiscard]] constexpr std::size_t capacity() noexcept { return pool_capacity; }
+        [[nodiscard]] std::size_t size() const noexcept { return _used_indices.size(); }
+        [[nodiscard]] constexpr std::size_t capacity() noexcept { return pool_capacity; }
 
-		using unique_ptr_t = std::unique_ptr<T, Deleter>;
+        using unique_ptr_t = std::unique_ptr<T, Deleter>;
 
-		template<class... Types>
-		unique_ptr_t allocate(Types&&... args)
-		{
-			std::scoped_lock lock(mutex);
+        template<class... Types>
+        [[nodiscard]] std::expected<unique_ptr_t, std::error_condition> allocate(Types&&... args) noexcept
+        {
+            std::scoped_lock lock(_mutex);
 
-			if (unused_indices.empty()) return unique_ptr_t{nullptr, deleter};
+            if (_unused_indices.empty()) {
+                return std::unexpected(MakeErrorCondition(ErrorCode::OUT_OF_MEMORY));
+            }
 
-			auto index = unused_indices.top();
+            auto index = _unused_indices.top();
+            _unused_indices.pop();
 
-			unused_indices.pop();
+            if (index)
+            {
+                int i = index.value();
 
-			_used_indices.insert(index);
-
-			return unique_ptr_t(new (&_data[index]) T(std::forward<Types>(args)...), deleter);
-		}
-
-
-	};
-
-	/*namespace factory
-	{
-		template<typename T, std::size_t pool_capacity>
-		std::expected<std::unique_ptr<ObjectPool<T, pool_capacity>>, Error> ObjectPool() noexcept
-		{
-			Error error;
-			if (auto pointer = make_unique_nothrow<mt::memory::ObjectPool<T, pool_capacity>>(error);
-				pointer
-			)
-			{
-				if (error.getErrorCode() == ErrorCode::ERROR_UNINITIALIZED)
-					return std::unexpected{error};
-				else
-					return std::move(pointer);
-			}
-			else
-			{
-				return std::unexpected(
-					mt::error::Error{
-						std::wstring_view{ L"Unable to reset the command list allocator." },
-						mt::error::ErrorCode::GRAPHICS_FAILURE,
-						__func__, __FILE__, __LINE__
-					}
-				);
-			}
-		};
-	}*/
+                try {
+                    _used_indices.insert(i);
+                    return unique_ptr_t(new (&_data[i]) T(std::forward<Types>(args)...), _deleter);
+                }
+                catch (...) {
+                    _unused_indices.push(i);
+                    return std::unexpected(MakeErrorCondition(ErrorCode::BAD_ALLOCATION));
+                }
+            }
+            else
+            {
+                return std::unexpected(MakeErrorCondition(ErrorCode::NO_SUCH_ELEMENT));
+            }
+        }
+        
+        Deleter get_deleter() const noexcept {
+            return _deleter;
+        }
+    };
 }

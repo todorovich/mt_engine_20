@@ -14,4 +14,7 @@ target_sources(EngineTests
 	EventTests.ixx
 )
 
+add_subdirectory ("memory")
+add_subdirectory ("queue")
+
 target_include_directories(EngineTests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

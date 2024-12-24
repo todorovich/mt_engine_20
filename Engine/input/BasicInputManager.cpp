@@ -225,8 +225,10 @@ void mt::input::BasicInputManager::acceptInput(
 ) noexcept
 {
 	if (isAcceptingInput()){
-		if (auto pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); pointer)
+		if (auto expected_pointer = _message_pool.allocate(input_type, std::chrono::steady_clock::now(), data); expected_pointer)
 		{
+			auto&& pointer = expected_pointer.value();
+
 			_input_queue.push(std::move(pointer));
 
 			if (_message_pool.size() == _message_pool.capacity())

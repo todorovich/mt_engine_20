@@ -1,16 +1,14 @@
 // Copyright 2024 Micho Todorovich, all rights reserved.
 module;
 
+#include <Windows.h>
+#include <windowsx.h>
 #include <wrl.h>
 
 #include <d3d12.h>
-#include <DirectXMath.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
-#include <DirectXCollision.h>
-
 #include "d3dx12.h"
-
 #include <dxgidebug.h>
 
 // Link necessary d3d12 libraries.
@@ -22,7 +20,6 @@ module;
 export module DirectXRenderer;
 
 import std;
-import Windows;
 
 export import Engine;
 export import FrameResource;
@@ -34,9 +31,7 @@ export import renderer.Vertex;
 
 using Microsoft::WRL::ComPtr;
 
-using namespace windows;
 using namespace std;
-using namespace DirectX;
 
 using mt::error::Error;
 

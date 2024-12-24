@@ -1,51 +1,56 @@
- // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
 #include <DirectXMath.h>
 
-module Geometry;
+export module Geometry:box;
 
 import std;
 
-namespace mt::geometry
+export import MeshData;
+export import MeshGeometry;
+export import SubmeshGeometry;
+
+using namespace DirectX;
+
+export namespace mt::geometry
 {
-	constexpr MeshData createBoxGeometry(float width, float height, float depth) noexcept
+	constexpr MeshData box(const float width, const float height, const float depth) noexcept
 	{
 		float half_width = width / 2.0f;
 		float half_height = height / 2.0f;
 		float half_depth = depth / 2.0f;
 
-		DirectX::XMFLOAT4 yellow  { 1.0f, 1.0f, 0.0f, 1.0f };
-		DirectX::XMFLOAT4 green   { 0.0f, 1.0f, 0.0f, 1.0f };
-		DirectX::XMFLOAT4 red     { 1.0f, 0.0f, 0.0f, 1.0f };
-		DirectX::XMFLOAT4 black   { 0.0f, 0.0f, 0.0f, 1.0f };
-		DirectX::XMFLOAT4 white   { 1.0f, 1.0f, 1.0f, 1.0f };
-		DirectX::XMFLOAT4 cyan    { 0.0f, 1.0f, 1.0f, 1.0f };
-		DirectX::XMFLOAT4 magenta { 1.0f, 0.0f, 1.0f, 1.0f };
-		DirectX::XMFLOAT4 blue    { 0.0f, 0.0f, 1.0f, 1.0f };
+		XMFLOAT4 yellow{ 1.0f, 1.0f, 0.0f, 1.0f };
+		XMFLOAT4 green{ 0.0f, 1.0f, 0.0f, 1.0f };
+		XMFLOAT4 red{ 1.0f, 0.0f, 0.0f, 1.0f };
+		XMFLOAT4 black{ 0.0f, 0.0f, 0.0f, 1.0f };
+		XMFLOAT4 white{ 1.0f, 1.0f, 1.0f, 1.0f };
+		XMFLOAT4 cyan{ 0.0f, 1.0f, 1.0f, 1.0f };
+		XMFLOAT4 magenta{ 1.0f, 0.0f, 1.0f, 1.0f };
+		XMFLOAT4 blue{ 0.0f, 0.0f, 1.0f, 1.0f };
 
-		DirectX::XMFLOAT3 left_top_back      { -half_width, +half_height, +half_depth };
-		DirectX::XMFLOAT3 right_top_back     { +half_width, +half_height, +half_depth };
-		DirectX::XMFLOAT3 left_bottom_back   { -half_width, -half_height, +half_depth };
-		DirectX::XMFLOAT3 right_bottom_back  { +half_width, -half_height, +half_depth };
-		DirectX::XMFLOAT3 left_top_front     { -half_width, +half_height, -half_depth };
-		DirectX::XMFLOAT3 right_top_front    { +half_width, +half_height, -half_depth };
-		DirectX::XMFLOAT3 left_bottom_front  { -half_width, -half_height, -half_depth };
-		DirectX::XMFLOAT3 right_bottom_front { +half_width, -half_height, -half_depth };
+		XMFLOAT3 left_top_back{ -half_width, +half_height, +half_depth };
+		XMFLOAT3 right_top_back{ +half_width, +half_height, +half_depth };
+		XMFLOAT3 left_bottom_back{ -half_width, -half_height, +half_depth };
+		XMFLOAT3 right_bottom_back{ +half_width, -half_height, +half_depth };
+		XMFLOAT3 left_top_front{ -half_width, +half_height, -half_depth };
+		XMFLOAT3 right_top_front{ +half_width, +half_height, -half_depth };
+		XMFLOAT3 left_bottom_front{ -half_width, -half_height, -half_depth };
+		XMFLOAT3 right_bottom_front{ +half_width, -half_height, -half_depth };
 
-		DirectX::XMFLOAT3 right  { +1.0f, +0.0f, +0.0 };
-		DirectX::XMFLOAT3 left   { -1.0f, +0.0f, +0.0 };
-		DirectX::XMFLOAT3 top    { +0.0f, +1.0f, +0.0 };
-		DirectX::XMFLOAT3 bottom { +0.0f, -1.0f, +0.0 };
-		DirectX::XMFLOAT3 back   { +0.0f, +0.0f, +1.0 };
-		DirectX::XMFLOAT3 front  { +0.0f, +0.0f, -1.0 };
+		XMFLOAT3 right{ +1.0f, +0.0f, +0.0 };
+		XMFLOAT3 left{ -1.0f, +0.0f, +0.0 };
+		XMFLOAT3 top{ +0.0f, +1.0f, +0.0 };
+		XMFLOAT3 bottom{ +0.0f, -1.0f, +0.0 };
+		XMFLOAT3 back{ +0.0f, +0.0f, +1.0 };
+		XMFLOAT3 front{ +0.0f, +0.0f, -1.0 };
 
-		DirectX::XMFLOAT2 left_bottom  { 0.0f, 0.0f };
-		DirectX::XMFLOAT2 left_top     { 0.0f, 1.0f };
-		DirectX::XMFLOAT2 right_top    { 1.0f, 1.0f };
-		DirectX::XMFLOAT2 right_bottom { 1.0f, 0.0f };
+		XMFLOAT2 left_bottom{ 0.0f, 0.0f };
+		XMFLOAT2 left_top{ 0.0f, 1.0f };
+		XMFLOAT2 right_top{ 1.0f, 1.0f };
+		XMFLOAT2 right_bottom{ 1.0f, 0.0f };
 
-		return MeshData {
+		return MeshData{
 			std::vector<Vertex> {
 				Vertex(left_bottom_front,	front,	right,	magenta,	left_bottom),
 				Vertex(left_top_front,		front,	right,	white,		left_top),
@@ -73,9 +78,9 @@ namespace mt::geometry
 				Vertex(right_bottom_back,	right,	back,	black,		right_bottom),
 			},
 			std::vector<std::uint16_t> {
-				// front face
-				0, 1, 2,
-				0, 2, 3,
+			// front face
+			0, 1, 2,
+			0, 2, 3,
 				// back face
 				4, 5, 6,
 				4, 6, 7,
