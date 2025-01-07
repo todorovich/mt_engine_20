@@ -1,5 +1,11 @@
 # mt_engine_20
 
+## Sytem Requirements:
+
+- Windows
+- DirectX 12
+- AVX2
+
 ## External Dependencies:
 - truetype
 - catch2

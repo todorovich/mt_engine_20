@@ -12,7 +12,7 @@ namespace mt::queue {
         size_t _size = size_t{ 0ull };
         int _data[CAPACITY]; 
 
-        void siftUp(size_t index) {
+        void siftUp(size_t index) noexcept {
             Compare compare;
             while (index > 0) {
                 size_t parentIndex = (index - 1) / 2;
@@ -22,7 +22,7 @@ namespace mt::queue {
             }
         }
 
-        void siftDown(size_t index) { 
+        void siftDown(size_t index) noexcept {
             Compare compare;
             size_t leftChild, rightChild, largest;
             while ((leftChild = 2 * index + 1) < _size) {
@@ -38,7 +38,7 @@ namespace mt::queue {
 
     public:
 
-        std::expected<void, std::error_condition> push(int value)
+        std::expected<void, std::error_condition> push(int value) noexcept
         {
             if (_size == CAPACITY) {
                 return std::unexpected(MakeErrorCondition(ErrorCode::OUT_OF_MEMORY));
@@ -49,7 +49,7 @@ namespace mt::queue {
             return {};
         }
 
-        std::expected<void, std::error_condition> pop() 
+        std::expected<void, std::error_condition> pop() noexcept
         {
             if (_size == 0) {
                 return std::unexpected(MakeErrorCondition(ErrorCode::NO_SUCH_ELEMENT));
@@ -59,7 +59,7 @@ namespace mt::queue {
             return {};
         }
 
-        std::expected<int, std::error_condition> top() const 
+        std::expected<int, std::error_condition> top() const noexcept
         { 
             if (_size == 0) {
                 return std::unexpected(MakeErrorCondition(ErrorCode::NO_SUCH_ELEMENT));
@@ -67,11 +67,11 @@ namespace mt::queue {
             return _data[0];
         }
 
-        constexpr size_t size() const {
+        constexpr size_t size() const noexcept {
             return _size;
         }
 
-        constexpr bool empty() const {
+        constexpr bool empty() const noexcept {
             return _size == 0;
         }
     };

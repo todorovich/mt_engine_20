@@ -5,7 +5,7 @@ import std;
 export import Error;
 export import Handle;
 
-import Windows;
+export import Windows;
 
 using namespace windows;
 using namespace mt::error;
@@ -20,7 +20,7 @@ export namespace mt::windows
 		mt::memory::Handle _main_window_handle = nullptr;
 	public:
 
-		Window(std::error_condition& error, int width, int height, HINSTANCE instance_handle)
+		Window(std::error_condition& error, int width, int height, HINSTANCE instance_handle) noexcept
 		{
 			// Compute window rectangle dimensions based on requested client area dimensions.
 			RECT rectangle = { 0, 0, width, height };

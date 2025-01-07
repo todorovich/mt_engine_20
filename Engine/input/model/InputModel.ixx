@@ -103,7 +103,7 @@ export namespace mt::input::model
 
 		InputMessage& operator=(InputMessage&& other) noexcept = default;
 
-		~InputMessage() = default;
+		~InputMessage() noexcept = default;
 	};
 
 	std::wstring to_wstring(InputMessage input_message) noexcept

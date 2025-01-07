@@ -18,17 +18,17 @@ export namespace mt::memory
     public:
         class Deleter
         {
-            ObjectPool<T, pool_capacity>& _object_pool;
 			mt::Engine& _engine;
+            ObjectPool<T, pool_capacity>& _object_pool;
 
         public:
-            Deleter(mt::Engine& engine, ObjectPool<T, pool_capacity>& object_pool)
+            Deleter(mt::Engine& engine, ObjectPool<T, pool_capacity>& object_pool) noexcept
                 : _engine(engine)
 				, _object_pool(object_pool)
             {
             }
 
-            void operator()(T const* pointer)
+			void operator()(T const* pointer) noexcept
             {
                 if (pointer) {
                     if (auto released = _object_pool.releaseMemory(pointer); !released) {
@@ -39,15 +39,15 @@ export namespace mt::memory
         };
 
     private:
+        mt::Engine& _engine;
+        Deleter _deleter{ _engine, *this };
         T* _data = static_cast<T*>(operator new[](pool_capacity * sizeof(T)));
         mt::queue::MinPriorityQueue<pool_capacity> _unused_indices{};
-        std::set<int> _used_indices;
+        std::set<int> _used_indices{};
         const std::size_t _capacity = pool_capacity;
-        Deleter _deleter{ _engine, *this };
         std::mutex _mutex;
-        mt::Engine& _engine;
 
-        [[nodiscard]] bool releaseMemory(T const* returned_memory)
+		[[nodiscard]] bool releaseMemory(T const* returned_memory) noexcept
         {
             std::scoped_lock lock(_mutex);
 
@@ -69,8 +69,7 @@ export namespace mt::memory
 
     public:
         friend ObjectPool::Deleter;
-        friend std::unique_ptr<ObjectPool<T, pool_capacity>> mt::memory::make_unique_nothrow(Error&& error) noexcept;
-
+		
         ObjectPool(mt::Engine& engine, std::error_condition& error) noexcept
             : _engine(engine) 
         {

@@ -6,8 +6,7 @@ import std;
 export import Engine;
 export import WindowsMessageManagerInterface;
 export import WindowsMessage;
-
-import Windows;
+export import Windows;
 
 using namespace windows;
 using namespace mt::error;
@@ -123,8 +122,8 @@ export namespace mt::windows
 		mt::windows::WindowsMessageLoopTask _windows_message_loop_task;
 
 	public:
-		WindowsMessageManager(Engine& engine, std::error_condition& error);
-		~WindowsMessageManager() = default;
+		WindowsMessageManager(Engine& engine, std::error_condition& error) noexcept;
+		~WindowsMessageManager() noexcept = default;
 		WindowsMessageManager(const WindowsMessageManager&) noexcept = default;
 		WindowsMessageManager(WindowsMessageManager&&) noexcept = default;
 		WindowsMessageManager& operator=(const WindowsMessageManager&) noexcept = default;

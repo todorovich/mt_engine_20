@@ -27,17 +27,13 @@ export namespace mt::renderer
 		// Give it a _name so we can look it up by _name.
 		std::string _name;
 
+	public:
 		// TODO: improve this
 		MeshGeometry(std::string&& name) noexcept
 			: _name(name)
 		{
 
 		}
-
-	public:
-		friend std::unique_ptr<MeshGeometry> mt::memory::make_unique_nothrow<MeshGeometry>(
-			std::string&& name
-		) noexcept;
 
 		~MeshGeometry() noexcept = default;
 

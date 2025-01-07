@@ -1,7 +1,8 @@
-﻿set_property(TARGET EngineTests PROPERTY CXX_STANDARD 23)
+﻿#set_property(TARGET EngineTests PROPERTY CXX_STANDARD latest)
   
 target_compile_options(
 	EngineTests PRIVATE 
+	/std:c++latest
 	/wd4005
 	/wd5106
 )
@@ -11,9 +12,10 @@ target_sources(EngineTests
 	EngineTests.ixx
 	TestMain.ixx
 	MicrosoftTests.ixx
-	EventTests.ixx
 )
 
+add_subdirectory ("event")
+add_subdirectory ("input")
 add_subdirectory ("memory")
 add_subdirectory ("queue")
 

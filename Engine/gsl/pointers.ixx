@@ -21,15 +21,7 @@ module;
 
 export module pointers;
 
-import <algorithm>;    // for forward
-import <cstddef>;      // for ptrdiff_t, nullptr_t, size_t
-import <memory>;       // for shared_ptr, unique_ptr
-import <system_error>; // for hash
-import <type_traits>;  // for enable_if_t, is_convertible, is_assignable
-
-#if !defined(GSL_NO_IOSTREAMS)
-import <iosfwd>; // for ostream
-#endif            // !defined(GSL_NO_IOSTREAMS)
+import std;
 
 export namespace gsl
 {

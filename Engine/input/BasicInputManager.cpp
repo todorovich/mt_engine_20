@@ -1,16 +1,9 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
-module;
-
-#include <DirectXMath.h>
-
-
-#undef RELATIVE
-#undef ABSOLUTE
-
 module BasicInputManager;
 
 import std;
 import Engine;
+import InputManagerInterface;
 import InputModel;
 import Windows;
 
@@ -22,6 +15,12 @@ using namespace mt::input::model;
 using namespace mt::task;
 
 using namespace std::literals;
+
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 void BasicInputManager::processInput() noexcept
 {
@@ -110,62 +109,57 @@ void BasicInputManager::processInput() noexcept
 				break;
 
 			case InputDataType::ONE_DIMENSIONAL:
-			{
-				const auto range = one_dimensional_input_handler.equal_range(input_type);
-
-				for (auto it = range.first; it != range.second; ++it)
-				{
-					InputData1D input_data = std::get<InputData1D>(input_message.data);
-					(*it->second)(input_data.x);
-				}
-			}
-				break;
-
 			case InputDataType::TWO_DIMENSIONAL:
-			{
-				const auto& data2d = std::get<InputData2D>(input_message.data);
-
-				if (getIsMouseRelative() && input_type.input_device == InputDevice::MOUSE)
-				{
-					const auto relative_mouse_input_type = InputType(
-						InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE
-					);
-
-					const auto range = two_dimensional_input_handler.equal_range(relative_mouse_input_type);
-
-					const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
-					const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
-
-					for (auto it = range.first; it != range.second; ++it)
-					{
-						(*it->second)(data2d.x - half_width, data2d.y - half_height);
-					}
-
-					SetCursorPos(half_width, half_height);
-				}
-				else
-				{
-					const auto range = two_dimensional_input_handler.equal_range(input_type);
-
-					for (auto it = range.first; it != range.second; ++it)
-					{
-						(*it->second)(data2d.x, data2d.y);
-					}
-				}
-			}
-				break;
-
 			case InputDataType::THREE_DIMENSIONAL:
-			{
-				const auto range = three_dimensional_input_handler.equal_range(input_type);
-				const auto& data3d = std::get<InputData3D>(input_message.data);
-
-				for (auto it = range.first; it != range.second; ++it)
-				{
-					(*it->second)(data3d.x, data3d.y, data3d.z);
-				}
-			}
+				std::visit(
+					overloaded{
+						[](std::monostate) {},
+						[&](const InputData1D& input_data)
+						{
+							const auto range = one_dimensional_input_handler.equal_range(input_type);
+							for (auto it = range.first; it != range.second; ++it)
+							{
+								(*it->second)(input_data.x);
+							}
+						},
+						[&](const InputData2D& input_data)
+						{
+							if (getIsMouseRelative() && input_type.input_device == InputDevice::MOUSE)
+							{
+								const auto relative_mouse_input_type = InputType(
+									InputDevice::MOUSE, InputDataType::TWO_DIMENSIONAL, InputContext::RELATIVE
+								);
+								const auto range = two_dimensional_input_handler.equal_range(relative_mouse_input_type);
+								const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
+								const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
+								for (auto it = range.first; it != range.second; ++it)
+								{
+									(*it->second)(input_data.x - half_width, input_data.y - half_height);
+								}
+								SetCursorPos(half_width, half_height);
+							}
+							else
+							{
+								const auto range = two_dimensional_input_handler.equal_range(input_type);
+								for (auto it = range.first; it != range.second; ++it)
+								{
+									(*it->second)(input_data.x, input_data.y);
+								}
+							}
+						},
+						[&](const InputData3D& input_data)
+						{
+							const auto range = three_dimensional_input_handler.equal_range(input_type);
+							for (auto it = range.first; it != range.second; ++it)
+							{
+								(*it->second)(input_data.x, input_data.y, input_data.z);
+							}
+						}
+					},
+					input_message.data
+				);
 				break;
+			
 
 			case InputDataType::NO_DATA_TYPE:
 			{
@@ -220,7 +214,7 @@ void BasicInputManager::processInput() noexcept
 		is_accepting_input.store(true);
 }
 
-void mt::input::BasicInputManager::acceptInput(
+std::expected<void, std::error_condition> mt::input::BasicInputManager::acceptInput(
 	InputType input_type, std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data
 ) noexcept
 {
@@ -235,19 +229,21 @@ void mt::input::BasicInputManager::acceptInput(
 				is_accepting_input.store(false);
 		}
 		else {
-			_engine.crash(MakeErrorCondition(ErrorCode::UNABLE_TO_ACCEPT_INPUT));
+			return std::unexpected{ _engine.crash(MakeErrorCondition(ErrorCode::UNABLE_TO_ACCEPT_INPUT)) };
 		}
 	}
 	else {
-		_engine.crash(MakeErrorCondition(mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT));
+		return std::unexpected{ _engine.crash(MakeErrorCondition(mt::error::ErrorCode::CALLED_WHILE_NOT_ACCEPTING_INPUT)) };
 	}
+
+	return {};
 }
 
 void mt::input::BasicInputManager::toggleIsMouseRelative() noexcept
 {
-	if (getIsMouseRelative())
+	if (InputManagerInterface::getIsMouseRelative())
 	{
-		_setIsMouseRelative(false);
+		InputManagerInterface::_setIsMouseRelative(false);
 
 		_engine.getWindowManager()->toggleShowCursor();
 
@@ -255,7 +251,7 @@ void mt::input::BasicInputManager::toggleIsMouseRelative() noexcept
 	}
 	else
 	{
-		_setIsMouseRelative();
+		InputManagerInterface::_setIsMouseRelative();
 
 		const int half_width = _engine.getWindowManager()->getWindowWidth() / 2;
 		const int half_height = _engine.getWindowManager()->getWindowHeight() / 2;
@@ -270,44 +266,114 @@ void mt::input::BasicInputManager::toggleIsMouseRelative() noexcept
 
 void mt::input::BasicInputManager::registerInputHandler(InputHandler input_handler, InputType input_type) noexcept
 {
-	switch (input_type.input_data_type)
-	{
-		case InputDataType::BUTTON_IDLE: [[fallthrough]];
-		case InputDataType::BUTTON_PRESSED: [[fallthrough]];
-		case InputDataType::BUTTON_HELD: [[fallthrough]];
-		case InputDataType::BUTTON_RELEASED:
-		{
-			auto& button_handling_function = std::get<not_null<Task*>>(input_handler);
-			button_input_handler.insert({input_type, button_handling_function});
-		}
-			break;
+    std::visit(
+        overloaded {
+            [&](Task * const  task) -> void { 
+				const auto comparator = [&](const auto& pair) { return pair.first == input_type && pair.second == task; };
+                if (
+					auto result = std::find_if(button_input_handler.begin(), button_input_handler.end(), comparator);
+					result == button_input_handler.end()
+				)
+                {
+                    button_input_handler.insert({ input_type, task });
+                }
+            },
+            [&](OneDimensionalInputTask * const  task) -> void {
+				const auto comparator = [&](const auto& pair) { return pair.first == input_type && pair.second == task; };
+                if (
+					auto result = std::find_if(one_dimensional_input_handler.begin(), one_dimensional_input_handler.end(), comparator);
+					result == one_dimensional_input_handler.end()
+				)
+                {
+                    one_dimensional_input_handler.insert({ input_type, task });
+                }
+            },
+            [&](TwoDimensionalInputTask * const  task) -> void { 
+				const auto comparator = [&](const auto& pair) { return pair.first == input_type && pair.second == task; };
+                if (
+					auto result = std::find_if(two_dimensional_input_handler.begin(), two_dimensional_input_handler.end(), comparator);
+					result == two_dimensional_input_handler.end()
+				)
+                {
+                    two_dimensional_input_handler.insert({ input_type, task });
+                }
+            },
+            [&](ThreeDimensionalInputTask * const  task) -> void {
+				const auto comparator = [&](const auto& pair) { return pair.first == input_type && pair.second == task; };
+                if (
+					auto result = std::find_if(three_dimensional_input_handler.begin(), three_dimensional_input_handler.end(), comparator);
+					result == three_dimensional_input_handler.end()
+				)
+                {
+                    three_dimensional_input_handler.insert({ input_type, task });
+                }
+            },
+        },
+        input_handler
+    );
+}
 
-		case InputDataType::ONE_DIMENSIONAL:
-		{
-			auto& one_dimensional_handling_function =
-			std::get<not_null<OneDimensionalInputTask*>>(input_handler);
-			one_dimensional_input_handler.insert({input_type, one_dimensional_handling_function});
-		}
-			break;
-
-		case InputDataType::TWO_DIMENSIONAL:
-		{
-			auto& two_dimensional_handling_function =
-			std::get<not_null<TwoDimensionalInputTask*>>(input_handler);
-			two_dimensional_input_handler.insert({input_type, two_dimensional_handling_function});
-		}
-			break;
-
-		case InputDataType::THREE_DIMENSIONAL:
-		{
-			auto& three_dimensional_handling_function =
-			std::get<not_null<ThreeDimensionalInputTask*>>(input_handler);
-			three_dimensional_input_handler.insert({input_type, three_dimensional_handling_function});
-		}
-			break;
-
-		case InputDataType::NO_DATA_TYPE:
-			_engine.crash(MakeErrorCondition(mt::error::ErrorCode::INVALID_INPUT_DATA_TYPE));
-			break;
-	}
+void mt::input::BasicInputManager::unregisterInputHandler(InputHandler input_handler, InputType input_type) noexcept
+{
+	std::visit(
+		overloaded{
+			[&](Task* const task) -> void {
+				auto range = button_input_handler.equal_range(input_type);
+				for (auto it = range.first; it != range.second; )
+				{
+					if (it->second == task)
+					{
+						it = button_input_handler.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
+			},
+			[&](OneDimensionalInputTask* const task) -> void {
+				auto range = one_dimensional_input_handler.equal_range(input_type);
+				for (auto it = range.first; it != range.second; )
+				{
+					if (it->second == task)
+					{
+						it = one_dimensional_input_handler.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
+			},
+			[&](TwoDimensionalInputTask* const task) -> void {
+				auto range = two_dimensional_input_handler.equal_range(input_type);
+				for (auto it = range.first; it != range.second; )
+				{
+					if (it->second == task)
+					{
+						it = two_dimensional_input_handler.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
+			},
+			[&](ThreeDimensionalInputTask* const task) -> void {
+				auto range = three_dimensional_input_handler.equal_range(input_type);
+				for (auto it = range.first; it != range.second; )
+				{
+					if (it->second == task)
+					{
+						it = three_dimensional_input_handler.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
+			},
+		},
+		input_handler
+	);
 }

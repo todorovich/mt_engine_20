@@ -1,7 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 export module Task;
 
-import std;
+export import std;
 
 export import Error;
 
@@ -18,6 +18,19 @@ export namespace mt::task
 		Task& operator=(Task&&) noexcept = default;
 		
 		virtual std::expected<void, std::error_condition> operator()() = 0;
+	};
+
+	class StoppableTask
+	{
+	public:
+		StoppableTask() noexcept = default;
+		virtual ~StoppableTask() noexcept = default;
+		StoppableTask(const StoppableTask&) noexcept = default;
+		StoppableTask(StoppableTask&&) noexcept = default;
+		StoppableTask& operator=(const StoppableTask&) noexcept = default;
+		StoppableTask& operator=(StoppableTask&&) noexcept = default;
+
+		virtual std::expected<void, std::error_condition> operator()(std::stop_token stop_token) = 0;
 	};
 
 	class OneDimensionalInputTask

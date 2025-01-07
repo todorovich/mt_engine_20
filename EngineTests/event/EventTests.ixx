@@ -1,7 +1,7 @@
 // Copyright 2023 Micho Todorovich, all rights reserved.
 module;
 
-#include <catch2/catch_test_macros.hpp>
+#include <catch.hpp>
 
 export module EventTests;
 

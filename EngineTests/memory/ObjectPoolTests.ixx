@@ -1,13 +1,16 @@
 module;
 
 #include <catch.hpp>
-#include <thread>
 
 export module ObjectPool.Tests;
 
+import std;
+
 import ObjectPool;
 import Error;
+import StandardEngine;
 import Engine;
+import MakeUnique;
 
 using namespace mt::memory;
 using namespace mt::error;
@@ -20,9 +23,9 @@ public:
 };
 
 TEST_CASE("ObjectPool Allocate and Deallocate", "[ObjectPool]") {
-	mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 10> pool(engine, error);
+	std::unique_ptr<mt::Engine> engine = mt::memory::make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 10> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -41,9 +44,9 @@ TEST_CASE("ObjectPool Allocate and Deallocate", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Out of Memory", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 2> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = mt::memory::make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 2> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -58,9 +61,9 @@ TEST_CASE("ObjectPool Out of Memory", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Bad Allocation", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 1> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = mt::memory::make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 1> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -74,9 +77,9 @@ TEST_CASE("ObjectPool Bad Allocation", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Repeated Allocation and Deallocation", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 5> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = mt::memory::make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 5> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -91,9 +94,9 @@ TEST_CASE("ObjectPool Repeated Allocation and Deallocation", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Deallocate Null Pointer", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 5> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 5> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -104,9 +107,9 @@ TEST_CASE("ObjectPool Deallocate Null Pointer", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Deallocate Non-Pool Object", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 5> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 5> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -118,9 +121,9 @@ TEST_CASE("ObjectPool Deallocate Non-Pool Object", "[ObjectPool]") {
 }
 
 TEST_CASE("ObjectPool Exceeding Capacity", "[ObjectPool]") {
-    mt::Engine engine;
     std::error_condition error;
-    ObjectPool<TestObject, 3> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 3> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 
@@ -138,8 +141,8 @@ TEST_CASE("ObjectPool Exceeding Capacity", "[ObjectPool]") {
 
 TEST_CASE("ObjectPool Concurrent Access", "[ObjectPool]") {
     std::error_condition error;
-    mt::Engine engine;
-    ObjectPool<TestObject, 10> pool(engine, error);
+    std::unique_ptr<mt::Engine> engine = make_unique_nothrow<mt::StandardEngine>(error);
+    ObjectPool<TestObject, 10> pool(*engine, error);
 
     REQUIRE_FALSE(error);
 

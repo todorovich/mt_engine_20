@@ -10,6 +10,7 @@ export module EngineDemo;
 
 import std;
 
+import StandardEngine;
 export import Game;
 export import DirectXUtility;
 export import InputHandlers;
@@ -89,11 +90,18 @@ int WINAPI WinMain(
 	[[maybe_unused]] int showCmd
 )
 {
-	mt::Engine engine = mt::Engine();
+	if (auto expectedEngine = mt::memory::ExpectMakeUnique<mt::StandardEngine>(); expectedEngine)
+	{
+		auto engine = std::move(expectedEngine.value());
 
-	if (auto expected = engine.run(make_unique_nothrow<mt::EngineDemo>(engine)); expected)
-		return 0;
+		if (auto expectedGame = engine->run(make_unique_nothrow<mt::EngineDemo>(*engine)); expectedGame)
+			return 0;
+		else
+			// TODO: do something with the errors returned. Also make that a better data structure.
+			return static_cast<int>(expectedGame.error().value());
+	}
 	else
-		// TODO: do something with the errors returned. Also make that a better data structure.
-		return static_cast<int>(expected.error().value());
+	{
+		return static_cast<int>(expectedEngine.error().value());
+	}	
 }

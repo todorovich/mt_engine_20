@@ -48,7 +48,7 @@ using namespace mt::windows;
 using namespace mt::error;
 
 
-WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, std::error_condition& error)
+WindowsMessageManager::WindowsMessageManager(mt::Engine& engine, std::error_condition& error) noexcept
 	: WindowsMessageManagerInterface(error)
 	, _windows_message_loop_task(engine)
 	, _engine(engine)

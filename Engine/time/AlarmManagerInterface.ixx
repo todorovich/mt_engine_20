@@ -1,6 +1,6 @@
 export module AlarmManager;
 
-import std;
+export import std;
 
 export import gsl;
 export import Task;

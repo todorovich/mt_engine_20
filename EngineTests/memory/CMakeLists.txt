@@ -1,5 +1,6 @@
 ﻿target_sources(EngineTests
 	PRIVATE
+	MakeUniqueTests.ixx
 	ObjectPoolTests.ixx
 )
 

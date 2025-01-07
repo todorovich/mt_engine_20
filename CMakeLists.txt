@@ -8,24 +8,22 @@ project ("Engine")
 set(VCPKG_TARGET_TRIPLET x64-windows)
 set(BUILD_SHARED_LIBS OFF)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD latest)
+#set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CXX_SCAN_FOR_MODULES 1)
 
 find_package(freetype CONFIG REQUIRED)
 find_package(xxHash CONFIG REQUIRED)
 
-add_library (STD STATIC "")
-target_compile_definitions(STD PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+set(HASH_DEFINE )
 
-add_library (DirectX STATIC "")
-target_compile_definitions(DirectX PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+add_library (STD STATIC "")
+target_compile_definitions(STD PRIVATE -DUNICODE -D_UNICODE -DWIN32 -D__AVX2__)
 
 add_library (Engine STATIC "")
-target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+target_compile_definitions(Engine PRIVATE -DUNICODE -D_UNICODE -DWIN32 -D__AVX2__)
 
 target_link_libraries(Engine PUBLIC STD)
-target_link_libraries(Engine PUBLIC DirectX)
 target_link_libraries(Engine PRIVATE Freetype::Freetype)
 target_link_libraries(Engine PRIVATE xxHash::xxhash)
 
@@ -38,11 +36,10 @@ target_link_libraries(EngineTests PRIVATE Engine)
 target_link_libraries(EngineTests PRIVATE Catch2::Catch2 Catch2::Catch2)
 
 add_executable (Game WIN32 "")
-target_compile_definitions(Game PRIVATE -DUNICODE -D_UNICODE -DWIN32)
+target_compile_definitions(Game PRIVATE -DUNICODE -D_UNICODE -DWIN32 -D__AVX2__)
 
 target_link_libraries(Game PRIVATE Engine)
 
-add_subdirectory ("DirectX")
 add_subdirectory ("Engine")
 add_subdirectory ("EngineTests")
 add_subdirectory ("Game")

@@ -20,7 +20,6 @@ namespace mt::event
 		EventManagerInterface(EventManagerInterface&&) noexcept = default;
 		EventManagerInterface& operator=(const EventManagerInterface&) noexcept = default;
 		EventManagerInterface& operator=(EventManagerInterface&&) noexcept = default;
-		auto operator<=>(const EventManagerInterface&) const noexcept = default;
 
 		[[nodiscard]] std::expected<mt::event::EventQueue*, std::error_condition> createEventQueue(
 			Name name, std::size_t size

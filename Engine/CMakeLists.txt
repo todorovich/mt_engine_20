@@ -1,7 +1,8 @@
-set_property(TARGET Engine PROPERTY CXX_STANDARD 23)
+#set_property(TARGET Engine PROPERTY CXX_STANDARD latest)
 
 target_compile_options(
 	Engine PRIVATE 
+	/std:c++latest
 	/wd4005
 	/wd5106
 	/W4
@@ -11,9 +12,11 @@ target_compile_options(
 target_sources(
 	Engine PRIVATE
 	Constants.ixx
-	Engine.cpp
 	Engine.ixx
+	Engine.cpp
 	Game.ixx
+	StandardEngine.ixx
+	StandardEngine.cpp
 )
 
 message("CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")

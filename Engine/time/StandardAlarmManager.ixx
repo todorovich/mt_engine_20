@@ -1,6 +1,6 @@
 export module StandardAlarmManager;
 
-import std;
+export import std;
 
 export import AlarmManager;
 
@@ -26,7 +26,7 @@ export namespace mt::time
 
 		std::priority_queue < Alarm*, std::vector<Alarm*>, AlarmCompare > _alarm_queue;
 
-		std::map<Alarm*, ObjectPool<Alarm, 1024>::unique_ptr_t> _alarms_and_timers;
+		std::map<Alarm*, decltype(_alarm_pool)::unique_ptr_t> _alarms_and_timers;
 
 	public:
 		StandardAlarmManager(mt::Engine& engine, std::error_condition& error) noexcept

@@ -1,6 +1,6 @@
 export module StandardTimeManager;
 
-import std;
+export import std;
 
 export import AlarmManager;
 
@@ -8,8 +8,8 @@ export import gsl;
 export import Engine;
 export import TimeManagerTasks;
 
-import StopWatch;
-import Windows;
+export import StopWatch;
+export import Windows;
 
 using namespace windows;
 using namespace gsl;
@@ -176,11 +176,11 @@ export namespace mt::time
 
 	class StandardTimeManager : public TimeManagerInterface
 	{
+		mt::Engine& _engine;
+
 		std::unique_ptr<AlarmManagerInterface> _alarm_manager;
 
 		std::map<std::string_view, std::unique_ptr<StopWatch>>	_stop_watches;
-
-		mt::Engine& _engine;
 
 		void _addEngineAlarms() noexcept;
 

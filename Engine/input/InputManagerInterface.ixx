@@ -7,6 +7,11 @@ export import InputModel;
 
 using namespace mt::input::model;
 
+namespace mt::input::test
+{
+	class InputManagerTest;
+}
+
 export namespace mt::input
 {
     class InputManagerInterface
@@ -20,6 +25,8 @@ export namespace mt::input
 		}
 
     public:
+        friend mt::input::test::InputManagerTest;
+
         InputManagerInterface() noexcept = default;
 
         virtual ~InputManagerInterface() noexcept = default;
@@ -34,11 +41,16 @@ export namespace mt::input
 
 		bool getIsMouseRelative() const { return _isMouseRelative; }
 
-		virtual void processInput() noexcept = 0;
+        // Accessor to check if the mouse is relative
+        bool isMouseRelative() const noexcept {
+            return _isMouseRelative;
+        }
 
 		virtual bool isAcceptingInput() const noexcept = 0;
 
-        virtual void acceptInput(
+		virtual void processInput() noexcept = 0;
+
+        [[no_discard]] virtual std::expected<void, std::error_condition> acceptInput(
             InputType input_type,
 			std::variant<std::monostate, InputData1D, InputData2D, InputData3D> data = std::monostate()
         ) noexcept = 0;
@@ -64,5 +76,10 @@ export namespace mt::input
 				std::forward<Rest>(rest)...
 			); // recursive call using pack expansion syntax
         }
+
+        virtual void unregisterInputHandler(InputHandler input_handler, InputType input_types) noexcept = 0;
+
+        virtual std::size_t getInputQueueSize() const noexcept = 0;
+        virtual std::size_t getHandlerMapSize() const noexcept = 0;
     };
 }

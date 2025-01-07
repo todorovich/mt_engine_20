@@ -1,7 +1,8 @@
-set_property(TARGET STD PROPERTY CXX_STANDARD 23)
+#set_property(TARGET STD PROPERTY CXX_STANDARD latest)
 
 target_compile_options(
 	STD PRIVATE 
+	/std:c++latest
 	/W1
 	"$<$<CONFIG:Debug>:/ZI>"
 )

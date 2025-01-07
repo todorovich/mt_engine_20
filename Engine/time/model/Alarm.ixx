@@ -100,7 +100,7 @@ export namespace mt::time::model
 			return _alarm_repeats;
 		}
 
-		void tick(std::chrono::steady_clock::time_point current_tick_time = std::chrono::steady_clock::now());
+		void tick(std::chrono::steady_clock::time_point current_tick_time = std::chrono::steady_clock::now()) noexcept;
 
 		// used to reset an alarm that repeats
 		void reset() noexcept;
@@ -120,7 +120,7 @@ export namespace mt::time::model
 	};
 }
 
-void mt::time::model::Alarm::tick(std::chrono::steady_clock::time_point current_tick_time)
+void mt::time::model::Alarm::tick(std::chrono::steady_clock::time_point current_tick_time) noexcept
 {
 	// Not triggered or paused
 	if (_has_triggered == false && _is_paused == false)
@@ -149,7 +149,7 @@ void mt::time::model::Alarm::pause(std::chrono::steady_clock::time_point time_pa
 void mt::time::model::Alarm::resume(std::chrono::steady_clock::time_point time_continued) noexcept
 {
 	// Offset time time by the amount of time spent paused;
-	_alarm_time += time_continued - _time_paused;
+	_alarm_time = _alarm_time + (time_continued - _time_paused);
 
 	_time_paused = std::chrono::steady_clock::time_point::min();
 

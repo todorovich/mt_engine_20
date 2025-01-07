@@ -1,10 +1,8 @@
 export module StopWatch;
 
-import std;
+export import std;
 
 export import Task;
-
-using namespace std::literals;
 
 export namespace mt::time::model
 {
@@ -31,7 +29,7 @@ export namespace mt::time::model
         // The total amount spent not doing the task
         std::chrono::steady_clock::duration _total_idle;
         
-        std::vector<std::chrono::steady_clock::duration> _task_intervals{ _number_of_samples, 1ns };
+        std::vector<std::chrono::steady_clock::duration> _task_intervals{ _number_of_samples, std::chrono::nanoseconds{ 1 } };
         std::chrono::steady_clock::duration _average_task_interval;
 
         int sample_index = 0;
@@ -50,10 +48,10 @@ export namespace mt::time::model
             , _task_started(created)
             , _task_paused(std::chrono::steady_clock::time_point::min())
             , _paused(std::chrono::steady_clock::duration::min())
-            , _average_task_interval(1ns)
-            , _total(0ns)
-            , _total_active(0ns)
-            , _total_idle(0ns)
+            , _average_task_interval(std::chrono::nanoseconds{ 1 })
+            , _total(std::chrono::nanoseconds{ 0 })
+            , _total_active(std::chrono::nanoseconds{ 0 })
+            , _total_idle(std::chrono::nanoseconds{ 0 })
         {}
 
         void startTask(std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now()) noexcept
@@ -62,8 +60,8 @@ export namespace mt::time::model
             {
                 _isActive = true;
                 _task_started = start_time;
-                _paused = 0ns;
-                _total_idle += _task_started - _task_finished;
+                _paused = std::chrono::nanoseconds{ 0 };
+                _total_idle = _total_idle + (_task_started - _task_finished);
             }
         }
 
@@ -72,7 +70,7 @@ export namespace mt::time::model
             if (_task_paused == std::chrono::steady_clock::time_point::min())
             {
                 _task_paused = pause_time;
-                _total = _task_paused - _task_started;
+                _total = std::chrono::steady_clock::duration::zero() + _task_paused - _task_started;
             }
         }
 
@@ -80,8 +78,8 @@ export namespace mt::time::model
         { 
             if (!(_task_paused == std::chrono::steady_clock::time_point::min()))
             {
-                _paused += start_time - _task_paused;
-                _total = _task_paused - _task_started;
+                _paused = _paused + (start_time - _task_paused);
+                _total = std::chrono::steady_clock::duration::zero() + _task_paused - _task_started;
                 _task_paused = std::chrono::steady_clock::time_point::min();
             }
         }
@@ -97,7 +95,7 @@ export namespace mt::time::model
                 auto index = sample_index % _number_of_samples;
                 
                 // Subtract out the previous sample from the average
-                _average_task_interval -= _task_intervals[index] / _number_of_samples;
+                _average_task_interval = std::chrono::steady_clock::duration::zero() + _average_task_interval - (_task_intervals[index] / _number_of_samples);
 
                 _task_intervals[index] = _task_finished - _task_started - _paused;
                 
@@ -106,7 +104,7 @@ export namespace mt::time::model
                 _total_idle += _paused;
 
                 // Add the current sample to the average
-                _average_task_interval += _task_intervals[index] / _number_of_samples;
+                _average_task_interval = std::chrono::steady_clock::duration::zero() + _average_task_interval + (_task_intervals[index] / _number_of_samples);
                 
                 sample_index++;
             }

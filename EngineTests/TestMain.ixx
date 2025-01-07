@@ -8,8 +8,6 @@ export int main(int argc, char* argv[])
 {
 	Catch::Session session;
 	
-	// Set the verbosity level to high 
-	session.configData().showSuccessfulTests = true; 
 	
 	int returnCode = session.applyCommandLine( argc, argv );
 	

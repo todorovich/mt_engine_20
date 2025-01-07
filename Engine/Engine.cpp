@@ -1,8 +1,9 @@
-// Copyright 2023 Micho Todorovich, all rights reserved.
+// Copyright 2024 Micho Todorovich, all rights reserved.
 module Engine;
 
 import std;
 
+import TimeManagerInterface;
 import DirectXRenderer;
 import BasicInputManager;
 import StandardTimeManager;
@@ -16,80 +17,13 @@ import Windows;
 
 using namespace ::windows;
 using namespace std::literals;
-
-const DWORD MS_VC_EXCEPTION = 0x406D1388;
-
 using namespace mt;
 using namespace mt::memory;
 using namespace mt::error;
 
-Engine* Engine::_instance = nullptr;
-std::atomic<bool> Engine::_is_shutting_down = false;
-std::atomic<bool> Engine::_should_shut_down = false;
-
-Engine::Engine() noexcept
-{
-	if (_instance != nullptr)
-	{
-		Assign(_error, mt::error::ErrorCode::ONE_ENGINE_RULE_VIOLATED);
-
-		crash(_error);
-		return;
-	}
-	else
-		_instance = this;
-	
-	if (_input_manager = make_unique_nothrow<input::BasicInputManager>(*this, _error);
-		_input_manager.get() == nullptr || _error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
-	)
-	{
-		if (_input_manager.get() == nullptr)
-			crash(MakeErrorCondition(mt::error::ErrorCode::BAD_ALLOCATION));
-		else
-			crash(_error);
-
-		return;
-	}
-
-	if (_time_manager = make_unique_nothrow<time::StandardTimeManager>(*this, _error);
-		_time_manager.get() == nullptr || _error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
-	)
-	{
-		if (_time_manager.get() == nullptr)
-			crash(MakeErrorCondition(mt::error::ErrorCode::BAD_ALLOCATION));
-		else
-			crash(_error);
-
-		return;
-	}
-
-	if (_window_manager = make_unique_nothrow<windows::WindowsWindowManager>(
-			*this, _error, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)
-		);
-		_window_manager.get() == nullptr || _error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
-	)
-	{
-		if (_window_manager.get() == nullptr)
-			crash(MakeErrorCondition(mt::error::ErrorCode::BAD_ALLOCATION));
-		else
-			crash(_error);
-
-		return;
-	}
-
-	// TODO: this should be taking in the error and returning error information if it fails.
-	if (_renderer = make_unique_nothrow<renderer::DirectXRenderer>(*this);
-		_renderer.get() == nullptr || _error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED)
-	)
-	{
-		if (_renderer.get() == nullptr)
-			crash(MakeErrorCondition(mt::error::ErrorCode::BAD_ALLOCATION));
-		else
-			crash(_error);
-		
-		return;
-	}
-}
+mt::Engine* mt::Engine::_instance = nullptr;
+std::atomic<bool> mt::Engine::_is_shutting_down = false;
+std::atomic<bool> mt::Engine::_should_shut_down = false;
 
 Engine::~Engine() noexcept
 {
@@ -98,14 +32,14 @@ Engine::~Engine() noexcept
 	OutputDebugString(L"Engine Shutdown\n");
 }
 
-std::expected<void, std::error_condition> Engine::run(std::unique_ptr<Game> game) noexcept
+std::expected<void, std::error_condition> Engine::run(std::shared_ptr<mt::Game> game) noexcept
 {
 	if (!game) {
 		crash(MakeErrorCondition(mt::error::ErrorCode::INVALID_GAME_PROVIDED));
 		return std::unexpected{ _error };
 	}
 	else
-		_game = std::move(game);
+		setGame(game);
 
 	if (_error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
 		return std::unexpected{ _error };
@@ -128,35 +62,44 @@ std::expected<void, std::error_condition> Engine::run(std::unique_ptr<Game> game
 	auto frame_time = getTimeManager()->findStopWatch(mt::time::DefaultTimers::FRAME_TIME);
 	frame_time->startTask();
 
-	auto tick_thread = std::jthread([&](){
-		if (FAILED(SetThreadDescription(GetCurrentThread(),L"mt::Engine Tick Thread")))
+	auto tick_thread = std::jthread([this](std::stop_token stop_token) {
+		if (FAILED(SetThreadDescription(GetCurrentThread(), L"mt::Engine Tick Thread")))
 			OutputDebugString(L"failed to set engine tick thread name.");
 
-		while(getWindowManager()->isMessageLoopRunning())
+		while (getWindowManager()->isMessageLoopRunning() && !stop_token.stop_requested())
 		{
-			_time_manager->tick();
+			auto time = getTimeManager();
+			time->tick();
 		}
 	});
 
 	auto expected = getWindowManager()->runMessageLoop();
 
+	tick_thread.join();
+
 	run_time->finishTask();
+
+	
 
 	if (_error.value() != static_cast<int>(ErrorCode::ERROR_UNINITIALIZED))
 		return std::unexpected{ std::move(_error) };
 	else
 		return {};
+
+	
 }
 
-void Engine::crash(std::error_condition error) noexcept
+std::error_condition Engine::crash(std::error_condition error) noexcept
 {
 	// TODO: what if there is already an error?
 	//  This is where special pool of errors comes in handy. Could link list errors as well as allow cause.
 	// 	then link together unique_ptr's that will clean themselves up.
 	
-	_error = std::move(error);
-	
+	_error = error;
+
 	//if constexpr (IS_DEBUG) OutputDebugString(_error->message().c_str());
 	// TODO: make this print the message? or log it at least.
 	shutdown();
-};
+
+	return _error;
+}

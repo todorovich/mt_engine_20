@@ -1,6 +1,7 @@
-set_property(TARGET Game PROPERTY CXX_STANDARD 23)
+#set_property(TARGET Game PROPERTY CXX_STANDARD latest)
   
 target_compile_options(Game PRIVATE 
+	/std:c++latest
 	/wd4005
 	/wd5106
 )

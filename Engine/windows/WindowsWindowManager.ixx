@@ -2,13 +2,13 @@
 export module WindowsWindowManager;
 
 export import Engine;
-export import MakeUnique;
 export import WindowManagerInterface;
 export import Window;
 export import WindowsMessageManager;
 
 import std;
 import Windows;
+import MakeUnique;
 
 using namespace windows;
 using namespace mt::error;
@@ -34,7 +34,7 @@ export namespace mt::windows
 	public:
 		WindowsWindowManager(mt::Engine& engine, std::error_condition& error, int primary_screen_width, int primary_screen_height) noexcept
 			: WindowManagerInterface(primary_screen_width, primary_screen_height)
-			, _windows_message_manager(std::make_unique<WindowsMessageManager>(engine, error))
+			, _windows_message_manager(mt::memory::make_unique_nothrow<mt::windows::WindowsMessageManager>(engine, error))
 			, _engine(engine)
 			, _instance_handle(GetModuleHandle(nullptr))
 		{

@@ -14,3 +14,5 @@ target_sources(
 )
 
 add_subdirectory(messages)
+
+target_include_directories(Engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

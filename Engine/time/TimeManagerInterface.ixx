@@ -1,8 +1,7 @@
 // Copyright 2024 Micho Todorovich, all rights reserved.
 export module TimeManagerInterface;
 
-import std;
-
+export import std;
 export import gsl;
 export import Error;
 export import TimeModel;
@@ -11,7 +10,6 @@ using namespace gsl;
 using namespace mt::error;
 using namespace mt::time::model;
 using namespace mt::task;
-using namespace std::literals;
 
 // TODO: need a tick and a physics tick. 
 export namespace mt::time
@@ -21,13 +19,13 @@ export namespace mt::time
 	class TimeManagerSetEndOfFrame;
 
 	struct DefaultTimers {
-		inline static const std::string_view RUN_TIME= "Run Time"sv;
-		inline static const std::string_view WINDOWS_MESSAGE_TIME = "Windows Message Time"sv;
-		inline static const std::string_view TICK_TIME = "Engine Tick Time"sv;
-		inline static const std::string_view UPDATE_TIME = "Update Time"sv;
-		inline static const std::string_view INPUT_TIME = "Input Time"sv;
-		inline static const std::string_view RENDER_TIME = "Render Time"sv;
-		inline static const std::string_view FRAME_TIME = "Frame Time"sv;
+		inline static const std::string_view RUN_TIME = std::string_view{ "Run Time" };
+		inline static const std::string_view WINDOWS_MESSAGE_TIME = std::string_view{ "Windows Message Time" };
+		inline static const std::string_view TICK_TIME = std::string_view{ "Engine Tick Time" };
+		inline static const std::string_view UPDATE_TIME = std::string_view{ "Update Time" };
+		inline static const std::string_view INPUT_TIME = std::string_view{ "Input Time" };
+		inline static const std::string_view RENDER_TIME = std::string_view{ "Render Time" };
+		inline static const std::string_view FRAME_TIME = std::string_view{ "Frame Time" };
 	};
 
 	class TickFunction
@@ -38,21 +36,21 @@ export namespace mt::time
 
 	class TimeManagerInterface
 	{
-		std::chrono::steady_clock::duration	_update_interval_ns;
-		std::chrono::steady_clock::duration	_render_interval_ns;
-		std::chrono::steady_clock::duration	_frame_interval;
-		std::chrono::steady_clock::duration	_command_list_interval;
+		std::chrono::steady_clock::duration	_update_interval_ns{ std::chrono::nanoseconds{ 1'000'000'000 } / 60 };
+		std::chrono::steady_clock::duration	_render_interval_ns{ std::chrono::nanoseconds{ 1'000'000'000 } / 144 };
+		std::chrono::steady_clock::duration	_frame_interval{ std::chrono::nanoseconds{ 16'666'666 } };
+		std::chrono::steady_clock::duration	_command_list_interval{ std::chrono::nanoseconds{ 0 } };
 
-		std::chrono::steady_clock::time_point _current_tick_time = std::chrono::steady_clock::time_point(0ns);
-		std::chrono::steady_clock::time_point _previous_tick_time = std::chrono::steady_clock::time_point(0ns);
+		std::chrono::steady_clock::time_point _current_tick_time = std::chrono::steady_clock::time_point(std::chrono::nanoseconds{ 0 });
+		std::chrono::steady_clock::time_point _previous_tick_time = std::chrono::steady_clock::time_point(std::chrono::nanoseconds{ 0 });
 
-		std::chrono::steady_clock::duration _tick_delta_time_ns = 0ns;
+		std::chrono::steady_clock::duration _tick_delta_time_ns = std::chrono::nanoseconds{ 0 };
 
 		TickFunction _do_nothing;
 
 		not_null<TickFunction*> _tick_function = &_do_nothing;
 
-		bool _is_paused;
+		bool _is_paused = true;
 
 		bool _should_update = false;
 		bool _should_render = false;
@@ -60,8 +58,6 @@ export namespace mt::time
 
 	protected:
 		[[nodiscard]] not_null<TickFunction*> _getTickFunction() noexcept { return _tick_function; }
-
-
 
 		void _setShouldUpdate() noexcept
 		{
@@ -105,21 +101,7 @@ export namespace mt::time
 		friend mt::time::TimeManagerSetShouldRender;
 		friend mt::time::TimeManagerSetEndOfFrame;
 
-		TimeManagerInterface()
-			: _update_interval_ns(1'000'000'000ns / 60)
-			, _render_interval_ns(1'000'000'000ns / 144)
-			, _frame_interval (16666666ns)
-			, _command_list_interval (0ns)
-			, _is_paused(true)
-		{
-
-		}
-
 		virtual ~TimeManagerInterface() noexcept = default;
-		TimeManagerInterface(const TimeManagerInterface& other) noexcept = default;
-		TimeManagerInterface(TimeManagerInterface&& other) noexcept = default;
-		TimeManagerInterface& operator=(const TimeManagerInterface& other) noexcept = default;
-		TimeManagerInterface& operator=(TimeManagerInterface&& other) noexcept = default;
 	
 		[[nodiscard]] std::chrono::steady_clock::time_point getCurrentTickTime() const noexcept
 		{
